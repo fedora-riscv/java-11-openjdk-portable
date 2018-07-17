@@ -196,7 +196,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        20
+%global buildver        22
 # priority must be 7 digits in total
 # setting to 1, so debug ones can have 0
 %global priority        00000%{minorver}1
@@ -698,10 +698,11 @@ exit 0
 %define java_rpo() %{expand:
 Requires: fontconfig%{?_isa}
 Requires: xorg-x11-fonts-Type1
-
 # Requires rest of java
 Requires: %{name}-headless%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
 OrderWithRequires: %{name}-headless%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
+# for java-X-openjdk package's desktop binding
+Recommends: gtk2%{?_isa}
 
 Provides: java-%{javaver}-%{origin} = %{epoch}:%{version}-%{release}
 
@@ -740,6 +741,8 @@ Requires(post):   chkconfig >= 1.7
 Requires(postun): %{_sbindir}/alternatives
 # in version 1.7 and higher for --family switch
 Requires(postun):   chkconfig >= 1.7
+# for optional support of kernel stream control, card reader and printing bindings
+Suggests: lksctp-tools%{?_isa}, pcsc-lite-devel%{?_isa}, cups
 
 # Standard JPackage base provides
 Provides: jre-headless%{?1} = %{epoch}:%{javaver}
@@ -869,7 +872,7 @@ URL:      http://openjdk.java.net/
 
 # to regenerate source0 (jdk) and source8 (jdk's taspets) run update_package.sh
 # update_package.sh contains hard-coded repos, revisions, tags, and projects to regenerate the source archives
-Source0: shenandoah-jdk%{majorver}-b516c8c7a0a4.tar.xz
+Source0: shenandoah-jdk%{majorver}-shenandoah-jdk-%{majorver}+%{buildver}.tar.xz
 Source8: systemtap_3.2_tapsets_hg-icedtea8-9d464368e06d.tar.xz
 
 # Desktop files. Adapted from IcedTea
@@ -1264,6 +1267,9 @@ else
   debugbuild=`echo $suffix  | sed "s/-//g"`
 fi
 
+# Variable used in hs_err hook on build failures
+top_dir_abs_path=$(pwd)/%{top_level_dir_name}
+
 mkdir -p %{buildoutputdir -- $suffix}
 pushd %{buildoutputdir -- $suffix}
 
@@ -1300,7 +1306,7 @@ make \
     LOG=trace \
     WARNINGS_ARE_ERRORS="-Wno-error" \
     CFLAGS_WARNINGS_ARE_ERRORS="-Wno-error" \
-    %{targets}
+    %{targets} || ( pwd; find $top_dir_abs_path -name "hs_err_pid*.log" | xargs cat && false )
 
 make docs-zip
 
@@ -1728,6 +1734,13 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue Jul 17 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.22-1
+- added Recommends gtk2 for main package
+- added Suggests lksctp-tools, pcsc-lite-devel, cups for headless package
+- see RHBZ1598152
+- added trick to catch hs_err files (sgehwolf)
+- updated to shenandaoh-jdk-11+22
+
 * Sat Jul 07 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.20-1
 - removed patch6 JDK-8205616-systemLcmsAndJpgFixFor-rev_f0aeede1b855.patch
 - improved a bit generate_source_tarball.sh to serve also for systemtap

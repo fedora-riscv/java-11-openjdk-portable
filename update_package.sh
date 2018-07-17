@@ -35,9 +35,7 @@ fi
 export PROJECT_NAME="shenandoah"
 export REPO_NAME="jdk11"
 # warning, clonning without shenadnaoh suffix, you will clone pure jdk - thus without shenandaoh GC
-# export VERSION="shenandoah-jdk11+22" 
-# will arrive at wednesday
-export VERSION="b516c8c7a0a4"
+export VERSION="shenandoah-jdk-11+22"
 export COMPRESSION=xz
 # unset tapsets overrides
 export OPENJDK_URL=""
@@ -65,6 +63,7 @@ echo "align specfile acordingly:"
 echo " sed 's/^Source0:.*/Source0: $name_helper/' -i *.spec"
 echo " sed 's/^Source8:.*/Source8: $TAPSET/'   -i *.spec"
 echo " sed 's/^%global buildver.*/%global buildver        $build/'   -i *.spec"
+echo " sed 's/Release:.*/Release: 1%{?dist}/'   -i *.spec"
 echo "and maybe others...."
 echo "you should fedpkg/rhpkg new-sources $TAPSET $FILENAME"
 echo "you should fedpkg/rhpkg prep --arch XXXX on all architectures: x86_64 i386 i586 i686 ppc ppc64 ppc64le s390 s390x aarch64 armv7hl"
