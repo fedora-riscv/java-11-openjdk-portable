@@ -702,7 +702,7 @@ Requires: xorg-x11-fonts-Type1
 Requires: %{name}-headless%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
 OrderWithRequires: %{name}-headless%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
 # for java-X-openjdk package's desktop binding
-Recommends: gtk2%{?_isa}
+Recommends: gtk3%{?_isa}
 
 Provides: java-%{javaver}-%{origin} = %{epoch}:%{version}-%{release}
 
@@ -930,7 +930,7 @@ BuildRequires: freetype-devel
 BuildRequires: giflib-devel
 BuildRequires: gcc-c++
 BuildRequires: gdb
-BuildRequires: gtk2-devel
+BuildRequires: gtk3-devel
 BuildRequires: lcms2-devel
 BuildRequires: libjpeg-devel
 BuildRequires: libpng-devel
@@ -1735,7 +1735,8 @@ require "copy_jdk_configs.lua"
 
 %changelog
 * Tue Jul 17 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.22-1
-- added Recommends gtk2 for main package
+- added Recommends gtk3 for main package
+- changed BuildRequires from gtk2-devel to gtk3-devel (it can be more likely dropped)
 - added Suggests lksctp-tools, pcsc-lite-devel, cups for headless package
 - see RHBZ1598152
 - added trick to catch hs_err files (sgehwolf)
