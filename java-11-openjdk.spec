@@ -946,7 +946,7 @@ BuildRequires: pkgconfig
 BuildRequires: xorg-x11-proto-devel
 BuildRequires: zip
 BuildRequires: javapackages-filesystem
-BuildRequires: java-11-openjdk-devel
+BuildRequires: java-openjdk-devel
 # Zero-assembler build requirement
 %ifnarch %{jit_arches}
 BuildRequires: libffi-devel
@@ -1281,7 +1281,7 @@ bash ../configure \
     --with-version-build=%{buildver} \
     --with-version-pre="ea" \
     --with-version-opt="" \
-    --with-boot-jdk=/usr/lib/jvm/java-11-openjdk \
+    --with-boot-jdk=/usr/lib/jvm/java-10-openjdk \
     --with-debug-level=$debugbuild \
     --with-native-debug-symbols=internal \
     --enable-unlimited-crypto \
