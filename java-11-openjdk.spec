@@ -719,7 +719,7 @@ Provides: java%{?1} = %{epoch}:%{javaver}
 %define java_headless_rpo() %{expand:
 # Require /etc/pki/java/cacerts
 Requires: ca-certificates
-# Require javapackages-filesystem for ownership of /usr/lib/jvm/
+# Require javapackages-filesystem for ownership of /usr/lib/jvm/ and macros
 Requires: javapackages-filesystem
 # Require zone-info data provided by tzdata-java sub-package
 Requires: tzdata-java >= 2015d
@@ -837,7 +837,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 1%{?dist}
+Release: 5%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -945,10 +945,8 @@ BuildRequires: nss-devel
 BuildRequires: pkgconfig
 BuildRequires: xorg-x11-proto-devel
 BuildRequires: zip
-# since we require only javapackages-filesystem we have to require whole javapackages-tools in build-time to have various _jvm macros expanded
-# note, that this dependency is bringing current main JDK into build-root
-BuildRequires: javapackages-tools
-BuildRequires: java-openjdk-devel
+BuildRequires: javapackages-filesystem
+BuildRequires: java-11-openjdk-devel
 # Zero-assembler build requirement
 %ifnarch %{jit_arches}
 BuildRequires: libffi-devel
@@ -1283,7 +1281,7 @@ bash ../configure \
     --with-version-build=%{buildver} \
     --with-version-pre="ea" \
     --with-version-opt="" \
-    --with-boot-jdk=/usr/lib/jvm/java-10-openjdk \
+    --with-boot-jdk=/usr/lib/jvm/java-11-openjdk \
     --with-debug-level=$debugbuild \
     --with-native-debug-symbols=internal \
     --enable-unlimited-crypto \
@@ -1734,6 +1732,12 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon Jul 30 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.22-5
+- now buildrequires javapackages-filesystem as the  issue with macros should be fixed
+
+* Wed Jul 18 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.22-2
+- changed to build by itself instead of by jdk10
+
 * Tue Jul 17 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.22-1
 - added Recommends gtk3 for main package
 - changed BuildRequires from gtk2-devel to gtk3-devel (it can be more likely dropped)
