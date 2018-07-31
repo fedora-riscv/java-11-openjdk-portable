@@ -837,7 +837,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 5%{?dist}
+Release: 6%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -946,7 +946,7 @@ BuildRequires: pkgconfig
 BuildRequires: xorg-x11-proto-devel
 BuildRequires: zip
 BuildRequires: javapackages-filesystem
-BuildRequires: java-openjdk-devel
+BuildRequires: java-11-openjdk-devel
 # Zero-assembler build requirement
 %ifnarch %{jit_arches}
 BuildRequires: libffi-devel
@@ -1281,7 +1281,7 @@ bash ../configure \
     --with-version-build=%{buildver} \
     --with-version-pre="ea" \
     --with-version-opt="" \
-    --with-boot-jdk=/usr/lib/jvm/java-10-openjdk \
+    --with-boot-jdk=/usr/lib/jvm/java-11-openjdk \
     --with-debug-level=$debugbuild \
     --with-native-debug-symbols=internal \
     --enable-unlimited-crypto \
