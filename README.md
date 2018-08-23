@@ -6,3 +6,4 @@ JDK11 is last LTS release of Java platform. It is bringing many cool improvement
 See announcement: http://mail.openjdk.java.net/pipermail/discuss/2017-September/004281.html
 See java SIG plans: https://jvanek.fedorapeople.org/devconf/2018/changesInjavaReleaseProcess.pdf
 
+https://fedoraproject.org/wiki/Changes/java-11-openjdk-TechPreview
