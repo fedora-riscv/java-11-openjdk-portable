@@ -597,8 +597,6 @@ exit 0
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/management/management.properties
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/net.properties
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/sound.properties
-# accessibility have package over user maintenance, so not config-noreplace
-%config  %{etcjavadir -- %{?1}}/conf/accessibility.properties
 %{_jvmdir}/%{sdkdir -- %{?1}}/conf
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/security
 }
@@ -704,7 +702,7 @@ OrderWithRequires: %{name}-headless%{?1}%{?_isa} = %{epoch}:%{version}-%{release
 # for java-X-openjdk package's desktop binding
 Recommends: gtk3%{?_isa}
 
-Provides: java-%{javaver}-%{origin} = %{epoch}:%{version}-%{release}
+Provides: java-%{javaver}-%{origin}%{?1} = %{epoch}:%{version}-%{release}
 
 # Standard JPackage base provides
 Provides: jre = %{javaver}%{?1}
@@ -1519,12 +1517,6 @@ mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/.java/.systemPrefs
 # copy samples next to demos; samples are mostly js files
 cp -r %{top_level_dir_name}/src/sample  $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/
 
-pushd $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/conf/
-  echo "#Config file to  enable java-atk-wrapper" > accessibility.properties
-  echo "" >> accessibility.properties
-  echo "assistive_technologies=org.GNOME.Accessibility.AtkWrapper" >> accessibility.properties
-  echo "" >> accessibility.properties
-popd
 
 # moving config files to /etc
 mkdir -p $RPM_BUILD_ROOT/%{etcjavadir -- $suffix}
@@ -1732,6 +1724,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Aug 23 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.22-6
+- dissabled accessibility, fixed provides for main package's debug variant
+
 * Mon Jul 30 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.22-5
 - now buildrequires javapackages-filesystem as the  issue with macros should be fixed
 
