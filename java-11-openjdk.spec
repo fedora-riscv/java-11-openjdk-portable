@@ -835,7 +835,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 7%{?dist}
+Release: 8%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1724,6 +1724,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Wed Aug 29 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.22-8
+- Adjust system NSS patch, RHBZ-1565658-system-nss-SunEC.patch, so
+  as to filter -Wl,--as-needed from linker flags. Fixes FTBFS issue.
+  Resolves: RHBZ#1623437
+
 * Thu Aug 23 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.22-6
 - dissabled accessibility, fixed provides for main package's debug variant
 
