@@ -196,7 +196,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        22
+%global buildver        28
 # priority must be 7 digits in total
 # setting to 1, so debug ones can have 0
 %global priority        00000%{minorver}1
@@ -835,7 +835,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 8%{?dist}
+Release: 1%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1724,6 +1724,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Fri Aug 31 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.28-1
+- Update to latest upstream build jdk11+28, the first release
+  candidate.
+
 * Wed Aug 29 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.22-8
 - Adjust system NSS patch, RHBZ-1565658-system-nss-SunEC.patch, so
   as to filter -Wl,--as-needed from linker flags. Fixes FTBFS issue.
