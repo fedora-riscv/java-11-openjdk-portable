@@ -834,7 +834,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 2%{?dist}
+Release: 3%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1294,6 +1294,9 @@ bash ../configure \
     --with-extra-ldflags="%{ourldflags}" \
     --with-num-cores="$NUM_PROC" \
     --disable-javac-server \
+%ifarch x86_64
+    --with-jvm-features=zgc \
+%endif
     --disable-warnings-as-errors
 
 make \
@@ -1723,6 +1726,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Fri Sep 7 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.28-3
+- Enable ZGC on x86_64.
+
 * Thu Sep 4 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.28-2
 - jfr/*jfc files listed for all arches
 - lib/classlist do not exists s390, ifarch-ed via jit_arches out
