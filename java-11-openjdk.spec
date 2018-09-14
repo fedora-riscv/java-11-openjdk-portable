@@ -1746,7 +1746,7 @@ require "copy_jdk_configs.lua"
 * Fri Sep 7 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.28-3
 - Enable ZGC on x86_64.
 
-* Thu Sep 4 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.28-2
+* Tue Sep 4 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.28-2
 - jfr/*jfc files listed for all arches
 - lib/classlist do not exists s390, ifarch-ed via jit_arches out
 
