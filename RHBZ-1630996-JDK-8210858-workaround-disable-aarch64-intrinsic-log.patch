@@ -1,0 +1,13 @@
+diff --git a/src/hotspot/cpu/aarch64/stubGenerator_aarch64.cpp b/src/hotspot/cpu/aarch64/stubGenerator_aarch64.cpp
+--- a/src/hotspot/cpu/aarch64/stubGenerator_aarch64.cpp
++++ b/src/hotspot/cpu/aarch64/stubGenerator_aarch64.cpp
+@@ -5741,7 +5741,8 @@
+     }
+ 
+     if (vmIntrinsics::is_intrinsic_available(vmIntrinsics::_dlog)) {
+-      StubRoutines::_dlog = generate_dlog();
++      // disabled pending fix and retest of generated code
++      // StubRoutines::_dlog = generate_dlog();
+     }
+ 
+     if (vmIntrinsics::is_intrinsic_available(vmIntrinsics::_dsin)) {

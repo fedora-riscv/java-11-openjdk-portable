@@ -838,7 +838,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 5%{?dist}
+Release: 6%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -914,6 +914,10 @@ Patch5:    RHBZ-1565658-system-nss-SunEC.patch
 # back to C code. Re-enable once JDK-8210461 is fixed and
 # available in jdk11u.
 Patch6:    RHBZ-1628612-JDK-8210461-workaround-disable-aarch64-intrinsic.patch
+# Temporarily disable log intrinsics on aarch64, falling
+# back to C code. Re-enable once JDK-8210858 is fixed and
+# available in jdk11u.
+Patch7:    RHBZ-1630996-JDK-8210858-workaround-disable-aarch64-intrinsic-log.patch
 
 #############################################
 #
@@ -1185,6 +1189,7 @@ pushd %{top_level_dir_name}
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
+%patch7 -p1
 
 popd # openjdk
 
@@ -1735,6 +1740,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Sep 20 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.28-6
+- Add patch, RHBZ-1630996-JDK-8210858-workaround-disable-aarch64-intrinsic-log.patch,
+  so as to disable log math intrinsic on aarch64. Work-around for
+  JDK-8210858
+
 * Thu Sep 13 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.28-5
 - Add patch, RHBZ-1628612-JDK-8210461-workaround-disable-aarch64-intrinsic.patch,
   so as to disable dsin/dcos math intrinsics on aarch64. Work-around for
