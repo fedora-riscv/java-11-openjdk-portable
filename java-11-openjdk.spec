@@ -104,11 +104,10 @@
 
 
 # Filter out flags from the optflags macro that cause problems with the OpenJDK build
-# We filter out -O flags so that the optimization of HotSpot is not lowered from O3 to O2
 # We filter out -Wall which will otherwise cause HotSpot to produce hundreds of thousands of warnings (100+mb logs)
 # We replace it with -Wformat (required by -Werror=format-security) and -Wno-cpp to avoid FORTIFY_SOURCE warnings
 # We filter out -fexceptions as the HotSpot build explicitly does -fno-exceptions and it's otherwise the default for C++
-%global ourflags %(echo %optflags | sed -e 's|-Wall|-Wformat -Wno-cpp|' | sed -r -e 's|-O[0-9]*||')
+%global ourflags %(echo %optflags | sed -e 's|-Wall|-Wformat -Wno-cpp|')
 %global ourcppflags %(echo %ourflags | sed -e 's|-fexceptions||')
 %global ourldflags %{__global_ldflags}
 
@@ -212,7 +211,7 @@
 # output dir stub
 %define buildoutputdir() %{expand:openjdk/build%{?1}}
 # we can copy the javadoc to not arched dir, or make it not noarch
-%define uniquejavadocdir()    %{expand:%{fullversion}%{?1}}
+%define uniquejavadocdir()    %{expand:%{fullversion}.%{_arch}%{?1}}
 # main id and dir of this jdk
 %define uniquesuffix()        %{expand:%{fullversion}.%{_arch}%{?1}}
 
@@ -708,13 +707,13 @@ Recommends: gtk3%{?_isa}
 Provides: java-%{javaver}-%{origin}%{?1} = %{epoch}:%{version}-%{release}
 
 # Standard JPackage base provides
-Provides: jre = %{javaver}%{?1}
-Provides: jre-%{origin}%{?1} = %{epoch}:%{version}-%{release}
+#Provides: jre = %{javaver}%{?1}
+#Provides: jre-%{origin}%{?1} = %{epoch}:%{version}-%{release}
 Provides: jre-%{javaver}%{?1} = %{epoch}:%{version}-%{release}
 Provides: jre-%{javaver}-%{origin}%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}%{?1} = %{epoch}:%{version}-%{release}
-Provides: java-%{origin}%{?1} = %{epoch}:%{version}-%{release}
-Provides: java%{?1} = %{epoch}:%{javaver}
+#Provides: java-%{origin}%{?1} = %{epoch}:%{version}-%{release}
+#Provides: java%{?1} = %{epoch}:%{javaver}
 }
 
 %define java_headless_rpo() %{expand:
@@ -746,14 +745,14 @@ Requires(postun):   chkconfig >= 1.7
 Suggests: lksctp-tools%{?_isa}, pcsc-lite-devel%{?_isa}, cups
 
 # Standard JPackage base provides
-Provides: jre-headless%{?1} = %{epoch}:%{javaver}
+#Provides: jre-headless%{?1} = %{epoch}:%{javaver}
 Provides: jre-%{javaver}-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
-Provides: jre-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
+#Provides: jre-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
 Provides: jre-%{javaver}-headless%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-headless%{?1} = %{epoch}:%{version}-%{release}
-Provides: java-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
-Provides: java-headless%{?1} = %{epoch}:%{javaver}
+#Provides: java-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
+#Provides: java-headless%{?1} = %{epoch}:%{javaver}
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=1312019
 Provides: /usr/bin/jjs
@@ -838,7 +837,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 6%{?dist}
+Release: 8%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -924,6 +923,22 @@ Patch7:    RHBZ-1630996-JDK-8210858-workaround-disable-aarch64-intrinsic-log.pat
 # OpenJDK specific patches
 #
 #############################################
+
+# 8210416, RHBZ#1624122: [linux] Poor StrictMath performance due to non-optimized compilation
+Patch8:    JDK-8210416-RHBZ-1624122-fdlibm-opt-fix.patch
+# 8210425, RHBZ#1624122: [x86] sharedRuntimeTrig/sharedRuntimeTrans compiled without optimization
+Patch9:    JDK-8210425-RHBZ-1624122-sharedRuntimeTrig-opt-fix.patch
+
+#############################################
+#
+# JDK 9+ only patches
+#
+#############################################
+
+# 8210647, RHBZ#1624122: libsaproc is being compiled without optimization
+Patch10:    JDK-8210647-RHBZ-1624122-libsaproc-opt-fix.patch
+# 8210703, RHBZ#1624122: vmStructs.cpp compiled with -O0
+Patch11:    JDK-8210703-RHBZ-1624122-vmStructs-opt-fix.patch
 
 
 BuildRequires: autoconf
@@ -1190,6 +1205,11 @@ pushd %{top_level_dir_name}
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
+%patch8 -p1
+%patch9 -p1
+%patch10 -p1
+%patch11 -p1
+
 
 popd # openjdk
 
@@ -1740,6 +1760,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Sep 27 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.28-8
+- removed version less provides
+- javadocdir moved to arched dir as it is no longer noarch
+
 * Thu Sep 20 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.28-6
 - Add patch, RHBZ-1630996-JDK-8210858-workaround-disable-aarch64-intrinsic-log.patch,
   so as to disable log math intrinsic on aarch64. Work-around for
@@ -1767,10 +1791,22 @@ require "copy_jdk_configs.lua"
 * Wed Aug 29 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.22-8
 - Adjust system NSS patch, RHBZ-1565658-system-nss-SunEC.patch, so
   as to filter -Wl,--as-needed from linker flags. Fixes FTBFS issue.
-  Resolves: RHBZ#1623437
 
 * Thu Aug 23 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.22-6
 - dissabled accessibility, fixed provides for main package's debug variant
+
+* Wed Sep 12 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.22-6
+- Add patch, JDK-8210416-RHBZ-1624122-fdlibm-opt-fix.patch, so as to
+  optimize compilation of fdlibm library.
+- Add patch, JDK-8210425-RHBZ-1624122-sharedRuntimeTrig-opt-fix.patch, so
+  as to optimize compilation of sharedRuntime{Trig,Trans}.cpp
+- Add patch, JDK-8210647-RHBZ-1624122-libsaproc-opt-fix.patch, so as to
+  optimize compilation of libsaproc (extra c flags won't override
+  optimization).
+- Add patch, JDK-8210703-RHBZ-1624122-vmStructs-opt-fix.patch, so as to
+  optimize compilation of vmStructs.cpp (part of libjvm.so).
+- No longer filter -O flags from C flags coming from
+  redhat-rpm-config.
 
 * Mon Jul 30 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.22-5
 - now buildrequires javapackages-filesystem as the  issue with macros should be fixed
