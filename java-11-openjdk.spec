@@ -1774,6 +1774,19 @@ require "copy_jdk_configs.lua"
   so as to disable dsin/dcos math intrinsics on aarch64. Work-around for
   JDK-8210461.
 
+* Wed Sep 12 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.22-6
+- Add patch, JDK-8210416-RHBZ-1624122-fdlibm-opt-fix.patch, so as to
+  optimize compilation of fdlibm library.
+- Add patch, JDK-8210425-RHBZ-1624122-sharedRuntimeTrig-opt-fix.patch, so
+  as to optimize compilation of sharedRuntime{Trig,Trans}.cpp
+- Add patch, JDK-8210647-RHBZ-1624122-libsaproc-opt-fix.patch, so as to
+  optimize compilation of libsaproc (extra c flags won't override
+  optimization).
+- Add patch, JDK-8210703-RHBZ-1624122-vmStructs-opt-fix.patch, so as to
+  optimize compilation of vmStructs.cpp (part of libjvm.so).
+- No longer filter -O flags from C flags coming from
+  redhat-rpm-config.
+
 * Mon Sep 10 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.28-4
 - link to jhsdb followed its file to ifarch jit_arches ifnarch s390x
 
@@ -1794,19 +1807,6 @@ require "copy_jdk_configs.lua"
 
 * Thu Aug 23 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.22-6
 - dissabled accessibility, fixed provides for main package's debug variant
-
-* Wed Sep 12 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.22-6
-- Add patch, JDK-8210416-RHBZ-1624122-fdlibm-opt-fix.patch, so as to
-  optimize compilation of fdlibm library.
-- Add patch, JDK-8210425-RHBZ-1624122-sharedRuntimeTrig-opt-fix.patch, so
-  as to optimize compilation of sharedRuntime{Trig,Trans}.cpp
-- Add patch, JDK-8210647-RHBZ-1624122-libsaproc-opt-fix.patch, so as to
-  optimize compilation of libsaproc (extra c flags won't override
-  optimization).
-- Add patch, JDK-8210703-RHBZ-1624122-vmStructs-opt-fix.patch, so as to
-  optimize compilation of vmStructs.cpp (part of libjvm.so).
-- No longer filter -O flags from C flags coming from
-  redhat-rpm-config.
 
 * Mon Jul 30 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.22-5
 - now buildrequires javapackages-filesystem as the  issue with macros should be fixed
