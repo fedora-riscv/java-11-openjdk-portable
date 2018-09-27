@@ -1,0 +1,84 @@
+# HG changeset patch
+# User sgehwolf
+# Date 1536142767 -7200
+#      Wed Sep 05 12:19:27 2018 +0200
+# Node ID 7ea57274e55054579d1532e757edb21e67beed83
+# Parent  3ee91722550680c18b977f0e00b1013323b5c9ef
+8210416: [linux] Poor StrictMath performance due to non-optimized compilation
+Summary: Compile fdlibm with -O2 -ffp-contract=off on gcc/clang arches.
+Reviewed-by: aph, erikj, dholmes, darcy
+
+diff --git a/make/autoconf/flags-cflags.m4 b/make/autoconf/flags-cflags.m4
+--- a/make/autoconf/flags-cflags.m4
++++ b/make/autoconf/flags-cflags.m4
+@@ -373,6 +373,18 @@
+ 
+   FLAGS_SETUP_CFLAGS_CPU_DEP([BUILD], [OPENJDK_BUILD_])
+ 
++  COMPILER_FP_CONTRACT_OFF_FLAG="-ffp-contract=off"
++  # Check that the compiler supports -ffp-contract=off flag
++  # Set FDLIBM_CFLAGS to -ffp-contract=off if it does. Empty
++  # otherwise.
++  # These flags are required for GCC-based builds of
++  # fdlibm with optimization without losing precision.
++  # Notably, -ffp-contract=off needs to be added for GCC >= 4.6.
++  FLAGS_COMPILER_CHECK_ARGUMENTS(ARGUMENT: [${COMPILER_FP_CONTRACT_OFF_FLAG}],
++      IF_TRUE: [FDLIBM_CFLAGS=${COMPILER_FP_CONTRACT_OFF_FLAG}],
++      IF_FALSE: [FDLIBM_CFLAGS=""])
++  AC_SUBST(FDLIBM_CFLAGS)
++
+   # Tests are only ever compiled for TARGET
+   CFLAGS_TESTLIB="$CFLAGS_JDKLIB"
+   CXXFLAGS_TESTLIB="$CXXFLAGS_JDKLIB"
+diff --git a/make/autoconf/spec.gmk.in b/make/autoconf/spec.gmk.in
+--- a/make/autoconf/spec.gmk.in
++++ b/make/autoconf/spec.gmk.in
+@@ -450,6 +450,7 @@
+ LIBJSIG_HASHSTYLE_LDFLAGS := @LIBJSIG_HASHSTYLE_LDFLAGS@
+ LIBJSIG_NOEXECSTACK_LDFLAGS := @LIBJSIG_NOEXECSTACK_LDFLAGS@
+ 
++FDLIBM_CFLAGS := @FDLIBM_CFLAGS@
+ JVM_CFLAGS := @JVM_CFLAGS@
+ JVM_LDFLAGS := @JVM_LDFLAGS@
+ JVM_ASFLAGS := @JVM_ASFLAGS@
+diff --git a/make/lib/CoreLibraries.gmk b/make/lib/CoreLibraries.gmk
+--- a/make/lib/CoreLibraries.gmk
++++ b/make/lib/CoreLibraries.gmk
+@@ -39,20 +39,15 @@
+   BUILD_LIBFDLIBM_OPTIMIZATION := HIGH
+ endif
+ 
+-ifeq ($(OPENJDK_TARGET_OS), linux)
+-  ifeq ($(OPENJDK_TARGET_CPU), ppc64)
+-    BUILD_LIBFDLIBM_OPTIMIZATION := HIGH
+-  else ifeq ($(OPENJDK_TARGET_CPU), ppc64le)
+-    BUILD_LIBFDLIBM_OPTIMIZATION := HIGH
+-  else ifeq ($(OPENJDK_TARGET_CPU), s390x)
+-    BUILD_LIBFDLIBM_OPTIMIZATION := HIGH
+-  else ifeq ($(OPENJDK_TARGET_CPU), aarch64)
+-    BUILD_LIBFDLIBM_OPTIMIZATION := HIGH
+-  endif
++# If FDLIBM_CFLAGS is non-empty we know that we can optimize
++# fdlibm by adding those extra C flags. Currently GCC,
++# and clang only.
++ifneq ($(FDLIBM_CFLAGS), )
++  BUILD_LIBFDLIBM_OPTIMIZATION := LOW
+ endif
+ 
+ LIBFDLIBM_SRC := $(TOPDIR)/src/java.base/share/native/libfdlibm
+-LIBFDLIBM_CFLAGS := -I$(LIBFDLIBM_SRC)
++LIBFDLIBM_CFLAGS := -I$(LIBFDLIBM_SRC) $(FDLIBM_CFLAGS)
+ 
+ ifneq ($(OPENJDK_TARGET_OS), macosx)
+   $(eval $(call SetupNativeCompilation, BUILD_LIBFDLIBM, \
+@@ -64,10 +59,6 @@
+       CFLAGS := $(CFLAGS_JDKLIB) $(LIBFDLIBM_CFLAGS), \
+       CFLAGS_windows_debug := -DLOGGING, \
+       CFLAGS_aix := -qfloat=nomaf, \
+-      CFLAGS_linux_ppc64 := -ffp-contract=off, \
+-      CFLAGS_linux_ppc64le := -ffp-contract=off, \
+-      CFLAGS_linux_s390x := -ffp-contract=off, \
+-      CFLAGS_linux_aarch64 := -ffp-contract=off, \
+       DISABLED_WARNINGS_gcc := sign-compare misleading-indentation, \
+       DISABLED_WARNINGS_microsoft := 4146 4244 4018, \
+       ARFLAGS := $(ARFLAGS), \
