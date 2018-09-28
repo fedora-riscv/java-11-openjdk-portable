@@ -1,0 +1,20 @@
+# HG changeset patch
+# User sgehwolf
+# Date 1537541916 -7200
+#      Fri Sep 21 16:58:36 2018 +0200
+# Node ID cd8483acfe56ade257685d93323f78e6e13704a0
+# Parent  e40fa3a70efdbc22f85c0d30350189f632779831
+8210761: libjsig is being compiled without optimization
+Reviewed-by: duke
+
+diff --git a/make/lib/Lib-java.base.gmk b/make/lib/Lib-java.base.gmk
+--- a/make/lib/Lib-java.base.gmk
++++ b/make/lib/Lib-java.base.gmk
+@@ -138,6 +138,7 @@
+ 
+     $(eval $(call SetupJdkLibrary, BUILD_LIBJSIG, \
+         NAME := jsig, \
++        OPTIMIZATION := LOW, \
+         CFLAGS := $(CFLAGS_JDKLIB) $(LIBJSIG_CFLAGS), \
+         LDFLAGS := $(LDFLAGS_JDKLIB) \
+             $(call SET_SHARED_LIBRARY_ORIGIN), \

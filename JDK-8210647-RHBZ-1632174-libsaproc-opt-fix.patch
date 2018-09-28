@@ -1,0 +1,21 @@
+# HG changeset patch
+# User sgehwolf
+# Date 1536751862 -7200
+#      Wed Sep 12 13:31:02 2018 +0200
+# Node ID f95c6746fe256fe0456e0ea0d2930631ef840286
+# Parent  7157249fdd4366d95dd68f3d083ebb0ef84c753b
+8210647: libsaproc is being compiled without optimization
+Reviewed-by: duke
+
+diff --git a/make/lib/Lib-jdk.hotspot.agent.gmk b/make/lib/Lib-jdk.hotspot.agent.gmk
+--- a/make/lib/Lib-jdk.hotspot.agent.gmk
++++ b/make/lib/Lib-jdk.hotspot.agent.gmk
+@@ -52,7 +52,7 @@
+ 
+ $(eval $(call SetupJdkLibrary, BUILD_LIBSA, \
+     NAME := saproc, \
+-    OPTIMIZATION := NONE, \
++    OPTIMIZATION := LOW, \
+     DISABLED_WARNINGS_microsoft := 4267, \
+     DISABLED_WARNINGS_gcc := sign-compare, \
+     DISABLED_WARNINGS_CXX_solstudio := truncwarn unknownpragma, \

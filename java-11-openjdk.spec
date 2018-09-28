@@ -104,10 +104,11 @@
 
 
 # Filter out flags from the optflags macro that cause problems with the OpenJDK build
+# We filter out -O flags so that the optimization of HotSpot is not lowered from O3 to O2
 # We filter out -Wall which will otherwise cause HotSpot to produce hundreds of thousands of warnings (100+mb logs)
 # We replace it with -Wformat (required by -Werror=format-security) and -Wno-cpp to avoid FORTIFY_SOURCE warnings
 # We filter out -fexceptions as the HotSpot build explicitly does -fno-exceptions and it's otherwise the default for C++
-%global ourflags %(echo %optflags | sed -e 's|-Wall|-Wformat -Wno-cpp|')
+%global ourflags %(echo %optflags | sed -e 's|-Wall|-Wformat -Wno-cpp|' | sed -r -e 's|-O[0-9]*||')
 %global ourcppflags %(echo %ourflags | sed -e 's|-fexceptions||')
 %global ourldflags %{__global_ldflags}
 
@@ -837,7 +838,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 8%{?dist}
+Release: 9%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -924,10 +925,10 @@ Patch7:    RHBZ-1630996-JDK-8210858-workaround-disable-aarch64-intrinsic-log.pat
 #
 #############################################
 
-# 8210416, RHBZ#1624122: [linux] Poor StrictMath performance due to non-optimized compilation
-Patch8:    JDK-8210416-RHBZ-1624122-fdlibm-opt-fix.patch
-# 8210425, RHBZ#1624122: [x86] sharedRuntimeTrig/sharedRuntimeTrans compiled without optimization
-Patch9:    JDK-8210425-RHBZ-1624122-sharedRuntimeTrig-opt-fix.patch
+# 8210416, RHBZ#1632174: [linux] Poor StrictMath performance due to non-optimized compilation
+Patch8:    JDK-8210416-RHBZ-1632174-fdlibm-opt-fix.patch
+# 8210425, RHBZ#1632174: [x86] sharedRuntimeTrig/sharedRuntimeTrans compiled without optimization
+Patch9:    JDK-8210425-RHBZ-1632174-sharedRuntimeTrig-opt-fix.patch
 
 #############################################
 #
@@ -935,10 +936,12 @@ Patch9:    JDK-8210425-RHBZ-1624122-sharedRuntimeTrig-opt-fix.patch
 #
 #############################################
 
-# 8210647, RHBZ#1624122: libsaproc is being compiled without optimization
-Patch10:    JDK-8210647-RHBZ-1624122-libsaproc-opt-fix.patch
-# 8210703, RHBZ#1624122: vmStructs.cpp compiled with -O0
-Patch11:    JDK-8210703-RHBZ-1624122-vmStructs-opt-fix.patch
+# 8210647, RHBZ#1632174: libsaproc is being compiled without optimization
+Patch10:    JDK-8210647-RHBZ-1632174-libsaproc-opt-fix.patch
+# 8210761, RHBZ#1632174: libjsig is being compiled without optimization
+Patch11:    JDK-8210761-RHBZ-1632174-libjsig-opt-fix.patch
+# 8210703, RHBZ#1632174: vmStructs.cpp compiled with -O0
+Patch12:    JDK-8210703-RHBZ-1632174-vmStructs-opt-fix.patch
 
 
 BuildRequires: autoconf
@@ -1209,7 +1212,7 @@ pushd %{top_level_dir_name}
 %patch9 -p1
 %patch10 -p1
 %patch11 -p1
-
+%patch12 -p1
 
 popd # openjdk
 
@@ -1760,6 +1763,22 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Fri Sep 28 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.28-9
+- Rework changes from 1:11.0.ea.22-6. RHBZ#1632174 supercedes
+  RHBZ-1624122.
+- Add patch, JDK-8210416-RHBZ-1632174-fdlibm-opt-fix.patch, so as to
+  optimize compilation of fdlibm library.
+- Add patch, JDK-8210425-RHBZ-1632174-sharedRuntimeTrig-opt-fix.patch, so
+  as to optimize compilation of sharedRuntime{Trig,Trans}.cpp
+- Add patch, JDK-8210647-RHBZ-1632174-libsaproc-opt-fix.patch, so as to
+  optimize compilation of libsaproc (extra c flags won't override
+  optimization).
+- Add patch, JDK-8210761-RHBZ-1632174-libjsig-opt-fix.patch, so as to
+  optimize compilation of libjsig.
+- Add patch, JDK-8210703-RHBZ-1632174-vmStructs-opt-fix.patch, so as to
+  optimize compilation of vmStructs.cpp (part of libjvm.so).
+- Reinstate filtering of opt flags coming from redhat-rpm-config.
+
 * Thu Sep 27 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.28-8
 - removed version less provides
 - javadocdir moved to arched dir as it is no longer noarch
