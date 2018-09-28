@@ -189,7 +189,7 @@
 
 # New Version-String scheme-style defines
 %global majorver 11
-%global securityver ea
+%global securityver 0
 
 # Standard JPackage naming and versioning defines
 %global origin          openjdk
@@ -838,7 +838,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 9%{?dist}
+Release: 1%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1313,7 +1313,7 @@ bash ../configure \
     --with-jobs=1 \
 %endif
     --with-version-build=%{buildver} \
-    --with-version-pre="ea" \
+    --with-version-pre="" \
     --with-version-opt="" \
     --with-boot-jdk=/usr/lib/jvm/java-11-openjdk \
     --with-debug-level=$debugbuild \
@@ -1533,7 +1533,7 @@ popd
 # Install Javadoc documentation
 install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}
 cp -a %{buildoutputdir -- $suffix}/images/docs $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}
-cp -a %{buildoutputdir -- $suffix}/bundles/jdk-%{majorver}-ea+%{buildver}-docs.zip  $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip
+cp -a %{buildoutputdir -- $suffix}/bundles/jdk-%{majorver}+%{buildver}-docs.zip  $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip
 
 # Install icons and menu entries
 for s in 16 24 32 48 ; do
@@ -1763,6 +1763,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Fri Sep 28 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.0.28-1
+- Identify as GA version and no longer as early access (EA).
+- JDK 11 has been released for GA on 2018-09-25.
+
 * Fri Sep 28 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.28-9
 - Rework changes from 1:11.0.ea.22-6. RHBZ#1632174 supercedes
   RHBZ-1624122.
