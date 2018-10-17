@@ -190,6 +190,9 @@
 # New Version-String scheme-style defines
 %global majorver 11
 %global securityver 0
+# Used via new version scheme. JDK 11 was
+# GA'ed in September 2018 => 18.9
+%global vendor_version_string 18.9
 
 # Standard JPackage naming and versioning defines
 %global origin          openjdk
@@ -838,7 +841,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 1%{?dist}
+Release: 2%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1315,6 +1318,7 @@ bash ../configure \
     --with-version-build=%{buildver} \
     --with-version-pre="" \
     --with-version-opt="" \
+    --with-vendor-version-string="%{vendor_version_string}" \
     --with-boot-jdk=/usr/lib/jvm/java-11-openjdk \
     --with-debug-level=$debugbuild \
     --with-native-debug-symbols=internal \
@@ -1763,6 +1767,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Wed Oct 17 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.0.28-2
+- Use --with-vendor-version-string=18.9 so as to show original
+  GA date for the JDK.
+
 * Fri Sep 28 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.0.28-1
 - Identify as GA version and no longer as early access (EA).
 - JDK 11 has been released for GA on 2018-09-25.
