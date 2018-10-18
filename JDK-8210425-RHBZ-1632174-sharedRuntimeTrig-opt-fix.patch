@@ -10,8 +10,8 @@ Reviewed-by: duke
 diff --git a/make/hotspot/lib/JvmOverrideFiles.gmk b/make/hotspot/lib/JvmOverrideFiles.gmk
 --- a/make/hotspot/lib/JvmOverrideFiles.gmk
 +++ b/make/hotspot/lib/JvmOverrideFiles.gmk
-@@ -41,20 +41,26 @@
-   BUILD_LIBJVM_shenandoahTraversalGC.cpp_CXXFLAGS := --param inline-unit-growth=1000
+@@ -43,20 +43,26 @@ ifeq ($(TOOLCHAIN_TYPE), gcc)
+   endif
  endif
  
 +LIBJVM_FDLIBM_COPY_OPT_FLAG := $(CXX_O_FLAG_NONE)
@@ -40,9 +40,9 @@ diff --git a/make/hotspot/lib/JvmOverrideFiles.gmk b/make/hotspot/lib/JvmOverrid
 -    endif
 +  ifeq ($(TOOLCHAIN_TYPE), clang)
 +    JVM_PRECOMPILED_HEADER_EXCLUDE := \
-+	sharedRuntimeTrig.cpp \
-+	sharedRuntimeTrans.cpp \
-+	#
++       sharedRuntimeTrig.cpp \
++       sharedRuntimeTrans.cpp \
++       #
    endif
  
    ifeq ($(OPENJDK_TARGET_CPU), x86)

@@ -35,7 +35,7 @@ fi
 export PROJECT_NAME="shenandoah"
 export REPO_NAME="jdk11"
 # warning, clonning without shenadnaoh suffix, you will clone pure jdk - thus without shenandaoh GC
-export VERSION="shenandoah-jdk-11+28"
+export VERSION="shenandoah-jdk-11.0.1+13"
 export COMPRESSION=xz
 # unset tapsets overrides
 export OPENJDK_URL=""
