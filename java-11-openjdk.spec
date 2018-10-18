@@ -193,6 +193,14 @@
 # Used via new version scheme. JDK 11 was
 # GA'ed in September 2018 => 18.9
 %global vendor_version_string 18.9
+# Add LTS designator for RHEL builds
+%if 0%{?rhel}
+  %global lts_designator "LTS"
+  %global lts_designator_zip -%{lts_designator}
+%else
+  %global lts_designator ""
+  %global lts_designator_zip ""
+%endif
 
 # Standard JPackage naming and versioning defines
 %global origin          openjdk
@@ -841,7 +849,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 1%{?dist}
+Release: 2%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1317,7 +1325,7 @@ bash ../configure \
 %endif
     --with-version-build=%{buildver} \
     --with-version-pre="" \
-    --with-version-opt="" \
+    --with-version-opt=%{lts_designator} \
     --with-vendor-version-string="%{vendor_version_string}" \
     --with-boot-jdk=/usr/lib/jvm/java-11-openjdk \
     --with-debug-level=$debugbuild \
@@ -1537,7 +1545,7 @@ popd
 # Install Javadoc documentation
 install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}
 cp -a %{buildoutputdir -- $suffix}/images/docs $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}
-cp -a %{buildoutputdir -- $suffix}/bundles/jdk-%{newjavaver}+%{buildver}-docs.zip  $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip
+cp -a %{buildoutputdir -- $suffix}/bundles/jdk-%{newjavaver}+%{buildver}%{lts_designator_zip}-docs.zip $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip
 
 # Install icons and menu entries
 for s in 16 24 32 48 ; do
@@ -1767,6 +1775,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Oct 18 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.1.13-2
+- Use LTS designator in version output for RHEL.
+
 * Thu Oct 18 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.1.13-1
 - Update to October 2018 CPU release, 11.0.1+13.
 
