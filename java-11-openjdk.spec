@@ -849,7 +849,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 3%{?dist}
+Release: 4%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -949,6 +949,12 @@ Patch12:    JDK-8210703-RHBZ-1632174-vmStructs-opt-fix.patch
 # intrinsics on aarch64, falling back to C code. Re-enable once JDK-8210461
 # is fixed and available in jdk11u.
 Patch6:    JDK-8211105-aarch64-log-sin-intrinsics-disable.patch
+#############################################
+#
+# Patches appearing in 11.0.2
+#
+#############################################
+Patch584: jdk8209639-rh1640127-coalesce_attempted_spill_non_spillable_02.patch
 
 BuildRequires: autoconf
 BuildRequires: automake
@@ -1218,7 +1224,7 @@ pushd %{top_level_dir_name}
 %patch10 -p1
 %patch11 -p1
 %patch12 -p1
-
+%patch584 -p1
 popd # openjdk
 
 %patch1000
@@ -1769,6 +1775,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Fri Oct 26 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.1.13-3
+- added Patch584 jdk8209639-rh1640127-coalesce_attempted_spill_non_spillable_02.patch
+
 * Mon Oct 29 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.1.13-3
 - Use upstream's version of Aarch64 intrinsics disable patch:
   - Removed:
