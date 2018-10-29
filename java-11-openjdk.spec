@@ -849,7 +849,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 2%{?dist}
+Release: 3%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -921,14 +921,6 @@ Patch3:    libjpeg-turbo-1.4-compat.patch
 Patch4:    RHBZ-1249083-system-crypto-policy-PR3183.patch
 # System NSS via SunEC Provider
 Patch5:    RHBZ-1565658-system-nss-SunEC.patch
-# Temporarily disable dsin/dcos intrinsics on aarch64, falling
-# back to C code. Re-enable once JDK-8210461 is fixed and
-# available in jdk11u.
-Patch6:    RHBZ-1628612-JDK-8210461-workaround-disable-aarch64-intrinsic.patch
-# Temporarily disable log intrinsics on aarch64, falling
-# back to C code. Re-enable once JDK-8210858 is fixed and
-# available in jdk11u.
-Patch7:    RHBZ-1630996-JDK-8210858-workaround-disable-aarch64-intrinsic-log.patch
 
 #############################################
 #
@@ -953,7 +945,10 @@ Patch10:    JDK-8210647-RHBZ-1632174-libsaproc-opt-fix.patch
 Patch11:    JDK-8210761-RHBZ-1632174-libjsig-opt-fix.patch
 # 8210703, RHBZ#1632174: vmStructs.cpp compiled with -O0
 Patch12:    JDK-8210703-RHBZ-1632174-vmStructs-opt-fix.patch
-
+# 8211105, RHBZ-1628612, RHBZ-1630996: Temporarily disable dsin/dcos/log
+# intrinsics on aarch64, falling back to C code. Re-enable once JDK-8210461
+# is fixed and available in jdk11u.
+Patch6:    JDK-8211105-aarch64-log-sin-intrinsics-disable.patch
 
 BuildRequires: autoconf
 BuildRequires: automake
@@ -1218,7 +1213,6 @@ pushd %{top_level_dir_name}
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
-%patch7 -p1
 %patch8 -p1
 %patch9 -p1
 %patch10 -p1
@@ -1775,6 +1769,14 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon Oct 29 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.1.13-3
+- Use upstream's version of Aarch64 intrinsics disable patch:
+  - Removed:
+    RHBZ-1628612-JDK-8210461-workaround-disable-aarch64-intrinsic.patch
+    RHBZ-1630996-JDK-8210858-workaround-disable-aarch64-intrinsic-log.patch
+  - Superceded by:
+    JDK-8211105-aarch64-log-sin-intrinsics-disable.patch
+
 * Thu Oct 18 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.1.13-2
 - Use LTS designator in version output for RHEL.
 
