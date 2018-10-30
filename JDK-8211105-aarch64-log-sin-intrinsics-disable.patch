@@ -1,0 +1,35 @@
+# HG changeset patch
+# User adinn
+# Date 1537977709 -3600
+#      Wed Sep 26 17:01:49 2018 +0100
+# Node ID 18426968f11cd0c3b238dec365003798d07576fc
+# Parent  0abe9de66ea9e1371bf35a2394daf31d8bfada98
+8211105: AArch64: Disable cos/sin and log intrinsics in jdk11u pending fix
+Summary: AArch64 cos/sin and log intrinsics are currently broken so should be disabled
+Reviewed-by: aph, shade
+
+diff --git a/src/hotspot/cpu/aarch64/stubGenerator_aarch64.cpp b/src/hotspot/cpu/aarch64/stubGenerator_aarch64.cpp
+--- a/src/hotspot/cpu/aarch64/stubGenerator_aarch64.cpp
++++ b/src/hotspot/cpu/aarch64/stubGenerator_aarch64.cpp
+@@ -5741,15 +5741,18 @@
+     }
+ 
+     if (vmIntrinsics::is_intrinsic_available(vmIntrinsics::_dlog)) {
+-      StubRoutines::_dlog = generate_dlog();
++      // disabled pending fix and retest of generated code via JDK-8210858
++      // StubRoutines::_dlog = generate_dlog();
+     }
+ 
+     if (vmIntrinsics::is_intrinsic_available(vmIntrinsics::_dsin)) {
+-      StubRoutines::_dsin = generate_dsin_dcos(/* isCos = */ false);
++      // disabled pending fix and retest of generated code via JDK-8210461
++      // StubRoutines::_dsin = generate_dsin_dcos(/* isCos = */ false);
+     }
+ 
+     if (vmIntrinsics::is_intrinsic_available(vmIntrinsics::_dcos)) {
+-      StubRoutines::_dcos = generate_dsin_dcos(/* isCos = */ true);
++      // disabled pending fix and retest of generated code via JDK-8210461
++      // StubRoutines::_dcos = generate_dsin_dcos(/* isCos = */ true);
+     }
+   }
+ 
