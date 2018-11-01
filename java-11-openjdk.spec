@@ -1775,7 +1775,7 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
-* Fri Oct 26 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.1.13-3
+* Thu Nov 01 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.1.13-3
 - added Patch584 jdk8209639-rh1640127-coalesce_attempted_spill_non_spillable_02.patch
 
 * Mon Oct 29 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.1.13-3
