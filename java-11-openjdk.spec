@@ -190,6 +190,10 @@
 # New Version-String scheme-style defines
 %global majorver 11
 %global securityver 1
+# buildjdkver is usually same as %{majorver}, 
+# but in time of bootstrap of next jdk, it is majorver-1, 
+# and this it is better to change it here, on single place
+%global buildjdkver %{majorver}
 # Used via new version scheme. JDK 11 was
 # GA'ed in September 2018 => 18.9
 %global vendor_version_string 18.9
@@ -985,7 +989,7 @@ BuildRequires: pkgconfig
 BuildRequires: xorg-x11-proto-devel
 BuildRequires: zip
 BuildRequires: javapackages-filesystem
-BuildRequires: java-11-openjdk-devel
+BuildRequires: java-%{buildjdkver}-openjdk-devel
 # Zero-assembler build requirement
 %ifnarch %{jit_arches}
 BuildRequires: libffi-devel
@@ -1327,7 +1331,7 @@ bash ../configure \
     --with-version-pre="" \
     --with-version-opt=%{lts_designator} \
     --with-vendor-version-string="%{vendor_version_string}" \
-    --with-boot-jdk=/usr/lib/jvm/java-11-openjdk \
+    --with-boot-jdk=/usr/lib/jvm/java-%{buildjdkver}-openjdk \
     --with-debug-level=$debugbuild \
     --with-native-debug-symbols=internal \
     --enable-unlimited-crypto \
