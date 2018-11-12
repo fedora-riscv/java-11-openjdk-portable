@@ -855,7 +855,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 5%{?dist}
+Release: 6%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -930,6 +930,14 @@ Patch5:    RHBZ-1565658-system-nss-SunEC.patch
 
 #############################################
 #
+# Shenandaoh specific patches
+#
+#############################################
+
+Patch585: rh1648995-shenandoah_array_copy_broken_by_not_always_copy_forward_for_disjoint_arrays.patch
+
+#############################################
+#
 # OpenJDK specific patches
 #
 #############################################
@@ -955,11 +963,13 @@ Patch12:    JDK-8210703-RHBZ-1632174-vmStructs-opt-fix.patch
 # intrinsics on aarch64, falling back to C code. Re-enable once JDK-8210461
 # is fixed and available in jdk11u.
 Patch6:    JDK-8211105-aarch64-log-sin-intrinsics-disable.patch
+
 #############################################
 #
 # Patches appearing in 11.0.2
 #
 #############################################
+
 Patch584: jdk8209639-rh1640127-coalesce_attempted_spill_non_spillable_02.patch
 
 BuildRequires: autoconf
@@ -1231,6 +1241,7 @@ pushd %{top_level_dir_name}
 %patch11 -p1
 %patch12 -p1
 %patch584 -p1
+%patch585 -p1
 popd # openjdk
 
 %patch1000
@@ -1781,6 +1792,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon Nov 12 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.1.13-6
+- fixed tck failures of arraycopy and process exec with shenandoah on
+- added patch585 rh1648995-shenandoah_array_copy_broken_by_not_always_copy_forward_for_disjoint_arrays.patch
+
 * Wed Nov 07 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.1.13-5
 - headless' suggests of cups, replaced by Requires of cups-libs
 
