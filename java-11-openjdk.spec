@@ -855,7 +855,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 6%{?dist}
+Release: 7%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -916,17 +916,17 @@ Source14: TestECDSA.java
 
 # NSS via SunPKCS11 Provider (disabled comment
 # due to memory leak).
-Patch1000: enableCommentedOutSystemNss.patch
+Patch1000: rh1648249-add_commented_out_nss_cfg_provider_to_java_security.patch
 
 # Ignore AWTError when assistive technologies are loaded
-Patch1:    accessible-toolkit.patch
+Patch1:    rh1648242-accessible_toolkit_crash_do_not_break_jvm.patch
 # Restrict access to java-atk-wrapper classes
-Patch2:    java-atk-wrapper-security.patch
-Patch3:    libjpeg-turbo-1.4-compat.patch
+Patch2:    rh1648644-java_access_bridge_privileged_security.patch
+Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk10_and_up.patch
 # Follow system wide crypto policy RHBZ#1249083
-Patch4:    RHBZ-1249083-system-crypto-policy-PR3183.patch
+Patch4:    pr3183-rh1340845-support_fedora_rhel_system_crypto_policy.patch
 # System NSS via SunEC Provider
-Patch5:    RHBZ-1565658-system-nss-SunEC.patch
+Patch5:    pr1983-rh1565658-support_using_the_system_installation_of_nss_with_the_sunec_provider_jdk11.patch
 
 #############################################
 #
@@ -943,9 +943,9 @@ Patch585: rh1648995-shenandoah_array_copy_broken_by_not_always_copy_forward_for_
 #############################################
 
 # 8210416, RHBZ#1632174: [linux] Poor StrictMath performance due to non-optimized compilation
-Patch8:    JDK-8210416-RHBZ-1632174-fdlibm-opt-fix.patch
+Patch8:    jdk8210416-rh1632174-compile_fdlibm_with_o2_ffp_contract_off_on_gcc_clang_arches.patch
 # 8210425, RHBZ#1632174: [x86] sharedRuntimeTrig/sharedRuntimeTrans compiled without optimization
-Patch9:    JDK-8210425-RHBZ-1632174-sharedRuntimeTrig-opt-fix.patch
+Patch9:    jdk8210425-rh1632174-sharedRuntimeTrig_sharedRuntimeTrans_compiled_without_optimization.patch
 
 #############################################
 #
@@ -954,15 +954,15 @@ Patch9:    JDK-8210425-RHBZ-1632174-sharedRuntimeTrig-opt-fix.patch
 #############################################
 
 # 8210647, RHBZ#1632174: libsaproc is being compiled without optimization
-Patch10:    JDK-8210647-RHBZ-1632174-libsaproc-opt-fix.patch
+Patch10:    jdk8210647-rh1632174-libsaproc_is_being_compiled_without_optimization.patch
 # 8210761, RHBZ#1632174: libjsig is being compiled without optimization
-Patch11:    JDK-8210761-RHBZ-1632174-libjsig-opt-fix.patch
+Patch11:    jdk8210761-rh1632174-libjsig_is_being_compiled_without_optimization.patch
 # 8210703, RHBZ#1632174: vmStructs.cpp compiled with -O0
-Patch12:    JDK-8210703-RHBZ-1632174-vmStructs-opt-fix.patch
+Patch12:    jdk8210703-rh1632174-vmStructs_cpp_no_longer_compiled_with_o0
 # 8211105, RHBZ-1628612, RHBZ-1630996: Temporarily disable dsin/dcos/log
 # intrinsics on aarch64, falling back to C code. Re-enable once JDK-8210461
 # is fixed and available in jdk11u.
-Patch6:    JDK-8211105-aarch64-log-sin-intrinsics-disable.patch
+Patch6:    jdk8211105-aarch64-disable_cos_sin_and_log_intrinsics.patch
 
 #############################################
 #
@@ -970,7 +970,7 @@ Patch6:    JDK-8211105-aarch64-log-sin-intrinsics-disable.patch
 #
 #############################################
 
-Patch584: jdk8209639-rh1640127-coalesce_attempted_spill_non_spillable_02.patch
+Patch584: jdk8209639-rh1640127-02-coalesce_attempted_spill_non_spillable.patch
 
 BuildRequires: autoconf
 BuildRequires: automake
@@ -1800,7 +1800,7 @@ require "copy_jdk_configs.lua"
 - headless' suggests of cups, replaced by Requires of cups-libs
 
 * Thu Nov 01 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.1.13-3
-- added Patch584 jdk8209639-rh1640127-coalesce_attempted_spill_non_spillable_02.patch
+- added Patch584 jdk8209639-rh1640127-02-coalesce_attempted_spill_non_spillable.patch
 
 * Mon Oct 29 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.1.13-3
 - Use upstream's version of Aarch64 intrinsics disable patch:
@@ -1808,7 +1808,7 @@ require "copy_jdk_configs.lua"
     RHBZ-1628612-JDK-8210461-workaround-disable-aarch64-intrinsic.patch
     RHBZ-1630996-JDK-8210858-workaround-disable-aarch64-intrinsic-log.patch
   - Superceded by:
-    JDK-8211105-aarch64-log-sin-intrinsics-disable.patch
+    jdk8211105-aarch64-disable_cos_sin_and_log_intrinsics.patch
 
 * Thu Oct 18 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.1.13-2
 - Use LTS designator in version output for RHEL.
@@ -1827,16 +1827,16 @@ require "copy_jdk_configs.lua"
 * Fri Sep 28 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.28-9
 - Rework changes from 1:11.0.ea.22-6. RHBZ#1632174 supercedes
   RHBZ-1624122.
-- Add patch, JDK-8210416-RHBZ-1632174-fdlibm-opt-fix.patch, so as to
+- Add patch, jdk8210416-rh1632174-compile_fdlibm_with_o2_ffp_contract_off_on_gcc_clang_arches.patch, so as to
   optimize compilation of fdlibm library.
-- Add patch, JDK-8210425-RHBZ-1632174-sharedRuntimeTrig-opt-fix.patch, so
+- Add patch, jdk8210425-rh1632174-sharedRuntimeTrig_sharedRuntimeTrans_compiled_without_optimization.patch, so
   as to optimize compilation of sharedRuntime{Trig,Trans}.cpp
-- Add patch, JDK-8210647-RHBZ-1632174-libsaproc-opt-fix.patch, so as to
+- Add patch, jdk8210647-rh1632174-libsaproc_is_being_compiled_without_optimization.patch, so as to
   optimize compilation of libsaproc (extra c flags won't override
   optimization).
-- Add patch, JDK-8210761-RHBZ-1632174-libjsig-opt-fix.patch, so as to
+- Add patch, jdk8210761-rh1632174-libjsig_is_being_compiled_without_optimization.patch, so as to
   optimize compilation of libjsig.
-- Add patch, JDK-8210703-RHBZ-1632174-vmStructs-opt-fix.patch, so as to
+- Add patch, jdk8210703-rh1632174-vmStructs_cpp_no_longer_compiled_with_o0, so as to
   optimize compilation of vmStructs.cpp (part of libjvm.so).
 - Reinstate filtering of opt flags coming from redhat-rpm-config.
 
@@ -1882,7 +1882,7 @@ require "copy_jdk_configs.lua"
   candidate.
 
 * Wed Aug 29 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.22-8
-- Adjust system NSS patch, RHBZ-1565658-system-nss-SunEC.patch, so
+- Adjust system NSS patch, pr1983-rh1565658-support_using_the_system_installation_of_nss_with_the_sunec_provider_jdk11.patch, so
   as to filter -Wl,--as-needed from linker flags. Fixes FTBFS issue.
 
 * Thu Aug 23 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.22-6
@@ -1925,7 +1925,7 @@ require "copy_jdk_configs.lua"
 * Fri Jun 22 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.ea.19-1
 - updated sources to jdk-11+19
 - added patch6 systemLcmsAndJpgFixFor-f0aeede1b855.patch to fix regression of system libraries after f0aeede1b855 commit
-- adapted RHBZ-1565658-system-nss-SunEC.patch to accommodate changes after f0aeede1b855 commit
+- adapted pr1983-rh1565658-support_using_the_system_installation_of_nss_with_the_sunec_provider_jdk11.patch to accommodate changes after f0aeede1b855 commit
 
 * Thu Jun 14 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.ea.16-5
 - Revert rename: java-11-openjdk => java-openjdk.
@@ -1951,7 +1951,7 @@ require "copy_jdk_configs.lua"
 - Updated and renamed patches:
   java-openjdk-s390-size_t.patch => JDK-8203030-s390-size_t.patch
 - Updated patches for JDK 11:
-  RHBZ-1565658-system-nss-SunEC.patch
+  pr1983-rh1565658-support_using_the_system_installation_of_nss_with_the_sunec_provider_jdk11.patch
 
 * Tue Jun 12 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:10.0.1.10-9
 - Use proper private_libs expression for filtering requires/provides.
@@ -1988,9 +1988,9 @@ require "copy_jdk_configs.lua"
   JDK-8201509-s390-atomic_store.patch
 - Renamed patches for clarity:
   aarch64BuildFailure.patch => JDK-8200556-aarch64-slowdebug-crash.patch
-  systemCryptoPolicyPR3183.patch => RHBZ-1249083-system-crypto-policy-PR3183.patch
+  systemCryptoPolicyPR3183.patch => pr3183-rh1340845-support_fedora_rhel_system_crypto_policy.patch
   bootcycle_jobs.patch => JDK-8201788-bootcycle-images-jobs.patch
-  system-nss-ec-rh1565658.patch => RHBZ-1565658-system-nss-SunEC.patch
+  system-nss-ec-rh1565658.patch => pr1983-rh1565658-support_using_the_system_installation_of_nss_with_the_sunec_provider_jdk11.patch
 
 * Fri Apr 20 2018 Jiri Vanek <jvanek@redhat.com> - 1:10.0.1.10-1
 - updated to security update 1
