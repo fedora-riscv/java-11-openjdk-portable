@@ -68,6 +68,10 @@
 # similarly for other %%{_jvmdir}/{jre,java} and %%{_javadocdir}/{java,java-zip}
 %define is_release_build() %( if [ "%{?1}" == "%{debug_suffix_unquoted}" ]; then echo "0" ; else echo "1"; fi )
 
+# while JDK is a techpreview(is_system_jdk=0), some provides are turned off. Once jdk stops to be an techpreview, move it to 1
+# as sytem JDK, we mean any JDK which can run whole system java stack without issues (like bytecode issues, module issues, dependencies...)
+%global is_system_jdk 0
+
 %global aarch64         aarch64 arm64 armv8
 # we need to distinguish between big and little endian PPC64
 %global ppc64le         ppc64le
@@ -145,7 +149,6 @@
 # this is workaround for processing of requires during srpm creation
 %global NSSSOFTOKN_BUILDTIME_VERSION %(if [ "x%{NSSSOFTOKN_BUILDTIME_NUMBER}" == "x" ] ; then echo "" ;else echo ">= %{NSSSOFTOKN_BUILDTIME_NUMBER}" ;fi)
 %global NSS_BUILDTIME_VERSION %(if [ "x%{NSS_BUILDTIME_NUMBER}" == "x" ] ; then echo "" ;else echo ">= %{NSS_BUILDTIME_NUMBER}" ;fi)
-
 
 # fix for https://bugzilla.redhat.com/show_bug.cgi?id=1111349
 %global _privatelibs libsplashscreen[.]so.*|libawt_xawt[.]so.*|libjli[.]so.*|libattach[.]so.*|libawt[.]so.*|libextnet[.]so.*|libawt_headless[.]so.*|libdt_socket[.]so.*|libfontmanager[.]so.*|libinstrument[.]so.*|libj2gss[.]so.*|libj2pcsc[.]so.*|libj2pkcs11[.]so.*|libjaas[.]so.*|libjavajpeg[.]so.*|libjdwp[.]so.*|libjimage[.]so.*|libjsound[.]so.*|liblcms[.]so.*|libmanagement[.]so.*|libmanagement_agent[.]so.*|libmanagement_ext[.]so.*|libmlib_image[.]so.*|libnet[.]so.*|libnio[.]so.*|libprefs[.]so.*|librmi[.]so.*|libsaproc[.]so.*|libsctp[.]so.*|libsunec[.]so.*|libunpack[.]so.*|libzip[.]so.*
@@ -232,9 +235,13 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        13
-# priority must be 7 digits in total
-# setting to 1, so debug ones can have 0
-%global priority        00000%{minorver}1
+# priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
+%if %is_system_jdk
+%global priority %( printf '%02d%02d%02d%02d' %{majorver} {minorver} %{securityver} %{buildver} )
+%else
+# for techpreview, using 1, so slowdebugs can have 0
+%global priority %( printf '%08d' 1 )
+%endif
 %global newjavaver      %{majorver}.%{minorver}.%{securityver}
 
 %global javaver         %{majorver}
@@ -637,6 +644,7 @@ exit 0
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/sound.properties
 %{_jvmdir}/%{sdkdir -- %{?1}}/conf
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/security
+%if %is_system_jdk
 %if %{is_release_build -- %{?1}}
 %ghost %{_bindir}/java
 %ghost %{_jvmdir}/jre
@@ -650,6 +658,7 @@ exit 0
 %ghost %{_jvmdir}/jre-%{origin}
 %ghost %{_jvmdir}/jre-%{javaver}
 %ghost %{_jvmdir}/jre-%{javaver}-%{origin}
+%endif
 %endif
 }
 
@@ -717,6 +726,7 @@ exit 0
 %dir %{tapsetdir}
 %{tapsetdir}/*%{_arch}%{?1}.stp
 %endif
+%if %is_system_jdk
 %if %{is_release_build -- %{?1}}
 %ghost %{_bindir}/javac
 %ghost %{_jvmdir}/java
@@ -748,6 +758,7 @@ exit 0
 %ghost %{_jvmdir}/java-%{javaver}
 %ghost %{_jvmdir}/java-%{javaver}-%{origin}
 %endif
+%endif
 }
 
 %define files_jmods() %{expand:
@@ -768,16 +779,20 @@ exit 0
 %define files_javadoc() %{expand:
 %doc %{_javadocdir}/%{uniquejavadocdir -- %{?1}}
 %license %{buildoutputdir -- %{?1}}/images/%{jdkimage}/legal
+%if %is_system_jdk
 %if %{is_release_build -- %{?1}}
 %ghost %{_javadocdir}/java
+%endif
 %endif
 }
 
 %define files_javadoc_zip() %{expand:
 %doc %{_javadocdir}/%{uniquejavadocdir -- %{?1}}.zip
 %license %{buildoutputdir -- %{?1}}/images/%{jdkimage}/legal
+%if %is_system_jdk
 %if %{is_release_build -- %{?1}}
 %ghost %{_javadocdir}/java-zip
+%endif
 %endif
 }
 
@@ -794,13 +809,15 @@ Recommends: gtk3%{?_isa}
 Provides: java-%{javaver}-%{origin}%{?1} = %{epoch}:%{version}-%{release}
 
 # Standard JPackage base provides
-#Provides: jre = %{javaver}%{?1}
-#Provides: jre-%{origin}%{?1} = %{epoch}:%{version}-%{release}
 Provides: jre-%{javaver}%{?1} = %{epoch}:%{version}-%{release}
 Provides: jre-%{javaver}-%{origin}%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}%{?1} = %{epoch}:%{version}-%{release}
-#Provides: java-%{origin}%{?1} = %{epoch}:%{version}-%{release}
-#Provides: java%{?1} = %{epoch}:%{javaver}
+%if %is_system_jdk
+Provides: java-%{origin}%{?1} = %{epoch}:%{version}-%{release}
+Provides: jre-%{origin}%{?1} = %{epoch}:%{version}-%{release}
+Provides: java%{?1} = %{epoch}:%{version}-%{release}
+Provides: jre%{?1} = %{epoch}:%{version}-%{release}
+%endif
 }
 
 %define java_headless_rpo() %{expand:
@@ -834,14 +851,16 @@ Requires(postun):   chkconfig >= 1.7
 Suggests: lksctp-tools%{?_isa}, pcsc-lite-devel%{?_isa}
 
 # Standard JPackage base provides
-#Provides: jre-headless%{?1} = %{epoch}:%{javaver}
 Provides: jre-%{javaver}-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
-#Provides: jre-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
 Provides: jre-%{javaver}-headless%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-headless%{?1} = %{epoch}:%{version}-%{release}
-#Provides: java-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
-#Provides: java-headless%{?1} = %{epoch}:%{javaver}
+%if %is_system_jdk
+Provides: java-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
+Provides: jre-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
+Provides: jre-headless%{?1} = %{epoch}:%{version}-%{release}
+Provides: java-headless%{?1} = %{epoch}:%{version}-%{release}
+%endif
 }
 
 %define java_devel_rpo() %{expand:
@@ -858,15 +877,16 @@ Requires(postun): %{_sbindir}/alternatives
 Requires(postun):   chkconfig >= 1.7
 
 # Standard JPackage devel provides
-Provides: java-sdk-%{javaver}-%{origin}%{?1} = %{epoch}:%{version}
-Provides: java-sdk-%{javaver}%{?1} = %{epoch}:%{version}
-#Provides: java-sdk-%%{origin}%%{?1} = %%{epoch}:%%{version}
-#Provides: java-sdk%%{?1} = %%{epoch}:%%{javaver}
-Provides: java-%{javaver}-devel%{?1} = %{epoch}:%{version}
-Provides: java-%{javaver}-%{origin}-devel%{?1} = %{epoch}:%{version}
-#Provides: java-devel-%%{origin}%%{?1} = %%{epoch}:%%{version}
-#Provides: java-devel%%{?1} = %%{epoch}:%%{javaver}
-
+Provides: java-sdk-%{javaver}-%{origin}%{?1} = %{epoch}:%{version}-%{release}
+Provides: java-sdk-%{javaver}%{?1} = %{epoch}:%{version}-%{release}
+Provides: java-%{javaver}-devel%{?1} = %{epoch}:%{version}-%{release}
+Provides: java-%{javaver}-%{origin}-devel%{?1} = %{epoch}:%{version}-%{release}
+%if %is_system_jdk
+Provides: java-devel-%{origin}%{?1} = %{epoch}:%{version}-%{release}
+Provides: java-sdk-%{origin}%{?1} = %{epoch}:%{version}-%{release}
+Provides: java-devel%{?1} = %{epoch}:%{version}-%{release}
+Provides: java-sdk%{?1} = %{epoch}:%{version}-%{release}
+%endif
 }
 
 %define java_jmods_rpo() %{expand:
@@ -875,20 +895,22 @@ Provides: java-%{javaver}-%{origin}-devel%{?1} = %{epoch}:%{version}
 Requires:         %{name}-devel%{?1} = %{epoch}:%{version}-%{release}
 OrderWithRequires: %{name}-headless%{?1} = %{epoch}:%{version}-%{release}
 
-Provides: java-jmods%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-jmods%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-%{origin}-jmods%{?1} = %{epoch}:%{version}-%{release}
-
+%if %is_system_jdk
+Provides: java-jmods%{?1} = %{epoch}:%{version}-%{release}
+%endif
 }
 
 %define java_demo_rpo() %{expand:
 Requires: %{name}%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
 OrderWithRequires: %{name}-headless%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
 
-Provides: java-demo%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-demo%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-%{origin}-demo%{?1} = %{epoch}:%{version}-%{release}
-
+%if %is_system_jdk
+Provides: java-demo%{?1} = %{epoch}:%{version}-%{release}
+%endif
 }
 
 %define java_javadoc_rpo() %{expand:
@@ -903,18 +925,22 @@ Requires(postun): %{_sbindir}/alternatives
 Requires(postun):   chkconfig >= 1.7
 
 # Standard JPackage javadoc provides
-Provides: java-javadoc%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-javadoc%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-%{origin}-javadoc%{?1} = %{epoch}:%{version}-%{release}
+%if %is_system_jdk
+Provides: java-javadoc%{?1} = %{epoch}:%{version}-%{release}
+%endif
 }
 
 %define java_src_rpo() %{expand:
 Requires: %{name}-headless%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
 
 # Standard JPackage sources provides
-Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-src%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
+%if %is_system_jdk
+Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
+%endif
 }
 
 # Prevent brp-java-repack-jars from being run
@@ -1286,8 +1312,8 @@ fi
 %setup -q -c -n %{uniquesuffix ""} -T -a 0
 # https://bugzilla.redhat.com/show_bug.cgi?id=1189084
 prioritylength=`expr length %{priority}`
-if [ $prioritylength -ne 7 ] ; then
- echo "priority must be 7 digits in total, violated"
+if [ $prioritylength -ne 8 ] ; then
+ echo "priority must be 8 digits in total, violated"
  exit 14
 fi
 
@@ -1861,6 +1887,7 @@ require "copy_jdk_configs.lua"
 %changelog
 * Wed Dec 5 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.1.13-9
 - for non debug supackages, ghosted all masters and slaves (rhbz1649776)
+- for tech-preview packages, if-outed versionless provides. Aligned versions to be %%{epoch}:%%{version}-%%{release} instead of chaotic
 
 * Wed Nov 28 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.1.13-8
 - Added %%global _find_debuginfo_opts -g
