@@ -53,6 +53,21 @@
 %global build_loop1 %{nil}
 %endif
 
+# We have hardcoded list of files, which  is appearing in alternatives, and in files
+# in alternatives those are slaves and master, very often triplicated by man pages
+# in files all masters and slaves are ghosted
+# the ghosts are here to allow installation via query like `dnf install /usr/bin/java`
+# you can list those files, with appropriate sections: cat *.spec | grep -e --install -e --slave -e post_ 
+# TODO - fix those hardcoded lists via single list
+# those files ,must *NOT* be ghosted for *slowdebug* packages
+# FIXME - if you are moving jshell or jlink or simialr, always modify all three sections
+# you can check via headless and devels:
+#    rpm -ql --noghost java-11-openjdk-headless-11.0.1.13-8.fc29.x86_64.rpm  | grep bin
+# == rpm -ql           java-11-openjdk-headless-slowdebug-11.0.1.13-8.fc29.x86_64.rpm  | grep bin
+# != rpm -ql           java-11-openjdk-headless-11.0.1.13-8.fc29.x86_64.rpm  | grep bin
+# similarly for other %%{_jvmdir}/{jre,java} and %%{_javadocdir}/{java,java-zip}
+%define is_release_build() %( if [ "%{?1}" == "%{debug_suffix_unquoted}" ]; then echo "0" ; else echo "1"; fi )
+
 %global aarch64         aarch64 arm64 armv8
 # we need to distinguish between big and little endian PPC64
 %global ppc64le         ppc64le
@@ -195,7 +210,7 @@
 # New Version-String scheme-style defines
 %global majorver 11
 %global securityver 1
-# buildjdkver is usually same as %{majorver}, 
+# buildjdkver is usually same as %%{majorver},
 # but in time of bootstrap of next jdk, it is majorver-1, 
 # and this it is better to change it here, on single place
 %global buildjdkver %{majorver}
@@ -622,6 +637,20 @@ exit 0
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/sound.properties
 %{_jvmdir}/%{sdkdir -- %{?1}}/conf
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/security
+%if %{is_release_build -- %{?1}}
+%ghost %{_bindir}/java
+%ghost %{_jvmdir}/jre
+# https://bugzilla.redhat.com/show_bug.cgi?id=1312019
+%ghost %{_bindir}/jjs
+%ghost %{_bindir}/keytool
+%ghost %{_bindir}/pack200
+%ghost %{_bindir}/rmid
+%ghost %{_bindir}/rmiregistry
+%ghost %{_bindir}/unpack200
+%ghost %{_jvmdir}/jre-%{origin}
+%ghost %{_jvmdir}/jre-%{javaver}
+%ghost %{_jvmdir}/jre-%{javaver}-%{origin}
+%endif
 }
 
 %define files_devel() %{expand:
@@ -688,6 +717,37 @@ exit 0
 %dir %{tapsetdir}
 %{tapsetdir}/*%{_arch}%{?1}.stp
 %endif
+%if %{is_release_build -- %{?1}}
+%ghost %{_bindir}/javac
+%ghost %{_jvmdir}/java
+%ghost %{_bindir}/jaotc
+%ghost %{_bindir}/jlink
+%ghost %{_bindir}/jmod
+%ghost %{_bindir}/jhsdb
+%ghost %{_bindir}/jar
+%ghost %{_bindir}/jarsigner
+%ghost %{_bindir}/javadoc
+%ghost %{_bindir}/javap
+%ghost %{_bindir}/jcmd
+%ghost %{_bindir}/jconsole
+%ghost %{_bindir}/jdb
+%ghost %{_bindir}/jdeps
+%ghost %{_bindir}/jdeprscan
+%ghost %{_bindir}/jimage
+%ghost %{_bindir}/jinfo
+%ghost %{_bindir}/jmap
+%ghost %{_bindir}/jps
+%ghost %{_bindir}/jrunscript
+%ghost %{_bindir}/jshell
+%ghost %{_bindir}/jstack
+%ghost %{_bindir}/jstat
+%ghost %{_bindir}/jstatd
+%ghost %{_bindir}/rmic
+%ghost %{_bindir}/serialver
+%ghost %{_jvmdir}/java-%{origin}
+%ghost %{_jvmdir}/java-%{javaver}
+%ghost %{_jvmdir}/java-%{javaver}-%{origin}
+%endif
 }
 
 %define files_jmods() %{expand:
@@ -708,11 +768,17 @@ exit 0
 %define files_javadoc() %{expand:
 %doc %{_javadocdir}/%{uniquejavadocdir -- %{?1}}
 %license %{buildoutputdir -- %{?1}}/images/%{jdkimage}/legal
+%if %{is_release_build -- %{?1}}
+%ghost %{_javadocdir}/java
+%endif
 }
 
 %define files_javadoc_zip() %{expand:
 %doc %{_javadocdir}/%{uniquejavadocdir -- %{?1}}.zip
 %license %{buildoutputdir -- %{?1}}/images/%{jdkimage}/legal
+%if %{is_release_build -- %{?1}}
+%ghost %{_javadocdir}/java-zip
+%endif
 }
 
 # not-duplicated requires/provides/obsoletes for normal/debug packages
@@ -776,10 +842,6 @@ Provides: java-%{javaver}-%{origin}-headless%{?1} = %{epoch}:%{version}-%{releas
 Provides: java-%{javaver}-headless%{?1} = %{epoch}:%{version}-%{release}
 #Provides: java-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
 #Provides: java-headless%{?1} = %{epoch}:%{javaver}
-
-# https://bugzilla.redhat.com/show_bug.cgi?id=1312019
-Provides: /usr/bin/jjs
-
 }
 
 %define java_devel_rpo() %{expand:
@@ -860,7 +922,7 @@ Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 8%{?dist}
+Release: 9%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1797,6 +1859,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Wed Dec 5 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.1.13-9
+- for non debug supackages, ghosted all masters and slaves (rhbz1649776)
+
 * Wed Nov 28 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.1.13-8
 - Added %%global _find_debuginfo_opts -g
 - Resolves: RHBZ#1520879 (Detailed NMT issue)
