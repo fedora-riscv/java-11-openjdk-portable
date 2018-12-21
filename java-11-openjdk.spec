@@ -231,7 +231,7 @@
 %global buildver        13
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
-%global priority %( printf '%02d%02d%02d%02d' %{majorver} {minorver} %{securityver} %{buildver} )
+%global priority %( printf '%02d%02d%02d%02d' %{majorver} %{minorver} %{securityver} %{buildver} )
 %else
 # for techpreview, using 1, so slowdebugs can have 0
 %global priority %( printf '%08d' 1 )
@@ -956,7 +956,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 9%{?dist}
+Release: 10%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
