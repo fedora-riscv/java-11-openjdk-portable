@@ -229,6 +229,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        13
+%global tagsuffix       20190101
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
 %global priority %( printf '%02d%02d%02d%02d' %{majorver} %{minorver} %{securityver} %{buildver} )
@@ -956,7 +957,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 10%{?dist}
+Release: 11%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -991,7 +992,7 @@ URL:      http://openjdk.java.net/
 
 # to regenerate source0 (jdk) and source8 (jdk's taspets) run update_package.sh
 # update_package.sh contains hard-coded repos, revisions, tags, and projects to regenerate the source archives
-Source0: shenandoah-jdk%{majorver}-shenandoah-jdk-%{newjavaver}+%{buildver}.tar.xz
+Source0: shenandoah-jdk%{majorver}-shenandoah-jdk-%{newjavaver}+%{buildver}%{?tagsuffix:-%{tagsuffix}}.tar.xz
 Source8: systemtap_3.2_tapsets_hg-icedtea8-9d464368e06d.tar.xz
 
 # Desktop files. Adapted from IcedTea
@@ -1023,6 +1024,10 @@ Patch1000: rh1648249-add_commented_out_nss_cfg_provider_to_java_security.patch
 Patch1:    rh1648242-accessible_toolkit_crash_do_not_break_jvm.patch
 # Restrict access to java-atk-wrapper classes
 Patch2:    rh1648644-java_access_bridge_privileged_security.patch
+# PR1834, RH1022017: Reduce curves reported by SSL to those in NSS
+# Not currently suitable to go upstream as it disables curves
+# for all providers unconditionally
+Patch525: rh1022017-reduce_ssl_curves.patch
 Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk10_and_up.patch
 # Follow system wide crypto policy RHBZ#1249083
 Patch4:    pr3183-rh1340845-support_fedora_rhel_system_crypto_policy.patch
@@ -1035,7 +1040,7 @@ Patch5:    pr1983-rh1565658-support_using_the_system_installation_of_nss_with_th
 #
 #############################################
 
-Patch585: rh1648995-shenandoah_array_copy_broken_by_not_always_copy_forward_for_disjoint_arrays.patch
+# Currently empty
 
 #############################################
 #
@@ -1342,7 +1347,7 @@ pushd %{top_level_dir_name}
 %patch11 -p1
 %patch12 -p1
 %patch584 -p1
-%patch585 -p1
+%patch525 -p1
 popd # openjdk
 
 %patch1000
@@ -1893,6 +1898,14 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Fri Jan 11 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.1.13-11
+- Update to shenandoah-jdk-11.0.1+13-20190101
+- Update tarball generation script in preparation for PR3681/RH1656677 SunEC changes.
+- Use remove-intree-libraries.sh to remove the remaining SunEC code for now.
+- Fix PR1983 SunEC patch so that ecc_impl.h is patched rather than added
+- Add missing RH1022017 patch to reduce curves reported by SSL to those we support.
+- Remove RH1648995; fixed upstream.
+
 * Wed Dec 5 2018 Jiri Vanek <jvanek@redhat.com> - 1:11.0.1.13-9
 - for non debug supackages, ghosted all masters and slaves (rhbz1649776)
 - for tech-preview packages, if-outed versionless provides. Aligned versions to be %%{epoch}:%%{version}-%%{release} instead of chaotic

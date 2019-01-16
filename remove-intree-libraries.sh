@@ -127,3 +127,11 @@ rm -vf ${LCMS_SRC}/cmsxform.c
 rm -vf ${LCMS_SRC}/lcms2.h
 rm -vf ${LCMS_SRC}/lcms2_internal.h
 rm -vf ${LCMS_SRC}/lcms2_plugin.h
+
+# Get rid of in-tree SunEC until RH1656676 is implemented
+echo "Removing SunEC native code"
+mv -v src/jdk.crypto.ec/share/native/libsunec/impl/ecc_impl.h .
+rm -vrf src/jdk.crypto.ec/share/native/libsunec/impl
+mv -v ecc_impl.h src/jdk.crypto.ec/share/native/libsunec
+
+

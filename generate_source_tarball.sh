@@ -3,8 +3,8 @@
 #
 # Example:
 # When used from local repo set REPO_ROOT pointing to file:// with your repo
-# if your local repo follows upstream forests conventions, you may be enough by setting OPENJDK_URL
-# if you wont to use local copy of patch PR2126 set path to it to PR2126 variable
+# If your local repo follows upstream forests conventions, it may be enough to set OPENJDK_URL
+# If you want to use a local copy of patch PR3681, set the path to it in the PR3681 variable
 #
 # In any case you have to set PROJECT_NAME REPO_NAME and VERSION. eg:
 # PROJECT_NAME=jdk
@@ -26,9 +26,9 @@
 # level folder, name is created, based on parameter
 #
 
-if [ ! "x$PR2126" = "x" ] ; then
-  if [ ! -f "$PR2126" ] ; then
-    echo "You have specified PR2126 as $PR2126 but it does not exists. exiting"
+if [ ! "x$PR3681" = "x" ] ; then
+  if [ ! -f "$PR3681" ] ; then
+    echo "You have specified PR3681 as $PR3681 but it does not exist. Exiting"
     exit 1
   fi
 fi
@@ -48,7 +48,7 @@ if [ "x$1" = "xhelp" ] ; then
     echo "FILE_NAME_ROOT - name of the archive, minus extensions (optional; defaults to PROJECT_NAME-REPO_NAME-VERSION)"
     echo "REPO_ROOT - the location of the Mercurial repository to archive (optional; defaults to OPENJDK_URL/PROJECT_NAME/REPO_NAME)"
     echo "TO_COMPRESS - what part of clone to pack (default is openjdk)"
-    echo "PR2126 - the path to the PR2126 patch to apply (optional; downloaded if unavailable)"
+    echo "PR3681 - the path to the PR3681 patch to apply (optional; downloaded if unavailable)"
     exit 1;
 fi
 
@@ -116,17 +116,29 @@ pushd "${FILE_NAME_ROOT}"
         pushd openjdk
             echo "Removing EC source code we don't build"
             CRYPTO_PATH=src/jdk.crypto.ec/share/native/libsunec/impl
-            rm -vrf $CRYPTO_PATH
+	    rm -vf ${CRYPTO_PATH}/ec2.h
+	    rm -vf ${CRYPTO_PATH}/ec2_163.c
+	    rm -vf ${CRYPTO_PATH}/ec2_193.c
+	    rm -vf ${CRYPTO_PATH}/ec2_233.c
+	    rm -vf ${CRYPTO_PATH}/ec2_aff.c
+	    rm -vf ${CRYPTO_PATH}/ec2_mont.c
+	    rm -vf ${CRYPTO_PATH}/ecp_192.c
+	    rm -vf ${CRYPTO_PATH}/ecp_224.c
+
             echo "Syncing EC list with NSS"
-            if [ "x$PR2126" = "x" ] ; then
+            if [ "x$PR3681" = "x" ] ; then
                 # orriginally for 8:
-                # get pr2126.patch (from http://icedtea.classpath.org/hg/icedtea?cmd=changeset;node=8d2c9a898f50) from most correct tag
-                # Do not push it or publish it (see http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=2126)
-                # there is currnetly no "upstram version of this patch, hardcoding custom version
-                PR2126="../../pr2126-11.patch"
+                # get pr3681.patch (from http://icedtea.classpath.org/hg/icedtea11) from most correct tag
+                # Do not push it or publish it (see http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=3681)
+		echo "PR3681 not found. Downloading..."
+		wget http://icedtea.classpath.org/hg/icedtea11/raw-file/tip/patches/pr3681.patch
+	        echo "Applying ${PWD}/pr3681.patch"
+		patch -Np1 < pr3681.patch
+		rm pr3681.patch
+	    else
+		echo "Applying ${PR3681}"
+		patch -Np1 < $PR3681
             fi;
-            echo "Applying ${PR2126}"
-            patch -Np1 < $PR2126
             find . -name '*.orig' -exec rm -vf '{}' ';'
         popd
     fi
