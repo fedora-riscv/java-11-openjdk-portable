@@ -11,7 +11,7 @@ Reviewed-by: aph, erikj, dholmes, darcy
 diff --git a/make/autoconf/flags-cflags.m4 b/make/autoconf/flags-cflags.m4
 --- a/make/autoconf/flags-cflags.m4
 +++ b/make/autoconf/flags-cflags.m4
-@@ -373,6 +373,18 @@
+@@ -366,6 +366,18 @@
  
    FLAGS_SETUP_CFLAGS_CPU_DEP([BUILD], [OPENJDK_BUILD_])
  
@@ -33,7 +33,7 @@ diff --git a/make/autoconf/flags-cflags.m4 b/make/autoconf/flags-cflags.m4
 diff --git a/make/autoconf/spec.gmk.in b/make/autoconf/spec.gmk.in
 --- a/make/autoconf/spec.gmk.in
 +++ b/make/autoconf/spec.gmk.in
-@@ -450,6 +450,7 @@
+@@ -444,6 +444,7 @@
  LIBJSIG_HASHSTYLE_LDFLAGS := @LIBJSIG_HASHSTYLE_LDFLAGS@
  LIBJSIG_NOEXECSTACK_LDFLAGS := @LIBJSIG_NOEXECSTACK_LDFLAGS@
  
@@ -79,6 +79,6 @@ diff --git a/make/lib/CoreLibraries.gmk b/make/lib/CoreLibraries.gmk
 -      CFLAGS_linux_ppc64le := -ffp-contract=off, \
 -      CFLAGS_linux_s390x := -ffp-contract=off, \
 -      CFLAGS_linux_aarch64 := -ffp-contract=off, \
-       DISABLED_WARNINGS_gcc := sign-compare misleading-indentation, \
+       DISABLED_WARNINGS_gcc := sign-compare misleading-indentation array-bounds, \
        DISABLED_WARNINGS_microsoft := 4146 4244 4018, \
        ARFLAGS := $(ARFLAGS), \

@@ -206,7 +206,7 @@
 
 # New Version-String scheme-style defines
 %global majorver 11
-%global securityver 1
+%global securityver 2
 # buildjdkver is usually same as %%{majorver},
 # but in time of bootstrap of next jdk, it is majorver-1, 
 # and this it is better to change it here, on single place
@@ -228,8 +228,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        13
-%global tagsuffix       20190101
+%global buildver        7
+#%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
 %global priority %( printf '%02d%02d%02d%02d' %{majorver} %{minorver} %{securityver} %{buildver} )
@@ -957,7 +957,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 11%{?dist}
+Release: 0%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1064,18 +1064,12 @@ Patch10:    jdk8210647-rh1632174-libsaproc_is_being_compiled_without_optimizatio
 Patch11:    jdk8210761-rh1632174-libjsig_is_being_compiled_without_optimization.patch
 # 8210703, RHBZ#1632174: vmStructs.cpp compiled with -O0
 Patch12:    jdk8210703-rh1632174-vmStructs_cpp_no_longer_compiled_with_o0
-# 8211105, RHBZ-1628612, RHBZ-1630996: Temporarily disable dsin/dcos/log
-# intrinsics on aarch64, falling back to C code. Re-enable once JDK-8210461
-# is fixed and available in jdk11u.
-Patch6:    jdk8211105-aarch64-disable_cos_sin_and_log_intrinsics.patch
 
 #############################################
 #
 # Patches appearing in 11.0.2
 #
 #############################################
-
-Patch584: jdk8209639-rh1640127-02-coalesce_attempted_spill_non_spillable.patch
 
 BuildRequires: autoconf
 BuildRequires: automake
@@ -1324,13 +1318,11 @@ pushd %{top_level_dir_name}
 %patch3 -p1
 %patch4 -p1
 %patch5 -p1
-%patch6 -p1
 %patch8 -p1
 %patch9 -p1
 %patch10 -p1
 %patch11 -p1
 %patch12 -p1
-%patch584 -p1
 %patch525 -p1
 popd # openjdk
 
@@ -1882,6 +1874,12 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue Jan 15 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.2.7-0
+- Update to shenandoah-jdk-11.0.2+7 (January 2019 CPU)
+- Drop JDK-8211105/RH1628612/RH1630996 applied upstream.
+- Drop JDK-8209639/RH1640127 applied upstream.
+- Re-generate JDK-8210416/RH1632174 following JDK-8209786
+
 * Fri Jan 11 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.1.13-11
 - Update to shenandoah-jdk-11.0.1+13-20190101
 - Update tarball generation script in preparation for PR3681/RH1656677 SunEC changes.
