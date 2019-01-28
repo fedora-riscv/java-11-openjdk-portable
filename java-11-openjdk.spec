@@ -970,7 +970,6 @@ Release: 11%{?dist}
 
 Epoch:   1
 Summary: %{origin_nice} Runtime Environment %{majorver}
-Group:   Development/Languages
 
 # HotSpot code is licensed under GPLv2
 # JDK library code is licensed under GPLv2 with the Classpath exception
@@ -1132,7 +1131,6 @@ The %{origin_nice} runtime environment.
 %if %{include_debug_build}
 %package slowdebug
 Summary: %{origin_nice} Runtime Environment %{majorver} %{debug_on}
-Group:   Development/Languages
 
 %{java_rpo -- %{debug_suffix_unquoted}}
 %description slowdebug
@@ -1143,7 +1141,6 @@ The %{origin_nice} runtime environment.
 %if %{include_normal_build}
 %package headless
 Summary: %{origin_nice} Headless Runtime Environment %{majorver}
-Group:   Development/Languages
 
 %{java_headless_rpo %{nil}}
 
@@ -1154,7 +1151,6 @@ The %{origin_nice} runtime environment %{majorver} without audio and video suppo
 %if %{include_debug_build}
 %package headless-slowdebug
 Summary: %{origin_nice} Runtime Environment %{debug_on}
-Group:   Development/Languages
 
 %{java_headless_rpo -- %{debug_suffix_unquoted}}
 
@@ -1166,7 +1162,6 @@ The %{origin_nice} runtime environment %{majorver} without audio and video suppo
 %if %{include_normal_build}
 %package devel
 Summary: %{origin_nice} Development Environment %{majorver}
-Group:   Development/Tools
 
 %{java_devel_rpo %{nil}}
 
@@ -1177,7 +1172,6 @@ The %{origin_nice} development tools %{majorver}.
 %if %{include_debug_build}
 %package devel-slowdebug
 Summary: %{origin_nice} Development Environment %{majorver} %{debug_on}
-Group:   Development/Tools
 
 %{java_devel_rpo -- %{debug_suffix_unquoted}}
 
@@ -1189,7 +1183,6 @@ The %{origin_nice} development tools %{majorver}.
 %if %{include_normal_build}
 %package jmods
 Summary: JMods for %{origin_nice} %{majorver}
-Group:   Development/Tools
 
 %{java_jmods_rpo %{nil}}
 
@@ -1200,7 +1193,6 @@ The JMods for %{origin_nice}.
 %if %{include_debug_build}
 %package jmods-slowdebug
 Summary: JMods for %{origin_nice} %{majorver} %{debug_on}
-Group:   Development/Tools
 
 %{java_jmods_rpo -- %{debug_suffix_unquoted}}
 
@@ -1212,7 +1204,6 @@ The JMods for %{origin_nice} %{majorver}.
 %if %{include_normal_build}
 %package demo
 Summary: %{origin_nice} Demos %{majorver}
-Group:   Development/Languages
 
 %{java_demo_rpo %{nil}}
 
@@ -1223,7 +1214,6 @@ The %{origin_nice} demos %{majorver}.
 %if %{include_debug_build}
 %package demo-slowdebug
 Summary: %{origin_nice} Demos %{majorver} %{debug_on}
-Group:   Development/Languages
 
 %{java_demo_rpo -- %{debug_suffix_unquoted}}
 
@@ -1235,7 +1225,6 @@ The %{origin_nice} demos %{majorver}.
 %if %{include_normal_build}
 %package src
 Summary: %{origin_nice} Source Bundle %{majorver}
-Group:   Development/Languages
 
 %{java_src_rpo %{nil}}
 
@@ -1247,7 +1236,6 @@ class library source code for use by IDE indexers and debuggers.
 %if %{include_debug_build}
 %package src-slowdebug
 Summary: %{origin_nice} Source Bundle %{majorver} %{for_debug}
-Group:   Development/Languages
 
 %{java_src_rpo -- %{debug_suffix_unquoted}}
 
@@ -1259,7 +1247,6 @@ The java-%{origin}-src-slowdebug sub-package contains the complete %{origin_nice
 %if %{include_normal_build}
 %package javadoc
 Summary: %{origin_nice} %{majorver} API documentation
-Group:   Documentation
 Requires: javapackages-filesystem
 
 %{java_javadoc_rpo %{nil}}
@@ -1271,7 +1258,6 @@ The %{origin_nice} %{majorver} API documentation.
 %if %{include_normal_build}
 %package javadoc-zip
 Summary: %{origin_nice} %{majorver} API documentation compressed in single archive
-Group:   Documentation
 Requires: javapackages-filesystem
 
 %{java_javadoc_rpo %{nil}}
@@ -1283,7 +1269,6 @@ The %{origin_nice} %{majorver} API documentation compressed in single archive.
 %if %{include_debug_build}
 %package javadoc-slowdebug
 Summary: %{origin_nice} %{majorver} API documentation %{for_debug}
-Group:   Documentation
 Requires: javapackages-filesystem
 
 %{java_javadoc_rpo -- %{debug_suffix_unquoted}}
@@ -1295,7 +1280,6 @@ The %{origin_nice} %{majorver} API documentation %{for_debug}.
 %if %{include_debug_build}
 %package javadoc-zip-slowdebug
 Summary: %{origin_nice} %{majorver} API documentation compressed in single archive %{for_debug}
-Group:   Documentation
 Requires: javapackages-filesystem
 
 %{java_javadoc_rpo -- %{debug_suffix_unquoted}}
