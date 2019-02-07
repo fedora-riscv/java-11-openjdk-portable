@@ -957,7 +957,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 1%{?dist}
+Release: 2%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1028,10 +1028,12 @@ Patch2:    rh1648644-java_access_bridge_privileged_security.patch
 # for all providers unconditionally
 Patch525: rh1022017-reduce_ssl_curves.patch
 Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk10_and_up.patch
-# Follow system wide crypto policy RHBZ#1249083
-Patch4:    pr3183-rh1340845-support_fedora_rhel_system_crypto_policy.patch
+# PR3694, RH1340845: Add security.useSystemPropertiesFile option to java.security to use system crypto policy
+Patch4: pr3694-rh1340845-support_fedora_rhel_system_crypto_policy.patch
 # System NSS via SunEC Provider
-Patch5:    pr1983-rh1565658-support_using_the_system_installation_of_nss_with_the_sunec_provider_jdk11.patch
+Patch5: pr1983-rh1565658-support_using_the_system_installation_of_nss_with_the_sunec_provider_jdk11.patch
+# PR3695: Allow use of system crypto policy to be disabled by the user
+Patch6: pr3695-toggle_system_crypto_policy.patch
 
 #############################################
 #
@@ -1318,6 +1320,7 @@ pushd %{top_level_dir_name}
 %patch3 -p1
 %patch4 -p1
 %patch5 -p1
+%patch6 -p1
 %patch8 -p1
 %patch9 -p1
 %patch10 -p1
@@ -1874,6 +1877,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Feb 07 2019 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.2.7-2
+- Add PR3695 to allow the system crypto policy to be turned off.
+- Correct original system crypto policy patch to refer to OpenJDK 11 bug (PR3694)
+
 * Fri Feb 01 2019 Fedora Release Engineering <releng@fedoraproject.org> - 1:11.0.2.7-1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
 
