@@ -121,9 +121,9 @@
 %endif
 
 %if %{bootstrap_build}
-%global targets bootcycle-images all docs
+%global targets bootcycle-images docs
 %else
-%global targets all docs
+%global targets images docs
 %endif
 
 
@@ -957,7 +957,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 2%{?dist}
+Release: 3%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1877,6 +1877,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue Feb 12 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-3
+- Don't build the test images needlessly.
+
 * Thu Feb 07 2019 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.2.7-2
 - Add PR3695 to allow the system crypto policy to be turned off.
 - Correct original system crypto policy patch to refer to OpenJDK 11 bug (PR3694)
