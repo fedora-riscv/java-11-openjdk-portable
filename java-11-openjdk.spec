@@ -614,11 +614,9 @@ exit 0
 %{_mandir}/man1/rmiregistry-%{uniquesuffix -- %{?1}}.1*
 %{_mandir}/man1/unpack200-%{uniquesuffix -- %{?1}}.1*
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/server/
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/client/
 %ifarch %{jit_arches}
 %ifnarch %{power64}
 %attr(444, root, root) %ghost %{_jvmdir}/%{sdkdir -- %{?1}}/lib/server/classes.jsa
-%attr(444, root, root) %ghost %{_jvmdir}/%{sdkdir -- %{?1}}/lib/client/classes.jsa
 %endif
 %endif
 %dir %{etcjavasubdir}
@@ -960,7 +958,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 5%{?dist}
+Release: 6%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1604,11 +1602,6 @@ mkdir -p $RPM_BUILD_ROOT%{_jvmdir}
 cp -a %{buildoutputdir -- $suffix}/images/%{jdkimage} \
   $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}
 
-# Install jsa directories so we can owe them
-mkdir -p $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/lib/%{archinstall}/server/
-mkdir -p $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/lib/%{archinstall}/client/
-mkdir -p $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/lib/client/ || true  ; # sometimes is here, sometimes not, ifout it or || true it out
-
 pushd %{buildoutputdir $suffix}/images/%{jdkimage}
 
 %if %{with_systemtap}
@@ -1888,6 +1881,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue Feb 26 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-6
+- Don't package lib/client and lib/client/classes.jsa
+  which don't exist.
+- Resolves: RHBZ#1643469
+
 * Tue Feb 19 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-5
 - Add explicit requirement for libXcomposite which is used when performing
   screenshots from Java.
