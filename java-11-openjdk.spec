@@ -809,6 +809,9 @@ exit 0
 %define java_rpo() %{expand:
 Requires: fontconfig%{?_isa}
 Requires: xorg-x11-fonts-Type1
+# Require libXcomposite explicitly since it's only dynamically loaded
+# at runtime. Fixes screenshot issues. See JDK-8150954.
+Requires: libXcomposite%{?_isa}
 # Requires rest of java
 Requires: %{name}-headless%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
 OrderWithRequires: %{name}-headless%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
@@ -957,7 +960,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 4%{?dist}
+Release: 5%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1104,6 +1107,7 @@ BuildRequires: nss-devel
 BuildRequires: pkgconfig
 BuildRequires: xorg-x11-proto-devel
 BuildRequires: zip
+BuildRequires: unzip
 BuildRequires: javapackages-filesystem
 BuildRequires: java-%{buildjdkver}-openjdk-devel
 # Zero-assembler build requirement
@@ -1884,6 +1888,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Fri Feb 19 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-5
+- Add explicit requirement for libXcomposite which is used when performing
+  screenshots from Java.
+- Add explicit BR unzip required for building OpenJDK.
+
 * Tue Feb 14 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-4
 - Add a test verifying system crypto policies can be disabled
 
