@@ -1888,12 +1888,12 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
-* Fri Feb 19 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-5
+* Tue Feb 19 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-5
 - Add explicit requirement for libXcomposite which is used when performing
   screenshots from Java.
 - Add explicit BR unzip required for building OpenJDK.
 
-* Tue Feb 14 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-4
+* Thu Feb 14 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-4
 - Add a test verifying system crypto policies can be disabled
 
 * Tue Feb 12 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-3
