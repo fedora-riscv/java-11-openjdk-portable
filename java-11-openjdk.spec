@@ -958,7 +958,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 6%{?dist}
+Release: 7%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1407,6 +1407,9 @@ EXTRA_CPP_FLAGS="%ourcppflags -std=gnu++98 -fno-delete-null-pointer-checks -fno-
 # fix rpmlint warnings
 EXTRA_CFLAGS="$EXTRA_CFLAGS -fno-strict-aliasing"
 %endif
+# Fixes annocheck warnings in assembler files due to missing build notes
+EXTRA_CPP_FLAGS="$EXTRA_CPP_FLAGS -Wa,--generate-missing-build-notes=yes"
+EXTRA_CFLAGS="$EXTRA_CFLAGS -Wa,--generate-missing-build-notes=yes"
 export EXTRA_CFLAGS
 
 for suffix in %{build_loop} ; do
@@ -1881,6 +1884,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon Mar 11 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-7
+- Add -Wa,--generate-missing-build-notes=yes C flags. So as to
+  fix annocheck warnings for assembler source files.
+
 * Tue Feb 26 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-6
 - Don't package lib/client and lib/client/classes.jsa
   which don't exist.
