@@ -851,12 +851,8 @@ OrderWithRequires: copy-jdk-configs
 Requires: cups-libs
 # Post requires alternatives to install tool alternatives
 Requires(post):   %{_sbindir}/alternatives
-# in version 1.7 and higher for --family switch
-Requires(post):   chkconfig >= 1.7
 # Postun requires alternatives to uninstall tool alternatives
 Requires(postun): %{_sbindir}/alternatives
-# in version 1.7 and higher for --family switch
-Requires(postun):   chkconfig >= 1.7
 # for optional support of kernel stream control, card reader and printing bindings
 Suggests: lksctp-tools%{?_isa}, pcsc-lite-devel%{?_isa}
 
@@ -879,12 +875,8 @@ Requires:         %{name}%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
 OrderWithRequires: %{name}-headless%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
 # Post requires alternatives to install tool alternatives
 Requires(post):   %{_sbindir}/alternatives
-# in version 1.7 and higher for --family switch
-Requires(post):   chkconfig >= 1.7
 # Postun requires alternatives to uninstall tool alternatives
 Requires(postun): %{_sbindir}/alternatives
-# in version 1.7 and higher for --family switch
-Requires(postun):   chkconfig >= 1.7
 
 # Standard JPackage devel provides
 Provides: java-sdk-%{javaver}-%{origin}%{?1} = %{epoch}:%{version}-%{release}
@@ -927,12 +919,8 @@ Provides: java-demo%{?1} = %{epoch}:%{version}-%{release}
 OrderWithRequires: %{name}-headless%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
 # Post requires alternatives to install javadoc alternative
 Requires(post):   %{_sbindir}/alternatives
-# in version 1.7 and higher for --family switch
-Requires(post):   chkconfig >= 1.7
 # Postun requires alternatives to uninstall javadoc alternative
 Requires(postun): %{_sbindir}/alternatives
-# in version 1.7 and higher for --family switch
-Requires(postun):   chkconfig >= 1.7
 
 # Standard JPackage javadoc provides
 Provides: java-%{javaver}-javadoc%{?1} = %{epoch}:%{version}-%{release}
@@ -958,7 +946,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 7%{?dist}
+Release: 8%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1884,6 +1872,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Wed Mar 20 2019 Peter Robinson <pbrobinson@fedoraproject.org> 1:11.0.2.7-8
+- Drop chkconfig dep, 1.7 shipped in f24
+
 * Mon Mar 11 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-7
 - Add -Wa,--generate-missing-build-notes=yes C flags. So as to
   fix annocheck warnings for assembler source files.
