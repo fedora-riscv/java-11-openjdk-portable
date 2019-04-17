@@ -946,7 +946,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 8%{?dist}
+Release: 9%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1019,13 +1019,6 @@ Patch2:    rh1648644-java_access_bridge_privileged_security.patch
 # Not currently suitable to go upstream as it disables curves
 # for all providers unconditionally
 Patch525: rh1022017-reduce_ssl_curves.patch
-Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk10_and_up.patch
-# PR3694, RH1340845: Add security.useSystemPropertiesFile option to java.security to use system crypto policy
-Patch4: pr3694-rh1340845-support_fedora_rhel_system_crypto_policy.patch
-# System NSS via SunEC Provider
-Patch5: pr1983-rh1565658-support_using_the_system_installation_of_nss_with_the_sunec_provider_jdk11.patch
-# PR3695: Allow use of system crypto policy to be disabled by the user
-Patch6: pr3695-toggle_system_crypto_policy.patch
 
 #############################################
 #
@@ -1045,6 +1038,15 @@ Patch6: pr3695-toggle_system_crypto_policy.patch
 Patch8:    jdk8210416-rh1632174-compile_fdlibm_with_o2_ffp_contract_off_on_gcc_clang_arches.patch
 # 8210425, RHBZ#1632174: [x86] sharedRuntimeTrig/sharedRuntimeTrans compiled without optimization
 Patch9:    jdk8210425-rh1632174-sharedRuntimeTrig_sharedRuntimeTrans_compiled_without_optimization.patch
+Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk10_and_up.patch
+# PR3694, RH1340845: Add security.useSystemPropertiesFile option to java.security to use system crypto policy
+Patch4: pr3694-rh1340845-support_fedora_rhel_system_crypto_policy.patch
+# System NSS via SunEC Provider
+Patch5: pr1983-rh1565658-support_using_the_system_installation_of_nss_with_the_sunec_provider_jdk11.patch
+# RH1566890: CVE-2018-3639
+Patch6:    rh1566890-CVE_2018_3639-speculative_store_bypass.patch
+# PR3695: Allow use of system crypto policy to be disabled by the user
+Patch7: pr3695-toggle_system_crypto_policy.patch
 
 #############################################
 #
@@ -1314,6 +1316,7 @@ pushd %{top_level_dir_name}
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
+%patch7 -p1
 %patch8 -p1
 %patch9 -p1
 %patch10 -p1
@@ -1872,6 +1875,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Mar 21 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-9
+- Add patch for RH1566890
+
 * Wed Mar 20 2019 Peter Robinson <pbrobinson@fedoraproject.org> 1:11.0.2.7-8
 - Drop chkconfig dep, 1.7 shipped in f24
 
