@@ -206,7 +206,7 @@
 
 # New Version-String scheme-style defines
 %global majorver 11
-%global securityver 2
+%global securityver 3
 # buildjdkver is usually same as %%{majorver},
 # but in time of bootstrap of next jdk, it is majorver-1, 
 # and this it is better to change it here, on single place
@@ -228,7 +228,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        7
+%global buildver        6
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -946,7 +946,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 9%{?dist}
+Release: 0%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1022,7 +1022,7 @@ Patch525: rh1022017-reduce_ssl_curves.patch
 
 #############################################
 #
-# Shenandaoh specific patches
+# Shenandoah specific patches
 #
 #############################################
 
@@ -1034,10 +1034,6 @@ Patch525: rh1022017-reduce_ssl_curves.patch
 #
 #############################################
 
-# 8210416, RHBZ#1632174: [linux] Poor StrictMath performance due to non-optimized compilation
-Patch8:    jdk8210416-rh1632174-compile_fdlibm_with_o2_ffp_contract_off_on_gcc_clang_arches.patch
-# 8210425, RHBZ#1632174: [x86] sharedRuntimeTrig/sharedRuntimeTrans compiled without optimization
-Patch9:    jdk8210425-rh1632174-sharedRuntimeTrig_sharedRuntimeTrans_compiled_without_optimization.patch
 Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk10_and_up.patch
 # PR3694, RH1340845: Add security.useSystemPropertiesFile option to java.security to use system crypto policy
 Patch4: pr3694-rh1340845-support_fedora_rhel_system_crypto_policy.patch
@@ -1047,23 +1043,12 @@ Patch5: pr1983-rh1565658-support_using_the_system_installation_of_nss_with_the_s
 Patch6:    rh1566890-CVE_2018_3639-speculative_store_bypass.patch
 # PR3695: Allow use of system crypto policy to be disabled by the user
 Patch7: pr3695-toggle_system_crypto_policy.patch
+# S390 ambiguous log2_intptr call
+Patch8: s390-8214206_fix.patch
 
 #############################################
 #
 # JDK 9+ only patches
-#
-#############################################
-
-# 8210647, RHBZ#1632174: libsaproc is being compiled without optimization
-Patch10:    jdk8210647-rh1632174-libsaproc_is_being_compiled_without_optimization.patch
-# 8210761, RHBZ#1632174: libjsig is being compiled without optimization
-Patch11:    jdk8210761-rh1632174-libjsig_is_being_compiled_without_optimization.patch
-# 8210703, RHBZ#1632174: vmStructs.cpp compiled with -O0
-Patch12:    jdk8210703-rh1632174-vmStructs_cpp_no_longer_compiled_with_o0
-
-#############################################
-#
-# Patches appearing in 11.0.2
 #
 #############################################
 
@@ -1318,10 +1303,6 @@ pushd %{top_level_dir_name}
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
-%patch9 -p1
-%patch10 -p1
-%patch11 -p1
-%patch12 -p1
 %patch525 -p1
 popd # openjdk
 
@@ -1875,6 +1856,15 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Sat Apr 06 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.3.6-0
+- Update to shenandoah-jdk-11.0.3+6 (April 2019 EA)
+- Drop JDK-8210416/RH1632174 applied upstream.
+- Drop JDK-8210425/RH1632174 applied upstream.
+- Drop JDK-8210647/RH1632174 applied upstream.
+- Drop JDK-8210761/RH1632174 applied upstream.
+- Drop JDK-8210703/RH1632174 applied upstream.
+- Add cast to resolve s390 ambiguity in call to log2_intptr
+
 * Thu Mar 21 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.2.7-9
 - Add patch for RH1566890
 

@@ -1,0 +1,12 @@
+diff --git openjdk.orig/jdk/src/hotspot/share/runtime/os.cpp openjdk/jdk/src/hotspot/share/runtime/os.cpp
+--- openjdk.orig/src/hotspot/share/runtime/os.cpp
++++ openjdk/src/hotspot/share/runtime/os.cpp
+@@ -1368,7 +1368,7 @@
+ }
+ 
+ void os::set_memory_serialize_page(address page) {
+-  int count = log2_intptr(sizeof(class JavaThread)) - log2_int(64);
++  int count = log2_intptr((uintptr_t) sizeof(class JavaThread)) - log2_int(64);
+   _mem_serialize_page = (volatile int32_t *)page;
+   // We initialize the serialization page shift count here
+   // We assume a cache line size of 64 bytes
