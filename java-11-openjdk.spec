@@ -253,17 +253,20 @@
 # main id and dir of this jdk
 %define uniquesuffix()        %{expand:%{fullversion}.%{_arch}%{?1}}
 
+#################################################################
 # fix for https://bugzilla.redhat.com/show_bug.cgi?id=1111349
 #         https://bugzilla.redhat.com/show_bug.cgi?id=1590796#c14
 #         https://bugzilla.redhat.com/show_bug.cgi?id=1655938
-%if %is_system_jdk
 %global _privatelibs libsplashscreen[.]so.*|libawt_xawt[.]so.*|libjli[.]so.*|libattach[.]so.*|libawt[.]so.*|libextnet[.]so.*|libawt_headless[.]so.*|libdt_socket[.]so.*|libfontmanager[.]so.*|libinstrument[.]so.*|libj2gss[.]so.*|libj2pcsc[.]so.*|libj2pkcs11[.]so.*|libjaas[.]so.*|libjavajpeg[.]so.*|libjdwp[.]so.*|libjimage[.]so.*|libjsound[.]so.*|liblcms[.]so.*|libmanagement[.]so.*|libmanagement_agent[.]so.*|libmanagement_ext[.]so.*|libmlib_image[.]so.*|libnet[.]so.*|libnio[.]so.*|libprefs[.]so.*|librmi[.]so.*|libsaproc[.]so.*|libsctp[.]so.*|libsunec[.]so.*|libunpack[.]so.*|libzip[.]so.*
+%global _publiclibs libjawt[.]so.*|libjava[.]so.*|libjvm[.]so.*|libverify[.]so.*|libjsig[.]so.*
+%if %is_system_jdk
 %global __provides_exclude ^(%{_privatelibs})$
 %global __requires_exclude ^(%{_privatelibs})$
 %global __provides_exclude_from ^.*/%{uniquesuffix -- %{debug_suffix_unquoted}}/.*$
 %else
-%global __provides_exclude lib.*[.]so.*
-%global __requires_exclude lib.*[.]so.*
+# Don't generate provides/requires for JDK provided shared libraries at all.
+%global __provides_exclude ^(%{_privatelibs}|%{_publiclibs})$
+%global __requires_exclude ^(%{_privatelibs}|%{_publiclibs})$
 %endif
 
 
@@ -946,7 +949,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 0%{?dist}
+Release: 1%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1856,6 +1859,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue Apr 23 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.3.7-1
+- Fix requires/provides for the non-system JDK case. JDK 11
+  isn't a system JDK at this point.
+- Resolves: RHBZ#1702324
+
 * Sun Apr 07 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.3.7-0
 - Update to shenandoah-jdk-11.0.3+7 (April 2019 GA)
 
