@@ -262,7 +262,9 @@
 %if %is_system_jdk
 %global __provides_exclude ^(%{_privatelibs})$
 %global __requires_exclude ^(%{_privatelibs})$
+# Never generate lib-style provides/requires for slowdebug packages
 %global __provides_exclude_from ^.*/%{uniquesuffix -- %{debug_suffix_unquoted}}/.*$
+%global __requires_exclude_from ^.*/%{uniquesuffix -- %{debug_suffix_unquoted}}/.*$
 %else
 # Don't generate provides/requires for JDK provided shared libraries at all.
 %global __provides_exclude ^(%{_privatelibs}|%{_publiclibs})$
@@ -949,7 +951,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 1%{?dist}
+Release: 2%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1859,6 +1861,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Wed Apr 24 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.3.7-2
+- Don't generate lib-style requires for -slowdebug subpackages.
+- Resolves: RHBZ#1702379
+
 * Tue Apr 23 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.3.7-1
 - Fix requires/provides for the non-system JDK case. JDK 11
   isn't a system JDK at this point.
