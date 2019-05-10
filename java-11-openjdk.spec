@@ -953,7 +953,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 3%{?dist}
+Release: 4%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1366,6 +1366,12 @@ EXTRA_CFLAGS="$EXTRA_CFLAGS -fno-strict-aliasing"
 # Fixes annocheck warnings in assembler files due to missing build notes
 EXTRA_CPP_FLAGS="$EXTRA_CPP_FLAGS -Wa,--generate-missing-build-notes=yes"
 EXTRA_CFLAGS="$EXTRA_CFLAGS -Wa,--generate-missing-build-notes=yes"
+# Fix for GCC 9 on i686. See:
+# https://bugzilla.redhat.com/show_bug.cgi?id=1683095
+%ifarch %{ix86}
+EXTRA_CPP_FLAGS="$EXTRA_CPP_FLAGS -fno-tree-ch"
+EXTRA_CFLAGS="$EXTRA_CFLAGS -fno-tree-ch"
+%endif
 export EXTRA_CFLAGS
 
 for suffix in %{build_loop} ; do
@@ -1828,6 +1834,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Fri May 10 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.3.7-4
+- Add -fno-tree-ch in order to work around GCC 9 issue on
+  i686.
+- Resolves: RHBZ#1683095
+
 * Thu Apr 25 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.3.7-3
 - Don't produce javadoc/javadoc-zip sub packages for the
   debug variant build.
