@@ -953,7 +953,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: 4%{?dist}
+Release: 5%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1834,6 +1834,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue May 14 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.3.7-5
+- Bump release for rebuild.
+
 * Fri May 10 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.3.7-4
 - Add -fno-tree-ch in order to work around GCC 9 issue on
   i686.
