@@ -208,7 +208,7 @@
 
 # New Version-String scheme-style defines
 %global majorver 11
-%global securityver 3
+%global securityver 4
 # buildjdkver is usually same as %%{majorver},
 # but in time of bootstrap of next jdk, it is majorver-1, 
 # and this it is better to change it here, on single place
@@ -230,8 +230,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        7
-%global rpmrelease      6
+%global buildver        2
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -248,7 +248,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           1
+%global is_ga           0
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -583,6 +583,7 @@ exit 0
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/classlist
 %endif
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/jexec
+%{_jvmdir}/%{sdkdir -- %{?1}}/lib/jspawnhelper
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/jrt-fs.jar
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/modules
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/psfont.properties.ja
@@ -1852,6 +1853,12 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Sun Jun 30 2019 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.4.2-0.1.ea
+- Update to shenandoah-jdk-11.0.4+2 (EA)
+
+* Fri Jun 21 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.4.2-0.1.ea
+- Package jspawnhelper (see JDK-8220360).
+
 * Fri Jun 21 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.3.7-6
 - Include 'ea' designator in Release when appropriate.
 
