@@ -231,7 +231,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        10
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1250,6 +1250,7 @@ The java-%{origin}-src-slowdebug sub-package contains the complete %{origin_nice
 %package javadoc
 Summary: %{origin_nice} %{majorver} API documentation
 Requires: javapackages-filesystem
+Obsoletes: javadoc-slowdebug < 1:11.0.3.7-4
 
 %{java_javadoc_rpo %{nil}}
 
@@ -1259,13 +1260,14 @@ The %{origin_nice} %{majorver} API documentation.
 
 %if %{include_normal_build}
 %package javadoc-zip
-Summary: %{origin_nice} %{majorver} API documentation compressed in single archive
+Summary: %{origin_nice} %{majorver} API documentation compressed in a single archive
 Requires: javapackages-filesystem
+Obsoletes: javadoc-zip-slowdebug < 1:11.0.3.7-4
 
 %{java_javadoc_rpo %{nil}}
 
 %description javadoc-zip
-The %{origin_nice} %{majorver} API documentation compressed in single archive.
+The %{origin_nice} %{majorver} API documentation compressed in a single archive.
 %endif
 
 %prep
@@ -1853,6 +1855,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon Jul 08 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.4.10-0.2.ea
+- Obsolete javadoc-slowdebug and javadoc-slowdebug-zip packages via javadoc and javadoc-zip respectively.
+
 * Mon Jul 08 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.4.10-0.1.ea
 - Update to shenandoah-jdk-11.0.4+10 (EA)
 
