@@ -231,7 +231,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        11
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1849,6 +1849,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Fri Jul 26 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.4.11-2
+- Rebuild with itself as boot JDK.
+
 * Fri Jul 26 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.4.11-1
 - Remove -fno-tree-ch workaround for i686 as the root cause has been
   fixed with 11.0.4+9.
