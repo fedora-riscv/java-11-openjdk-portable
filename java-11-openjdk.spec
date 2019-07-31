@@ -231,7 +231,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        11
-%global rpmrelease      2
+%global rpmrelease      3
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1086,12 +1086,11 @@ BuildRequires: cups-devel
 BuildRequires: desktop-file-utils
 # elfutils only are OK for build without AOT
 BuildRequires: elfutils-devel
-BuildRequires: fontconfig
+BuildRequires: fontconfig-devel
 BuildRequires: freetype-devel
 BuildRequires: giflib-devel
 BuildRequires: gcc-c++
 BuildRequires: gdb
-BuildRequires: gtk3-devel
 BuildRequires: lcms2-devel
 BuildRequires: libjpeg-devel
 BuildRequires: libpng-devel
@@ -1099,6 +1098,8 @@ BuildRequires: libxslt
 BuildRequires: libX11-devel
 BuildRequires: libXi-devel
 BuildRequires: libXinerama-devel
+BuildRequires: libXrandr-devel
+BuildRequires: libXrender-devel
 BuildRequires: libXt-devel
 BuildRequires: libXtst-devel
 # Requirements for setting up the nss.cfg
@@ -1849,6 +1850,12 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Fri Jul 26 2019 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.4.11-3
+- Drop unnecessary build requirement on gtk3-devel, as OpenJDK searches for Gtk+ at runtime.
+- Add missing build requirement for libXrender-devel, previously masked by Gtk3+ dependency
+- Add missing build requirement for libXrandr-devel, previously masked by Gtk3+ dependency
+- fontconfig build requirement should be fontconfig-devel, previously masked by Gtk3+ dependency
+
 * Fri Jul 26 2019 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.4.11-2
 - Rebuild with itself as boot JDK.
 
