@@ -143,14 +143,6 @@
 # looks like openjdk RPM specific bug
 # Always set this so the nss.cfg file is not broken
 %global NSS_LIBDIR %(pkg-config --variable=libdir nss)
-%global NSS_LIBS %(pkg-config --libs nss)
-%global NSS_CFLAGS %(pkg-config --cflags nss-softokn)
-# see https://bugzilla.redhat.com/show_bug.cgi?id=1332456
-%global NSSSOFTOKN_BUILDTIME_NUMBER %(pkg-config --modversion nss-softokn || : )
-%global NSS_BUILDTIME_NUMBER %(pkg-config --modversion nss || : )
-# this is workaround for processing of requires during srpm creation
-%global NSSSOFTOKN_BUILDTIME_VERSION %(if [ "x%{NSSSOFTOKN_BUILDTIME_NUMBER}" == "x" ] ; then echo "" ;else echo ">= %{NSSSOFTOKN_BUILDTIME_NUMBER}" ;fi)
-%global NSS_BUILDTIME_VERSION %(if [ "x%{NSS_BUILDTIME_NUMBER}" == "x" ] ; then echo "" ;else echo ">= %{NSS_BUILDTIME_NUMBER}" ;fi)
 
 # In some cases, the arch used by the JDK does
 # not match _arch.
@@ -231,7 +223,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        11
-%global rpmrelease      3
+%global rpmrelease      4
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -865,9 +857,6 @@ Requires: javapackages-filesystem
 Requires: tzdata-java >= 2015d
 # libsctp.so.1 is being `dlopen`ed on demand
 Requires: lksctp-tools%{?_isa}
-# there is a need to depend on the exact version of NSS
-Requires: nss%{?_isa} %{NSS_BUILDTIME_VERSION}
-Requires: nss-softokn%{?_isa} %{NSSSOFTOKN_BUILDTIME_VERSION}
 # tool to copy jdk's configs - should be Recommends only, but then only dnf/yum enforce it,
 # not rpm transaction and so no configs are persisted when pure rpm -u is run. It may be
 # considered as regression
@@ -1063,8 +1052,6 @@ Patch525: rh1022017-reduce_ssl_curves.patch
 Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk10_and_up.patch
 # PR3694, RH1340845: Add security.useSystemPropertiesFile option to java.security to use system crypto policy
 Patch4: pr3694-rh1340845-support_fedora_rhel_system_crypto_policy.patch
-# System NSS via SunEC Provider
-Patch5: pr1983-rh1565658-support_using_the_system_installation_of_nss_with_the_sunec_provider_jdk11.patch
 # RH1566890: CVE-2018-3639
 Patch6:    rh1566890-CVE_2018_3639-speculative_store_bypass.patch
 # PR3695: Allow use of system crypto policy to be disabled by the user
@@ -1117,8 +1104,6 @@ BuildRequires: libffi-devel
 BuildRequires: tzdata-java >= 2015d
 # Earlier versions have a bug in tree vectorization on PPC
 BuildRequires: gcc >= 4.8.3-8
-# Build requirements for SunEC system NSS support
-BuildRequires: nss-softokn-freebl-devel >= 3.16.1
 
 %if %{with_systemtap}
 BuildRequires: systemtap-sdt-devel
@@ -1305,7 +1290,6 @@ pushd %{top_level_dir_name}
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
-%patch5 -p1
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
@@ -1419,7 +1403,6 @@ bash ../configure \
     --with-debug-level=$debugbuild \
     --with-native-debug-symbols=internal \
     --enable-unlimited-crypto \
-    --enable-system-nss \
     --with-zlib=system \
     --with-libjpeg=system \
     --with-giflib=system \
@@ -1850,6 +1833,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Aug 08 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.4.11-4
+- Switch to in-tree SunEC code, dropping NSS runtime dependencies and patches to link against it.
+
 * Fri Jul 26 2019 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.4.11-3
 - Drop unnecessary build requirement on gtk3-devel, as OpenJDK searches for Gtk+ at runtime.
 - Add missing build requirement for libXrender-devel, previously masked by Gtk3+ dependency
