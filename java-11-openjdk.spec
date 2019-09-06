@@ -200,7 +200,7 @@
 
 # New Version-String scheme-style defines
 %global majorver 11
-%global securityver 4
+%global securityver 5
 # buildjdkver is usually same as %%{majorver},
 # but in time of bootstrap of next jdk, it is majorver-1, 
 # and this it is better to change it here, on single place
@@ -222,8 +222,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        11
-%global rpmrelease      4
+%global buildver        1
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -240,7 +240,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           1
+%global is_ga           0
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -1833,6 +1833,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon Aug 12 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.5.1-0.1.ea
+- Update to shenandoah-jdk-11.0.5+1 (EA)
+- Switch to EA mode for 11.0.5 pre-release builds.
+
 * Thu Aug 08 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.4.11-4
 - Switch to in-tree SunEC code, dropping NSS runtime dependencies and patches to link against it.
 
