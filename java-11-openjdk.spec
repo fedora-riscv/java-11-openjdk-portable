@@ -222,7 +222,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        1
+%global buildver        2
 %global rpmrelease      1
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
@@ -1833,6 +1833,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Sat Aug 24 2019 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.5.2-0.1.ea
+- Update to shenandoah-jdk-11.0.5+2 (EA)
+
 * Mon Aug 12 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.5.1-0.1.ea
 - Update to shenandoah-jdk-11.0.5+1 (EA)
 - Switch to EA mode for 11.0.5 pre-release builds.
