@@ -222,8 +222,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        2
-%global rpmrelease      2
+%global buildver        9
+%global rpmrelease      0
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1828,6 +1828,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon Oct 07 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.5.9-0.0.ea
+- Update to shenandoah-jdk-11.0.5+9 (EA)
+
 * Tue Aug 27 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.5.2-0.2.ea
 - Update generate_source_tarball.sh script to use the PR3751 patch and retain the secp256k1 curve.
 - Regenerate source tarball using the updated script and add the -'4curve' suffix.
