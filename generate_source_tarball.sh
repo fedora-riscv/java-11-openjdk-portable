@@ -4,7 +4,7 @@
 # Example:
 # When used from local repo set REPO_ROOT pointing to file:// with your repo
 # If your local repo follows upstream forests conventions, it may be enough to set OPENJDK_URL
-# If you want to use a local copy of patch PR3681, set the path to it in the PR3681 variable
+# If you want to use a local copy of patch PR3751, set the path to it in the PR3751 variable
 #
 # In any case you have to set PROJECT_NAME REPO_NAME and VERSION. eg:
 # PROJECT_NAME=jdk
@@ -26,9 +26,9 @@
 # level folder, name is created, based on parameter
 #
 
-if [ ! "x$PR3681" = "x" ] ; then
-  if [ ! -f "$PR3681" ] ; then
-    echo "You have specified PR3681 as $PR3681 but it does not exist. Exiting"
+if [ ! "x$PR3751" = "x" ] ; then
+  if [ ! -f "$PR3751" ] ; then
+    echo "You have specified PR3751 as $PR3751 but it does not exist. Exiting"
     exit 1
   fi
 fi
@@ -48,7 +48,7 @@ if [ "x$1" = "xhelp" ] ; then
     echo "FILE_NAME_ROOT - name of the archive, minus extensions (optional; defaults to PROJECT_NAME-REPO_NAME-VERSION)"
     echo "REPO_ROOT - the location of the Mercurial repository to archive (optional; defaults to OPENJDK_URL/PROJECT_NAME/REPO_NAME)"
     echo "TO_COMPRESS - what part of clone to pack (default is openjdk)"
-    echo "PR3681 - the path to the PR3681 patch to apply (optional; downloaded if unavailable)"
+    echo "PR3751 - the path to the PR3751 patch to apply (optional; downloaded if unavailable)"
     exit 1;
 fi
 
@@ -126,18 +126,17 @@ pushd "${FILE_NAME_ROOT}"
 	    rm -vf ${CRYPTO_PATH}/ecp_224.c
 
             echo "Syncing EC list with NSS"
-            if [ "x$PR3681" = "x" ] ; then
-                # orriginally for 8:
-                # get pr3681.patch (from http://icedtea.classpath.org/hg/icedtea11) from most correct tag
-                # Do not push it or publish it (see http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=3681)
-		echo "PR3681 not found. Downloading..."
-		wget http://icedtea.classpath.org/hg/icedtea11/raw-file/tip/patches/pr3681.patch
-	        echo "Applying ${PWD}/pr3681.patch"
-		patch -Np1 < pr3681.patch
-		rm pr3681.patch
+            if [ "x$PR3751" = "x" ] ; then
+                # get pr3751.patch (from http://icedtea.classpath.org/hg/icedtea11) from most correct tag
+                # Do not push it or publish it (see http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=3751)
+		echo "PR3751 not found. Downloading..."
+		wget http://icedtea.classpath.org/hg/icedtea11/raw-file/tip/patches/pr3751.patch
+	        echo "Applying ${PWD}/pr3751.patch"
+		patch -Np1 < pr3751.patch
+		rm pr3751.patch
 	    else
-		echo "Applying ${PR3681}"
-		patch -Np1 < $PR3681
+		echo "Applying ${PR3751}"
+		patch -Np1 < $PR3751
             fi;
             find . -name '*.orig' -exec rm -vf '{}' ';'
         popd
@@ -149,8 +148,9 @@ pushd "${FILE_NAME_ROOT}"
     else
         SWITCH=czf
     fi
-    tar --exclude-vcs -$SWITCH ${FILE_NAME_ROOT}.tar.${COMPRESSION} $TO_COMPRESS
-    mv ${FILE_NAME_ROOT}.tar.${COMPRESSION}  ..
+    TARBALL_NAME=${FILE_NAME_ROOT}-4curve.tar.${COMPRESSION}
+    tar --exclude-vcs -$SWITCH ${TARBALL_NAME} $TO_COMPRESS
+    mv ${TARBALL_NAME} ..
 popd
 echo "Done. You may want to remove the uncompressed version - $FILE_NAME_ROOT."
 

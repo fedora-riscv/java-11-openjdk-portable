@@ -223,7 +223,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        2
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -995,7 +995,7 @@ URL:      http://openjdk.java.net/
 
 # to regenerate source0 (jdk) and source8 (jdk's taspets) run update_package.sh
 # update_package.sh contains hard-coded repos, revisions, tags, and projects to regenerate the source archives
-Source0: shenandoah-jdk%{majorver}-shenandoah-jdk-%{newjavaver}+%{buildver}%{?tagsuffix:-%{tagsuffix}}.tar.xz
+Source0: shenandoah-jdk%{majorver}-shenandoah-jdk-%{newjavaver}+%{buildver}%{?tagsuffix:-%{tagsuffix}}-4curve.tar.xz
 Source8: systemtap_3.2_tapsets_hg-icedtea8-9d464368e06d.tar.xz
 
 # Desktop files. Adapted from IcedTea
@@ -1030,10 +1030,6 @@ Patch1000: rh1648249-add_commented_out_nss_cfg_provider_to_java_security.patch
 Patch1:    rh1648242-accessible_toolkit_crash_do_not_break_jvm.patch
 # Restrict access to java-atk-wrapper classes
 Patch2:    rh1648644-java_access_bridge_privileged_security.patch
-# PR1834, RH1022017: Reduce curves reported by SSL to those in NSS
-# Not currently suitable to go upstream as it disables curves
-# for all providers unconditionally
-Patch525: rh1022017-reduce_ssl_curves.patch
 
 #############################################
 #
@@ -1293,7 +1289,6 @@ pushd %{top_level_dir_name}
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
-%patch525 -p1
 popd # openjdk
 
 %patch1000
@@ -1833,6 +1828,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue Aug 27 2019 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.5.2-0.2.ea
+- Update generate_source_tarball.sh script to use the PR3751 patch and retain the secp256k1 curve.
+- Regenerate source tarball using the updated script and add the -'4curve' suffix.
+- PR3751 includes the changes in the PR1834/RH1022017 patch which is removed.
+
 * Sat Aug 24 2019 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.5.2-0.1.ea
 - Update to shenandoah-jdk-11.0.5+2 (EA)
 
