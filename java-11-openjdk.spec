@@ -222,7 +222,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        9
+%global buildver        10
 %global rpmrelease      0
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
@@ -240,7 +240,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           0
+%global is_ga           1
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -963,7 +963,7 @@ Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}.1
+Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1056,6 +1056,10 @@ Patch6:    rh1566890-CVE_2018_3639-speculative_store_bypass.patch
 Patch7: pr3695-toggle_system_crypto_policy.patch
 # S390 ambiguous log2_intptr call
 Patch8: s390-8214206_fix.patch
+# JDK-8236039: JSSE Client does not accept status_request extension in CertificateRequest messages for TLS 1.3
+Patch9: jdk8236039-status_request_extension.patch
+# JDK-8224851: AArch64: fix warnings and errors with Clang and GCC 8.3
+Patch10: jdk8224851-aarch64_compiler_fixes.patch
 
 #############################################
 #
@@ -1291,6 +1295,8 @@ pushd %{top_level_dir_name}
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
+%patch9 -p1
+%patch10 -p1
 popd # openjdk
 
 %patch1000
@@ -1359,8 +1365,8 @@ export CFLAGS="$CFLAGS -mieee"
 # We use ourcppflags because the OpenJDK build seems to
 # pass EXTRA_CFLAGS to the HotSpot C++ compiler...
 # Explicitly set the C++ standard as the default has changed on GCC >= 6
-EXTRA_CFLAGS="%ourcppflags -std=gnu++98 -Wno-error -fno-delete-null-pointer-checks -fno-lifetime-dse"
-EXTRA_CPP_FLAGS="%ourcppflags -std=gnu++98 -fno-delete-null-pointer-checks -fno-lifetime-dse"
+EXTRA_CFLAGS="%ourcppflags -std=gnu++98 -Wno-error -fno-delete-null-pointer-checks -fno-lifetime-dse -fcommon"
+EXTRA_CPP_FLAGS="%ourcppflags -std=gnu++98 -fno-delete-null-pointer-checks -fno-lifetime-dse -fcommon"
 
 %ifarch %{power64} ppc
 # fix rpmlint warnings
@@ -1830,7 +1836,15 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
-* Wed Jan 29 2020 Fedora Release Engineering <releng@fedoraproject.org> - 1:11.0.6.9-0.0.ea.1
+* Wed Jan 29 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.6.10-0
+- Account for building with GCC 10: JDK-8224851, -fcommon switch.
+
+* Wed Jan 29 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.6.10-0
+- Update to shenandoah-jdk-11.0.6+10 (GA)
+- Add JDK-8236039 backport to resolve OpenShift blocker.
+- Add JDK-8224851 backport to resolve AArch64 compiler issues.
+
+* Wed Jan 29 2020 Fedora Release Engineering <releng@fedoraproject.org> - 1:11.0.6.9-0.1.ea
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
 
 * Thu Jan 09 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.6.9-0.0.ea

@@ -1,0 +1,506 @@
+# HG changeset patch
+# User ngasson
+# Date 1560756709 -28800
+#      Mon Jun 17 15:31:49 2019 +0800
+# Node ID e53ec3b362f42ca94b120141b6da6dcfeba346f2
+# Parent  5eeee2cc94f5937ca847f635d9e0510b355bb2af
+8224851: AArch64: fix warnings and errors with Clang and GCC 8.3
+Reviewed-by: aph, kbarrett
+
+diff --git a/src/hotspot/cpu/aarch64/aarch64.ad b/src/hotspot/cpu/aarch64/aarch64.ad
+--- a/src/hotspot/cpu/aarch64/aarch64.ad
++++ b/src/hotspot/cpu/aarch64/aarch64.ad
+@@ -13748,7 +13748,7 @@
+   format %{ "fcmps $src1, 0.0" %}
+ 
+   ins_encode %{
+-    __ fcmps(as_FloatRegister($src1$$reg), 0.0D);
++    __ fcmps(as_FloatRegister($src1$$reg), 0.0);
+   %}
+ 
+   ins_pipe(pipe_class_compare);
+@@ -13777,7 +13777,7 @@
+   format %{ "fcmpd $src1, 0.0" %}
+ 
+   ins_encode %{
+-    __ fcmpd(as_FloatRegister($src1$$reg), 0.0D);
++    __ fcmpd(as_FloatRegister($src1$$reg), 0.0);
+   %}
+ 
+   ins_pipe(pipe_class_compare);
+@@ -13853,7 +13853,7 @@
+     Label done;
+     FloatRegister s1 = as_FloatRegister($src1$$reg);
+     Register d = as_Register($dst$$reg);
+-    __ fcmps(s1, 0.0D);
++    __ fcmps(s1, 0.0);
+     // installs 0 if EQ else -1
+     __ csinvw(d, zr, zr, Assembler::EQ);
+     // keeps -1 if less or unordered else installs 1
+@@ -13880,7 +13880,7 @@
+     Label done;
+     FloatRegister s1 = as_FloatRegister($src1$$reg);
+     Register d = as_Register($dst$$reg);
+-    __ fcmpd(s1, 0.0D);
++    __ fcmpd(s1, 0.0);
+     // installs 0 if EQ else -1
+     __ csinvw(d, zr, zr, Assembler::EQ);
+     // keeps -1 if less or unordered else installs 1
+diff --git a/src/hotspot/cpu/aarch64/assembler_aarch64.hpp b/src/hotspot/cpu/aarch64/assembler_aarch64.hpp
+--- a/src/hotspot/cpu/aarch64/assembler_aarch64.hpp
++++ b/src/hotspot/cpu/aarch64/assembler_aarch64.hpp
+@@ -276,7 +276,7 @@
+   unsigned get(int msb = 31, int lsb = 0) {
+     int nbits = msb - lsb + 1;
+     unsigned mask = ((1U << nbits) - 1) << lsb;
+-    assert_cond(bits & mask == mask);
++    assert_cond((bits & mask) == mask);
+     return (insn & mask) >> lsb;
+   }
+ 
+@@ -2580,7 +2580,7 @@
+   // RBIT only allows T8B and T16B but encodes them oddly.  Argh...
+   void rbit(FloatRegister Vd, SIMD_Arrangement T, FloatRegister Vn) {
+     assert((ASSERTION), MSG);
+-    _rbit(Vd, SIMD_Arrangement(T & 1 | 0b010), Vn);
++    _rbit(Vd, SIMD_Arrangement((T & 1) | 0b010), Vn);
+   }
+ #undef ASSERTION
+ 
+diff --git a/src/hotspot/cpu/aarch64/c1_LIRAssembler_aarch64.cpp b/src/hotspot/cpu/aarch64/c1_LIRAssembler_aarch64.cpp
+--- a/src/hotspot/cpu/aarch64/c1_LIRAssembler_aarch64.cpp
++++ b/src/hotspot/cpu/aarch64/c1_LIRAssembler_aarch64.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2000, 2018, Oracle and/or its affiliates. All rights reserved.
++ * Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2014, Red Hat Inc. All rights reserved.
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+  *
+@@ -1091,8 +1091,8 @@
+       // Assembler::EQ does not permit unordered branches, so we add
+       // another branch here.  Likewise, Assembler::NE does not permit
+       // ordered branches.
+-      if (is_unordered && op->cond() == lir_cond_equal
+-          || !is_unordered && op->cond() == lir_cond_notEqual)
++      if ((is_unordered && op->cond() == lir_cond_equal)
++          || (!is_unordered && op->cond() == lir_cond_notEqual))
+         __ br(Assembler::VS, *(op->ublock()->label()));
+       switch(op->cond()) {
+       case lir_cond_equal:        acond = Assembler::EQ; break;
+@@ -1775,18 +1775,22 @@
+     switch (code) {
+     case lir_add: __ fadds (dest->as_float_reg(), left->as_float_reg(), right->as_float_reg()); break;
+     case lir_sub: __ fsubs (dest->as_float_reg(), left->as_float_reg(), right->as_float_reg()); break;
++    case lir_mul_strictfp: // fall through
+     case lir_mul: __ fmuls (dest->as_float_reg(), left->as_float_reg(), right->as_float_reg()); break;
++    case lir_div_strictfp: // fall through
+     case lir_div: __ fdivs (dest->as_float_reg(), left->as_float_reg(), right->as_float_reg()); break;
+     default:
+       ShouldNotReachHere();
+     }
+   } else if (left->is_double_fpu()) {
+     if (right->is_double_fpu()) {
+-      // cpu register - cpu register
++      // fpu register - fpu register
+       switch (code) {
+       case lir_add: __ faddd (dest->as_double_reg(), left->as_double_reg(), right->as_double_reg()); break;
+       case lir_sub: __ fsubd (dest->as_double_reg(), left->as_double_reg(), right->as_double_reg()); break;
++      case lir_mul_strictfp: // fall through
+       case lir_mul: __ fmuld (dest->as_double_reg(), left->as_double_reg(), right->as_double_reg()); break;
++      case lir_div_strictfp: // fall through
+       case lir_div: __ fdivd (dest->as_double_reg(), left->as_double_reg(), right->as_double_reg()); break;
+       default:
+         ShouldNotReachHere();
+diff --git a/src/hotspot/cpu/aarch64/c1_LIRGenerator_aarch64.cpp b/src/hotspot/cpu/aarch64/c1_LIRGenerator_aarch64.cpp
+--- a/src/hotspot/cpu/aarch64/c1_LIRGenerator_aarch64.cpp
++++ b/src/hotspot/cpu/aarch64/c1_LIRGenerator_aarch64.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2005, 2018, Oracle and/or its affiliates. All rights reserved.
++ * Copyright (c) 2005, 2019, Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2014, Red Hat, Inc. All rights reserved.
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+  *
+@@ -426,7 +426,7 @@
+     tmp = new_register(T_DOUBLE);
+   }
+ 
+-  arithmetic_op_fpu(x->op(), reg, left.result(), right.result(), NULL);
++  arithmetic_op_fpu(x->op(), reg, left.result(), right.result(), x->is_strictfp());
+ 
+   set_result(x, round_item(reg));
+ }
+diff --git a/src/hotspot/cpu/aarch64/frame_aarch64.cpp b/src/hotspot/cpu/aarch64/frame_aarch64.cpp
+--- a/src/hotspot/cpu/aarch64/frame_aarch64.cpp
++++ b/src/hotspot/cpu/aarch64/frame_aarch64.cpp
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
++ * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
+  * Copyright (c) 2014, Red Hat Inc. All rights reserved.
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+  *
+@@ -767,11 +767,13 @@
+ 
+ extern "C" void pf(unsigned long sp, unsigned long fp, unsigned long pc,
+                    unsigned long bcx, unsigned long thread) {
+-  RegisterMap map((JavaThread*)thread, false);
+   if (!reg_map) {
+-    reg_map = (RegisterMap*)os::malloc(sizeof map, mtNone);
++    reg_map = NEW_C_HEAP_OBJ(RegisterMap, mtNone);
++    ::new (reg_map) RegisterMap((JavaThread*)thread, false);
++  } else {
++    *reg_map = RegisterMap((JavaThread*)thread, false);
+   }
+-  memcpy(reg_map, &map, sizeof map);
++
+   {
+     CodeBlob *cb = CodeCache::find_blob((address)pc);
+     if (cb && cb->frame_size())
+diff --git a/src/hotspot/cpu/aarch64/interp_masm_aarch64.hpp b/src/hotspot/cpu/aarch64/interp_masm_aarch64.hpp
+--- a/src/hotspot/cpu/aarch64/interp_masm_aarch64.hpp
++++ b/src/hotspot/cpu/aarch64/interp_masm_aarch64.hpp
+@@ -38,8 +38,6 @@
+  protected:
+ 
+  protected:
+-  using MacroAssembler::call_VM_leaf_base;
+-
+   // Interpreter specific version of call_VM_base
+   using MacroAssembler::call_VM_leaf_base;
+ 
+diff --git a/src/hotspot/cpu/aarch64/macroAssembler_aarch64.cpp b/src/hotspot/cpu/aarch64/macroAssembler_aarch64.cpp
+--- a/src/hotspot/cpu/aarch64/macroAssembler_aarch64.cpp
++++ b/src/hotspot/cpu/aarch64/macroAssembler_aarch64.cpp
+@@ -2608,7 +2608,7 @@
+   if ((offset & (size-1)) && offset >= (1<<8)) {
+     add(tmp, base, offset & ((1<<12)-1));
+     base = tmp;
+-    offset &= -1<<12;
++    offset &= -1u<<12;
+   }
+ 
+   if (offset >= (1<<12) * size) {
+diff --git a/src/hotspot/cpu/aarch64/macroAssembler_aarch64_log.cpp b/src/hotspot/cpu/aarch64/macroAssembler_aarch64_log.cpp
+--- a/src/hotspot/cpu/aarch64/macroAssembler_aarch64_log.cpp
++++ b/src/hotspot/cpu/aarch64/macroAssembler_aarch64_log.cpp
+@@ -286,7 +286,7 @@
+     frecpe(vtmp5, vtmp5, S);                   // vtmp5 ~= 1/vtmp5
+     lsr(tmp2, rscratch1, 48);
+     movz(tmp4, 0x77f0, 48);
+-    fmovd(vtmp4, 1.0d);
++    fmovd(vtmp4, 1.0);
+     movz(tmp1, INF_OR_NAN_PREFIX, 48);
+     bfm(tmp4, rscratch1, 0, 51);               // tmp4 = 0x77F0 << 48 | mantissa(X)
+     // vtmp1 = AS_DOUBLE_BITS(0x77F0 << 48 | mantissa(X)) == mx
+@@ -358,7 +358,7 @@
+       br(GE, DONE);
+       cmp(rscratch1, tmp2);
+       br(NE, CHECKED_CORNER_CASES);
+-      fmovd(v0, 0.0d);
++      fmovd(v0, 0.0);
+   }
+   bind(DONE);
+     ret(lr);
+diff --git a/src/hotspot/cpu/aarch64/macroAssembler_aarch64_trig.cpp b/src/hotspot/cpu/aarch64/macroAssembler_aarch64_trig.cpp
+--- a/src/hotspot/cpu/aarch64/macroAssembler_aarch64_trig.cpp
++++ b/src/hotspot/cpu/aarch64/macroAssembler_aarch64_trig.cpp
+@@ -381,11 +381,11 @@
+       }
+ 
+       block_comment("nx calculation with unrolled while(tx[nx-1]==zeroA) nx--;"); {
+-        fcmpd(v26, 0.0d);                          // if NE then jx == 2. else it's 1 or 0
++        fcmpd(v26, 0.0);                           // if NE then jx == 2. else it's 1 or 0
+         add(iqBase, sp, 480);                      // base of iq[]
+         fmuld(v3, v26, v10);
+         br(NE, NX_SET);
+-        fcmpd(v7, 0.0d);                           // v7 == 0 => jx = 0. Else jx = 1
++        fcmpd(v7, 0.0);                            // v7 == 0 => jx = 0. Else jx = 1
+         csetw(jx, NE);
+       }
+     bind(NX_SET);
+@@ -696,7 +696,7 @@
+     cmpw(jv, zr);
+     addw(tmp4, jx, 4); // tmp4 = m = jx + jk = jx + 4. jx is in {0,1,2} so m is in [4,5,6]
+     cselw(jv, jv, zr, GE);
+-    fmovd(v26, 0.0d);
++    fmovd(v26, 0.0);
+     addw(tmp5, jv, 1);                    // jv+1
+     subsw(j, jv, jx);
+     add(qBase, sp, 320);                  // base of q[]
+@@ -819,8 +819,8 @@
+   movw(jz, 4);
+   fmovd(v17, i);                               // v17 = twon24
+   fmovd(v30, tmp5);                            // 2^q0
+-  fmovd(v21, 0.125d);
+-  fmovd(v20, 8.0d);
++  fmovd(v21, 0.125);
++  fmovd(v20, 8.0);
+   fmovd(v22, tmp4);                            // 2^-q0
+ 
+   block_comment("recompute loop"); {
+@@ -877,7 +877,7 @@
+           lsr(ih, tmp2, 23);                               // ih = iq[z-1] >> 23
+           b(Q0_ZERO_CMP_DONE);
+         bind(Q0_ZERO_CMP_LT);
+-          fmovd(v4, 0.5d);
++          fmovd(v4, 0.5);
+           fcmpd(v18, v4);
+           cselw(ih, zr, ih, LT);                           // if (z<0.5) ih = 0
+       }
+@@ -924,7 +924,7 @@
+         br(NE, IH_HANDLED);
+ 
+         block_comment("if(ih==2) {"); {
+-          fmovd(v25, 1.0d);
++          fmovd(v25, 1.0);
+           fsubd(v18, v25, v18);                            // z = one - z;
+           cbzw(rscratch2, IH_HANDLED);
+           fsubd(v18, v18, v30);                            // z -= scalbnA(one,q0);
+@@ -932,7 +932,7 @@
+     }
+     bind(IH_HANDLED);
+       // check if recomputation is needed
+-      fcmpd(v18, 0.0d);
++      fcmpd(v18, 0.0);
+       br(NE, RECOMP_CHECK_DONE_NOT_ZERO);
+ 
+       block_comment("if(z==zeroB) {"); {
+@@ -994,7 +994,7 @@
+     }
+     bind(RECOMP_CHECK_DONE);
+       // chop off zero terms
+-      fcmpd(v18, 0.0d);
++      fcmpd(v18, 0.0);
+       br(EQ, Z_IS_ZERO);
+ 
+       block_comment("else block of if(z==0.0) {"); {
+@@ -1053,7 +1053,7 @@
+           movw(tmp2, zr); // tmp2 will keep jz - i == 0 at start
+         bind(COMP_FOR);
+           // for(fw=0.0,k=0;k<=jp&&k<=jz-i;k++) fw += PIo2[k]*q[i+k];
+-          fmovd(v30, 0.0d);
++          fmovd(v30, 0.0);
+           add(tmp5, qBase, i, LSL, 3); // address of q[i+k] for k==0
+           movw(tmp3, 4);
+           movw(tmp4, zr);              // used as k
+@@ -1081,7 +1081,7 @@
+         // remember prec == 2
+ 
+         block_comment("for (i=jz;i>=0;i--) fw += fq[i];"); {
+-            fmovd(v4, 0.0d);
++            fmovd(v4, 0.0);
+             mov(i, jz);
+           bind(FW_FOR1);
+             ldrd(v1, Address(rscratch2, i, Address::lsl(3)));
+@@ -1319,7 +1319,7 @@
+     ld1(C1, C2, C3, C4, T1D, Address(rscratch2)); // load C1..C3\4
+     block_comment("calculate r = z*(C1+z*(C2+z*(C3+z*(C4+z*(C5+z*C6)))))"); {
+       fmaddd(r, z, C6, C5);
+-      fmovd(half, 0.5d);
++      fmovd(half, 0.5);
+       fmaddd(r, z, r, C4);
+       fmuld(y, x, y);
+       fmaddd(r, z, r, C3);
+@@ -1329,7 +1329,7 @@
+       fmaddd(r, z, r, C1);                        // r = C1+z(C2+z(C4+z(C5+z*C6)))
+     }
+     // need to multiply r by z to have "final" r value
+-    fmovd(one, 1.0d);
++    fmovd(one, 1.0);
+     cmp(ix, rscratch1);
+     br(GT, IX_IS_LARGE);
+     block_comment("if(ix < 0x3FD33333) return one - (0.5*z - (z*r - x*y))"); {
+@@ -1352,7 +1352,7 @@
+       b(QX_SET);
+     bind(SET_QX_CONST);
+       block_comment("if(ix > 0x3fe90000) qx = 0.28125;"); {
+-        fmovd(qx, 0.28125d);
++        fmovd(qx, 0.28125);
+       }
+     bind(QX_SET);
+       fnmsub(C6, x, r, y);    // z*r - xy
+@@ -1443,7 +1443,7 @@
+   block_comment("kernel_sin/kernel_cos: if(ix<0x3e400000) {<fast return>}"); {
+     bind(TINY_X);
+       if (isCos) {
+-        fmovd(v0, 1.0d);
++        fmovd(v0, 1.0);
+       }
+       ret(lr);
+   }
+diff --git a/src/hotspot/cpu/aarch64/vm_version_aarch64.cpp b/src/hotspot/cpu/aarch64/vm_version_aarch64.cpp
+--- a/src/hotspot/cpu/aarch64/vm_version_aarch64.cpp
++++ b/src/hotspot/cpu/aarch64/vm_version_aarch64.cpp
+@@ -169,7 +169,7 @@
+   if (FILE *f = fopen("/proc/cpuinfo", "r")) {
+     char buf[128], *p;
+     while (fgets(buf, sizeof (buf), f) != NULL) {
+-      if (p = strchr(buf, ':')) {
++      if ((p = strchr(buf, ':')) != NULL) {
+         long v = strtol(p+1, NULL, 0);
+         if (strncmp(buf, "CPU implementer", sizeof "CPU implementer" - 1) == 0) {
+           _cpu = v;
+diff --git a/src/hotspot/os_cpu/linux_aarch64/atomic_linux_aarch64.hpp b/src/hotspot/os_cpu/linux_aarch64/atomic_linux_aarch64.hpp
+--- a/src/hotspot/os_cpu/linux_aarch64/atomic_linux_aarch64.hpp
++++ b/src/hotspot/os_cpu/linux_aarch64/atomic_linux_aarch64.hpp
+@@ -40,7 +40,9 @@
+ {
+   template<typename I, typename D>
+   D add_and_fetch(I add_value, D volatile* dest, atomic_memory_order order) const {
+-    return __sync_add_and_fetch(dest, add_value);
++    D res = __atomic_add_fetch(dest, add_value, __ATOMIC_RELEASE);
++    FULL_MEM_BARRIER;
++    return res;
+   }
+ };
+ 
+diff --git a/src/hotspot/os_cpu/linux_aarch64/copy_linux_aarch64.s b/src/hotspot/os_cpu/linux_aarch64/copy_linux_aarch64.s
+--- a/src/hotspot/os_cpu/linux_aarch64/copy_linux_aarch64.s
++++ b/src/hotspot/os_cpu/linux_aarch64/copy_linux_aarch64.s
+@@ -159,7 +159,7 @@
+         blo     bwd_copy_drain
+ 
+ bwd_copy_again:
+-        prfm    pldl1keep, [s, #-256]
++        prfum   pldl1keep, [s, #-256]
+         stp     t0, t1, [d, #-16]
+         ldp     t0, t1, [s, #-16]
+         stp     t2, t3, [d, #-32]
+diff --git a/src/hotspot/os_cpu/linux_aarch64/os_linux_aarch64.cpp b/src/hotspot/os_cpu/linux_aarch64/os_linux_aarch64.cpp
+--- a/src/hotspot/os_cpu/linux_aarch64/os_linux_aarch64.cpp
++++ b/src/hotspot/os_cpu/linux_aarch64/os_linux_aarch64.cpp
+@@ -79,12 +79,8 @@
+ #define REG_FP 29
+ #define REG_LR 30
+ 
+-#define SPELL_REG_SP "sp"
+-#define SPELL_REG_FP "x29"
+-
+-address os::current_stack_pointer() {
+-  register void *esp __asm__ (SPELL_REG_SP);
+-  return (address) esp;
++NOINLINE address os::current_stack_pointer() {
++  return (address)__builtin_frame_address(0);
+ }
+ 
+ char* os::non_memory_address_word() {
+@@ -199,23 +195,8 @@
+   return frame(fr->link(), fr->link(), fr->sender_pc());
+ }
+ 
+-intptr_t* _get_previous_fp() {
+-  register intptr_t **fp __asm__ (SPELL_REG_FP);
+-
+-  // fp is for this frame (_get_previous_fp). We want the fp for the
+-  // caller of os::current_frame*(), so go up two frames. However, for
+-  // optimized builds, _get_previous_fp() will be inlined, so only go
+-  // up 1 frame in that case.
+-  #ifdef _NMT_NOINLINE_
+-    return **(intptr_t***)fp;
+-  #else
+-    return *fp;
+-  #endif
+-}
+-
+-
+-frame os::current_frame() {
+-  intptr_t* fp = _get_previous_fp();
++NOINLINE frame os::current_frame() {
++  intptr_t *fp = *(intptr_t **)__builtin_frame_address(0);
+   frame myframe((intptr_t*)os::current_stack_pointer(),
+                 (intptr_t*)fp,
+                 CAST_FROM_FN_PTR(address, os::current_frame));
+@@ -228,12 +209,6 @@
+ }
+ 
+ // Utility functions
+-
+-// From IA32 System Programming Guide
+-enum {
+-  trap_page_fault = 0xE
+-};
+-
+ extern "C" JNIEXPORT int
+ JVM_handle_linux_signal(int sig,
+                         siginfo_t* info,
+@@ -575,42 +550,42 @@
+     return 0;
+   }
+ 
+-  void _Copy_conjoint_jshorts_atomic(jshort* from, jshort* to, size_t count) {
++  void _Copy_conjoint_jshorts_atomic(const jshort* from, jshort* to, size_t count) {
+     if (from > to) {
+-      jshort *end = from + count;
++      const jshort *end = from + count;
+       while (from < end)
+         *(to++) = *(from++);
+     }
+     else if (from < to) {
+-      jshort *end = from;
++      const jshort *end = from;
+       from += count - 1;
+       to   += count - 1;
+       while (from >= end)
+         *(to--) = *(from--);
+     }
+   }
+-  void _Copy_conjoint_jints_atomic(jint* from, jint* to, size_t count) {
++  void _Copy_conjoint_jints_atomic(const jint* from, jint* to, size_t count) {
+     if (from > to) {
+-      jint *end = from + count;
++      const jint *end = from + count;
+       while (from < end)
+         *(to++) = *(from++);
+     }
+     else if (from < to) {
+-      jint *end = from;
++      const jint *end = from;
+       from += count - 1;
+       to   += count - 1;
+       while (from >= end)
+         *(to--) = *(from--);
+     }
+   }
+-  void _Copy_conjoint_jlongs_atomic(jlong* from, jlong* to, size_t count) {
++  void _Copy_conjoint_jlongs_atomic(const jlong* from, jlong* to, size_t count) {
+     if (from > to) {
+-      jlong *end = from + count;
++      const jlong *end = from + count;
+       while (from < end)
+         os::atomic_copy64(from++, to++);
+     }
+     else if (from < to) {
+-      jlong *end = from;
++      const jlong *end = from;
+       from += count - 1;
+       to   += count - 1;
+       while (from >= end)
+@@ -618,22 +593,22 @@
+     }
+   }
+ 
+-  void _Copy_arrayof_conjoint_bytes(HeapWord* from,
++  void _Copy_arrayof_conjoint_bytes(const HeapWord* from,
+                                     HeapWord* to,
+                                     size_t    count) {
+     memmove(to, from, count);
+   }
+-  void _Copy_arrayof_conjoint_jshorts(HeapWord* from,
++  void _Copy_arrayof_conjoint_jshorts(const HeapWord* from,
+                                       HeapWord* to,
+                                       size_t    count) {
+     memmove(to, from, count * 2);
+   }
+-  void _Copy_arrayof_conjoint_jints(HeapWord* from,
++  void _Copy_arrayof_conjoint_jints(const HeapWord* from,
+                                     HeapWord* to,
+                                     size_t    count) {
+     memmove(to, from, count * 4);
+   }
+-  void _Copy_arrayof_conjoint_jlongs(HeapWord* from,
++  void _Copy_arrayof_conjoint_jlongs(const HeapWord* from,
+                                      HeapWord* to,
+                                      size_t    count) {
+     memmove(to, from, count * 8);
