@@ -200,7 +200,7 @@
 
 # New Version-String scheme-style defines
 %global majorver 11
-%global securityver 6
+%global securityver 7
 # buildjdkver is usually same as %%{majorver},
 # but in time of bootstrap of next jdk, it is majorver-1, 
 # and this it is better to change it here, on single place
@@ -222,7 +222,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        10
+%global buildver        1
 %global rpmrelease      0
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
@@ -240,7 +240,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           1
+%global is_ga           0
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -1056,8 +1056,6 @@ Patch6:    rh1566890-CVE_2018_3639-speculative_store_bypass.patch
 Patch7: pr3695-toggle_system_crypto_policy.patch
 # S390 ambiguous log2_intptr call
 Patch8: s390-8214206_fix.patch
-# JDK-8236039: JSSE Client does not accept status_request extension in CertificateRequest messages for TLS 1.3
-Patch9: jdk8236039-status_request_extension.patch
 # JDK-8224851: AArch64: fix warnings and errors with Clang and GCC 8.3
 Patch10: jdk8224851-aarch64_compiler_fixes.patch
 
@@ -1295,7 +1293,6 @@ pushd %{top_level_dir_name}
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
-%patch9 -p1
 %patch10 -p1
 popd # openjdk
 
@@ -1845,6 +1842,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Feb 27 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.7.1-0.0.ea
+- Update to shenandoah-jdk-11.0.7+1 (EA)
+- Switch to EA mode for 11.0.7 pre-release builds.
+- Drop JDK-8236039 backport now applied upstream.
+
 * Thu Feb 27 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.6.10-0
 - Add workaround for building with GCC 10 on s390x. See RHBZ#1799087
 
