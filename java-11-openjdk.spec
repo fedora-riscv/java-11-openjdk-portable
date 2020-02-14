@@ -1362,11 +1362,16 @@ export ARCH_DATA_MODEL=64
 export CFLAGS="$CFLAGS -mieee"
 %endif
 
+GCC_10_WORKAROUND_S390x="-fno-tree-coalesce-vars -fno-tree-copy-prop -fno-tree-dce -fno-tree-dominator-opts -fno-tree-dse -fno-tree-forwprop -fno-tree-fre -fno-tree-loop-distribute-patterns -fno-tree-loop-distribution -fno-tree-loop-vectorize -fno-tree-partial-pre -fno-tree-phiprop -fno-tree-pre -fno-tree-pta -fno-tree-scev-cprop -fno-tree-sink -fno-tree-slp-vectorize -fno-tree-slsr -fno-tree-sra -fno-tree-switch-conversion -fno-tree-tail-merge -fno-tree-ter -fno-tree-vrp -fno-unit-at-a-time -fno-unswitch-loops -fno-vect-cost-model -fno-version-loops-for-strides"
 # We use ourcppflags because the OpenJDK build seems to
 # pass EXTRA_CFLAGS to the HotSpot C++ compiler...
 # Explicitly set the C++ standard as the default has changed on GCC >= 6
 EXTRA_CFLAGS="%ourcppflags -std=gnu++98 -Wno-error -fno-delete-null-pointer-checks -fno-lifetime-dse -fcommon"
 EXTRA_CPP_FLAGS="%ourcppflags -std=gnu++98 -fno-delete-null-pointer-checks -fno-lifetime-dse -fcommon"
+%ifarch s390x
+EXTRA_CFLAGS="$EXTRA_CFLAGS $GCC_10_WORKAROUND_S390x"
+EXTRA_CPP_FLAGS="$EXTRA_CPP_FLAGS $GCC_10_WORKAROUND_S390x"
+%endif
 
 %ifarch %{power64} ppc
 # fix rpmlint warnings
