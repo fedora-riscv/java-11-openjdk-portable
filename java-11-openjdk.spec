@@ -1845,6 +1845,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Feb 27 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.6.10-0
+- Add workaround for building with GCC 10 on s390x. See RHBZ#1799087
+
 * Wed Jan 29 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.6.10-0
 - Account for building with GCC 10: JDK-8224851, -fcommon switch.
 
