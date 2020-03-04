@@ -222,7 +222,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        1
+%global buildver        2
 %global rpmrelease      0
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
@@ -1056,8 +1056,6 @@ Patch6:    rh1566890-CVE_2018_3639-speculative_store_bypass.patch
 Patch7: pr3695-toggle_system_crypto_policy.patch
 # S390 ambiguous log2_intptr call
 Patch8: s390-8214206_fix.patch
-# JDK-8224851: AArch64: fix warnings and errors with Clang and GCC 8.3
-Patch10: jdk8224851-aarch64_compiler_fixes.patch
 
 #############################################
 #
@@ -1293,7 +1291,6 @@ pushd %{top_level_dir_name}
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
-%patch10 -p1
 popd # openjdk
 
 %patch1000
@@ -1842,6 +1839,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Wed Mar 04 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.2-0.0.ea
+- Update to shenandoah-jdk-11.0.7+2 (EA)
+- Drop JDK-8224851 backport now included upstream.
+
 * Thu Feb 27 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.7.1-0.0.ea
 - Update to shenandoah-jdk-11.0.7+1 (EA)
 - Switch to EA mode for 11.0.7 pre-release builds.
