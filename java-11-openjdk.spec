@@ -223,7 +223,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        2
-%global rpmrelease      0
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1056,6 +1056,8 @@ Patch6:    rh1566890-CVE_2018_3639-speculative_store_bypass.patch
 Patch7: pr3695-toggle_system_crypto_policy.patch
 # S390 ambiguous log2_intptr call
 Patch8: s390-8214206_fix.patch
+# JDK-8237879: make 4.3 breaks build
+Patch9: jdk8237879-make_4_3_build_fixes.patch
 
 #############################################
 #
@@ -1291,6 +1293,7 @@ pushd %{top_level_dir_name}
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
+%patch9 -p1
 popd # openjdk
 
 %patch1000
@@ -1839,6 +1842,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Fri Mar 13 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.7.2-0.1.ea
+- Add patch for make 4.3 (JDK-8237879)
+
 * Wed Mar 04 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.2-0.0.ea
 - Update to shenandoah-jdk-11.0.7+2 (EA)
 - Drop JDK-8224851 backport now included upstream.
