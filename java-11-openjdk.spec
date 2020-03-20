@@ -223,7 +223,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        2
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1056,6 +1056,18 @@ Patch6:    rh1566890-CVE_2018_3639-speculative_store_bypass.patch
 Patch7: pr3695-toggle_system_crypto_policy.patch
 # S390 ambiguous log2_intptr call
 Patch8: s390-8214206_fix.patch
+# JDK-8241296: Segfault in JNIHandleBlock::oops_do()
+Patch10: jdk8241296-jnihandleblock_segfault.patch
+
+#############################################
+#
+# Patches appearing in 11.0.8
+#
+# This section includes patches which are present
+# in the listed OpenJDK 11u release and should be
+# able to be removed once that release is out
+# and used by this RPM.
+#############################################
 # JDK-8237879: make 4.3 breaks build
 Patch9: jdk8237879-make_4_3_build_fixes.patch
 
@@ -1294,6 +1306,7 @@ pushd %{top_level_dir_name}
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
+%patch10 -p1
 popd # openjdk
 
 %patch1000
@@ -1842,6 +1855,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Fri Mar 20 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.2-0.2.ea
+- Backport JDK-8241296 to fix segfaults when active_handles is NULL (RH1813550)
+
 * Fri Mar 13 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.7.2-0.1.ea
 - Add patch for make 4.3 (JDK-8237879)
 
