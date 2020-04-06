@@ -217,13 +217,16 @@
   %global lts_designator_zip ""
 %endif
 
+# Define IcedTea version used for SystemTap tapsets and desktop file
+%global icedteaver      3.15.0
+
 # Standard JPackage naming and versioning defines
 %global origin          openjdk
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        2
-%global rpmrelease      4
+%global rpmrelease      5
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -995,10 +998,14 @@ License:  ASL 1.1 and ASL 2.0 and BSD and BSD with advertising and GPL+ and GPLv
 URL:      http://openjdk.java.net/
 
 
-# to regenerate source0 (jdk) and source8 (jdk's taspets) run update_package.sh
+# to regenerate source0 (jdk) run update_package.sh
 # update_package.sh contains hard-coded repos, revisions, tags, and projects to regenerate the source archives
 Source0: shenandoah-jdk%{majorver}-shenandoah-jdk-%{newjavaver}+%{buildver}%{?tagsuffix:-%{tagsuffix}}-4curve.tar.xz
-Source8: systemtap_3.2_tapsets_hg-icedtea8-9d464368e06d.tar.xz
+
+# Use 'icedtea_sync.sh' to update the following
+# They are based on code contained in the IcedTea project (3.x).
+# Systemtap tapsets. Zipped up to keep it small.
+Source8: tapsets-icedtea-%{icedteaver}.tar.xz
 
 # Desktop files. Adapted from IcedTea
 Source9: jconsole.desktop.in
@@ -1334,7 +1341,7 @@ cp -r tapset tapset%{debug_suffix}
 
 for suffix in %{build_loop} ; do
   for file in "tapset"$suffix/*.in; do
-    OUTPUT_FILE=`echo $file | sed -e "s:\.stp\.in$:%{version}-%{release}.%{_arch}.stp:g"`
+    OUTPUT_FILE=`echo $file | sed -e "s:\.stp\.in$:-%{version}-%{release}.%{_arch}.stp:g"`
     sed -e "s:@ABS_SERVER_LIBJVM_SO@:%{_jvmdir}/%{sdkdir -- $suffix}/lib/server/libjvm.so:g" $file > $file.1
 # TODO find out which architectures other than i686 have a client vm
 %ifarch %{ix86}
@@ -1351,16 +1358,18 @@ done
 %endif
 
 # Prepare desktop files
+# The _X_ syntax indicates variables that are replaced by make upstream
+# The @X@ syntax indicates variables that are replaced by configure upstream
 for suffix in %{build_loop} ; do
 for file in %{SOURCE9}; do
     FILE=`basename $file | sed -e s:\.in$::g`
     EXT="${FILE##*.}"
     NAME="${FILE%.*}"
     OUTPUT_FILE=$NAME$suffix.$EXT
-    sed    -e  "s:@JAVA_HOME@:%{sdkbindir -- $suffix}:g" $file > $OUTPUT_FILE
-    sed -i -e  "s:@JRE_HOME@:%{jrebindir -- $suffix}:g" $OUTPUT_FILE
-    sed -i -e  "s:@ARCH@:%{version}-%{release}.%{_arch}$suffix:g" $OUTPUT_FILE
-    sed -i -e  "s:@JAVA_MAJOR_VERSION@:%{majorver}:g" $OUTPUT_FILE
+    sed    -e  "s:_SDKBINDIR_:%{sdkbindir -- $suffix}:g" $file > $OUTPUT_FILE
+    sed -i -e  "s:@target_cpu@:%{_arch}:g" $OUTPUT_FILE
+    sed -i -e  "s:@OPENJDK_VER@:%{version}-%{release}.%{_arch}$suffix:g" $OUTPUT_FILE
+    sed -i -e  "s:@JAVA_VER@:%{javaver}:g" $OUTPUT_FILE
     sed -i -e  "s:@JAVA_VENDOR@:%{origin}:g" $OUTPUT_FILE
 done
 done
@@ -1863,6 +1872,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon Apr 06 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.2-0.5.ea
+- Sync SystemTap & desktop files with upstream IcedTea release 3.15.0 using new script
+
 * Sat Mar 28 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.2-0.4.ea
 - Add JDK-8237396 backport to resolve Shenandoah TCK breakage in traversal mode.
 
