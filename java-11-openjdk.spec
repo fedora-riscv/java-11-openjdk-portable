@@ -225,8 +225,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        2
-%global rpmrelease      5
+%global buildver        3
+%global rpmrelease      0
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1872,6 +1872,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Apr 16 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.3-0.0.ea
+- Update to shenandoah-jdk-11.0.7+3 (EA)
+
 * Mon Apr 06 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.2-0.5.ea
 - Sync SystemTap & desktop files with upstream IcedTea release 3.15.0 using new script
 
