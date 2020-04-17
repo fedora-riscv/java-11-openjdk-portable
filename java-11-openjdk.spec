@@ -1073,6 +1073,8 @@ Patch8: s390-8214206_fix.patch
 # able to be removed once that release is out
 # and used by this RPM.
 #############################################
+# JDK-8237879: make 4.3 breaks build
+Patch9: jdk8237879-make_4_3_build_fixes.patch
 # JDK-8241296: Segfault in JNIHandleBlock::oops_do()
 Patch10: jdk8241296-jnihandleblock_segfault.patch
 
@@ -1085,10 +1087,10 @@ Patch10: jdk8241296-jnihandleblock_segfault.patch
 # able to be removed once that release is out
 # and used by this RPM.
 #############################################
-# JDK-8237879: make 4.3 breaks build
-Patch9: jdk8237879-make_4_3_build_fixes.patch
 # JDK-8237396: JvmtiTagMap::weak_oops_do() should not trigger barriers
 Patch11: jdk8237396-avoid_triggering_barriers.patch
+# JDK-8228407: JVM crashes with shared archive file mismatch
+Patch12: jdk8228407-shared_archive_crash.patch
 
 #############################################
 #
@@ -1327,6 +1329,7 @@ pushd %{top_level_dir_name}
 %patch9 -p1
 %patch10 -p1
 %patch11 -p1
+%patch12 -p1
 popd # openjdk
 
 %patch1000
@@ -1872,6 +1875,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Apr 16 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.3-0.0.ea
+- Add JDK-8228407 backport to resolve crashes during verification.
+
 * Thu Apr 16 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.3-0.0.ea
 - Update to shenandoah-jdk-11.0.7+3 (EA)
 
