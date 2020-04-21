@@ -225,7 +225,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        8
+%global buildver        9
 %global rpmrelease      0
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
@@ -1075,8 +1075,6 @@ Patch8: s390-8214206_fix.patch
 #############################################
 # JDK-8237879: make 4.3 breaks build
 Patch9: jdk8237879-make_4_3_build_fixes.patch
-# JDK-8241296: Segfault in JNIHandleBlock::oops_do()
-Patch10: jdk8241296-jnihandleblock_segfault.patch
 
 #############################################
 #
@@ -1327,7 +1325,6 @@ pushd %{top_level_dir_name}
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
-%patch10 -p1
 %patch11 -p1
 %patch12 -p1
 popd # openjdk
@@ -1875,6 +1872,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue Apr 21 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.9-0.0.ea
+- Update to shenandoah-jdk-11.0.7+9 (EA)
+- Remove JDK-8241296 backport as this was integrated upstream in jdk-11.0.7+9.
+
 * Tue Apr 21 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.8-0.0.ea
 - Update to shenandoah-jdk-11.0.7+8 (EA)
 
