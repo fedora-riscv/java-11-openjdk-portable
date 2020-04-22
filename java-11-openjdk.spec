@@ -225,7 +225,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        9
+%global buildver        10
 %global rpmrelease      0
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
@@ -243,7 +243,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           0
+%global is_ga           1
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -1066,18 +1066,6 @@ Patch8: s390-8214206_fix.patch
 
 #############################################
 #
-# Patches appearing in 11.0.7
-#
-# This section includes patches which are present
-# in the listed OpenJDK 11u release and should be
-# able to be removed once that release is out
-# and used by this RPM.
-#############################################
-# JDK-8237879: make 4.3 breaks build
-Patch9: jdk8237879-make_4_3_build_fixes.patch
-
-#############################################
-#
 # Patches appearing in 11.0.8
 #
 # This section includes patches which are present
@@ -1324,7 +1312,6 @@ pushd %{top_level_dir_name}
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
-%patch9 -p1
 %patch11 -p1
 %patch12 -p1
 popd # openjdk
@@ -1872,6 +1859,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Wed Apr 22 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.10-0
+- Update to shenandoah-jdk-11.0.7+10 (GA)
+- Switch to GA mode for final release.
+- Remove JDK-8237879 backport as this was integrated upstream in jdk-11.0.7+10.
+
 * Tue Apr 21 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.9-0.0.ea
 - Update to shenandoah-jdk-11.0.7+9 (EA)
 - Remove JDK-8241296 backport as this was integrated upstream in jdk-11.0.7+9.
