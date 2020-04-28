@@ -73,7 +73,7 @@
 
 # while JDK is a techpreview(is_system_jdk=0), some provides are turned off. Once jdk stops to be an techpreview, move it to 1
 # as sytem JDK, we mean any JDK which can run whole system java stack without issues (like bytecode issues, module issues, dependencies...)
-%global is_system_jdk 0
+%global is_system_jdk 1
 
 %global aarch64         aarch64 arm64 armv8
 # we need to distinguish between big and little endian PPC64
@@ -230,7 +230,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        8
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1965,6 +1965,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Jul 09 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.8.8-0.2.ea
+- bumped to become system jdk, is_system_jdk moved from 0 to 1
+
 * Thu Jul 09 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.8-0.1.ea
 - Re-introduce java-openjdk-src & java-openjdk-demo for system_jdk builds.
 - Fix accidental renaming of java-openjdk-devel to java-devel-openjdk.
