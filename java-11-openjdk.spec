@@ -226,7 +226,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        10
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1077,6 +1077,8 @@ Patch8: s390-8214206_fix.patch
 Patch11: jdk8237396-avoid_triggering_barriers.patch
 # JDK-8228407: JVM crashes with shared archive file mismatch
 Patch12: jdk8228407-shared_archive_crash.patch
+# JDK-8233880: Support compilers with multi-digit major version numbers
+Patch13: jdk8233880-compiler_versioning.patch
 
 #############################################
 #
@@ -1314,6 +1316,7 @@ pushd %{top_level_dir_name}
 %patch8 -p1
 %patch11 -p1
 %patch12 -p1
+%patch13 -p1
 popd # openjdk
 
 %patch1000
@@ -1383,9 +1386,9 @@ export CFLAGS="$CFLAGS -mieee"
 
 # We use ourcppflags because the OpenJDK build seems to
 # pass EXTRA_CFLAGS to the HotSpot C++ compiler...
-# Explicitly set the C++ standard as the default has changed on GCC >= 6
-EXTRA_CFLAGS="%ourcppflags -std=gnu++98 -Wno-error -fno-delete-null-pointer-checks -fno-lifetime-dse -fcommon"
-EXTRA_CPP_FLAGS="%ourcppflags -std=gnu++98 -fno-delete-null-pointer-checks -fno-lifetime-dse -fcommon"
+# Explicitly set -fcommon as GCC 10+ defaults to -fno-common
+EXTRA_CFLAGS="%ourcppflags -Wno-error -fcommon"
+EXTRA_CPP_FLAGS="%ourcppflags -fcommon"
 
 %ifarch %{power64} ppc
 # fix rpmlint warnings
@@ -1859,6 +1862,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Sun May 17 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.10-2
+- Backport JDK-8233880 to fix version detection of GCC 10.
+- Remove explicit compiler flags which should be handled by the upstream build
+  (-std=gnu++98, -fno-delete-null-pointer-checks, -fno-lifetime-dse)
+
 * Fri Apr 24 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.10-1
 - Make use of --with-extra-asflags introduced in jdk-11.0.6+1.
 
