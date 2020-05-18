@@ -200,7 +200,7 @@
 
 # New Version-String scheme-style defines
 %global majorver 11
-%global securityver 7
+%global securityver 8
 # buildjdkver is usually same as %%{majorver},
 # but in time of bootstrap of next jdk, it is majorver-1, 
 # and this it is better to change it here, on single place
@@ -225,8 +225,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        10
-%global rpmrelease      2
+%global buildver        1
+%global rpmrelease      0
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -243,7 +243,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           1
+%global is_ga           0
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -1073,10 +1073,6 @@ Patch8: s390-8214206_fix.patch
 # able to be removed once that release is out
 # and used by this RPM.
 #############################################
-# JDK-8237396: JvmtiTagMap::weak_oops_do() should not trigger barriers
-Patch11: jdk8237396-avoid_triggering_barriers.patch
-# JDK-8228407: JVM crashes with shared archive file mismatch
-Patch12: jdk8228407-shared_archive_crash.patch
 # JDK-8233880: Support compilers with multi-digit major version numbers
 Patch13: jdk8233880-compiler_versioning.patch
 
@@ -1314,8 +1310,6 @@ pushd %{top_level_dir_name}
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
-%patch11 -p1
-%patch12 -p1
 %patch13 -p1
 popd # openjdk
 
@@ -1862,6 +1856,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon May 18 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.1-0.0.ea
+- Update to shenandoah-jdk-11.0.8+1 (EA)
+- Switch to EA mode for 11.0.8 pre-release builds.
+- Drop JDK-8237396 & JDK-8228407 backports now applied upstream.
+
 * Sun May 17 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.7.10-2
 - Backport JDK-8233880 to fix version detection of GCC 10.
 - Remove explicit compiler flags which should be handled by the upstream build
