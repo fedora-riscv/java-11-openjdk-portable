@@ -225,7 +225,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        2
+%global buildver        3
 %global rpmrelease      0
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
@@ -1073,8 +1073,6 @@ Patch8: s390-8214206_fix.patch
 # able to be removed once that release is out
 # and used by this RPM.
 #############################################
-# JDK-8233880: Support compilers with multi-digit major version numbers
-Patch13: jdk8233880-compiler_versioning.patch
 
 #############################################
 #
@@ -1310,7 +1308,6 @@ pushd %{top_level_dir_name}
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
-%patch13 -p1
 popd # openjdk
 
 %patch1000
@@ -1856,6 +1853,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue May 19 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.3-0.0.ea
+- Update to shenandoah-jdk-11.0.8+3 (EA)
+- Drop JDK-8233880 backport now applied upstream.
+
 * Mon May 18 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.2-0.0.ea
 - Update to shenandoah-jdk-11.0.8+2 (EA)
 
