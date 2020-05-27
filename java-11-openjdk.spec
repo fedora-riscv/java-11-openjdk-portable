@@ -225,8 +225,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        3
-%global rpmrelease      1
+%global buildver        4
+%global rpmrelease      0
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -879,7 +879,9 @@ Requires: ca-certificates
 # Require javapackages-filesystem for ownership of /usr/lib/jvm/ and macros
 Requires: javapackages-filesystem
 # Require zone-info data provided by tzdata-java sub-package
-Requires: tzdata-java >= 2015d
+# 2020a required as of JDK-8243541 in 11.0.8+4
+Requires: tzdata-java >= 2020a
+# for support of kernel stream control
 # libsctp.so.1 is being `dlopen`ed on demand
 Requires: lksctp-tools%{?_isa}
 # tool to copy jdk's configs - should be Recommends only, but then only dnf/yum enforce it,
@@ -1141,7 +1143,8 @@ BuildRequires: java-%{buildjdkver}-openjdk-devel
 %ifnarch %{jit_arches}
 BuildRequires: libffi-devel
 %endif
-BuildRequires: tzdata-java >= 2015d
+# 2020a required as of JDK-8243541 in 11.0.8+4
+BuildRequires: tzdata-java >= 2020a
 # Earlier versions have a bug in tree vectorization on PPC
 BuildRequires: gcc >= 4.8.3-8
 
@@ -1908,6 +1911,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon May 25 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.4-0.0.ea
+- Update to shenandoah-jdk-11.0.8+4 (EA)
+- Require tzdata 2020a due to resource changes in JDK-8243541
+
 * Fri May 22 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.8.3-0.1.ea
 - Build static-libs-image and add resulting files via -static-libs
   sub-package.
