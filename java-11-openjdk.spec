@@ -202,15 +202,16 @@
 %endif
 
 # New Version-String scheme-style defines
+# If you bump majorver, you must bump also vendor_version_string
 %global majorver 11
+# Used via new version scheme. JDK 11 was
+# GA'ed in September 2018 => 18.9
+%global vendor_version_string 18.9
 %global securityver 8
 # buildjdkver is usually same as %%{majorver},
 # but in time of bootstrap of next jdk, it is majorver-1, 
 # and this it is better to change it here, on single place
 %global buildjdkver %{majorver}
-# Used via new version scheme. JDK 11 was
-# GA'ed in September 2018 => 18.9
-%global vendor_version_string 18.9
 # Add LTS designator for RHEL builds
 %if 0%{?rhel}
   %global lts_designator "LTS"
