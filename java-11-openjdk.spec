@@ -229,7 +229,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        5
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -257,6 +257,23 @@
 %global ea_designator_zip -%{ea_designator}
 %global extraver .%{ea_designator}
 %global eaprefix 0.
+%endif
+
+# Define what url should JVM offer in case of a crash report
+# order may be important, epel may have rhel declared
+%if 0%{?epel}
+%global bugs  https://bugzilla.redhat.com/enter_bug.cgi?product=Fedora%20EPEL&component=%{name}&version=epel%{epel}
+%else
+%if 0%{?fedora}
+# Does not work for rawhide, keeps the version field empty
+%global bugs  https://bugzilla.redhat.com/enter_bug.cgi?product=Fedora&component=%{name}&version=%{fedora}
+%else
+%if 0%{?rhel}
+%global bugs  https://bugzilla.redhat.com/enter_bug.cgi?product=Red%20Hat%20Enterprise%20Linux%20%{rhel}&component=%{name}
+%else
+%global bugs  https://bugzilla.redhat.com/enter_bug.cgi
+%endif
+%endif
 %endif
 
 # parametrized macros are order-sensitive
@@ -1466,6 +1483,10 @@ bash ../configure \
     --with-version-pre="%{ea_designator}" \
     --with-version-opt=%{lts_designator} \
     --with-vendor-version-string="%{vendor_version_string}" \
+    --with-vendor-name="Red Hat, Inc." \
+    --with-vendor-url="https://www.redhat.com/" \
+    --with-vendor-bug-url="%{bugs}" \
+    --with-vendor-vm-bug-url="%{bugs}" \
     --with-boot-jdk=/usr/lib/jvm/java-%{buildjdkver}-openjdk \
     --with-debug-level=$debugbuild \
     --with-native-debug-symbols=internal \
@@ -1919,6 +1940,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Jun 18 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.8.5-0.2.ea
+- set vendor property and vendor urls
+- made urls to be preconfigured by os
+
 * Tue Jun 09 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.8.5-0.1.ea
 - Disable stripping of debug symbols for static libraries part of
   the -static-libs sub-package.
