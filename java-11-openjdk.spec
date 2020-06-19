@@ -230,7 +230,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        5
-%global rpmrelease      2
+%global rpmrelease      3
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -583,6 +583,7 @@ exit 0
 
 %define files_jre_headless() %{expand:
 %license %{_jvmdir}/%{sdkdir -- %{?1}}/legal
+%doc %{_defaultdocdir}/%{uniquejavadocdir -- %{?1}}/NEWS
 %dir %{_sysconfdir}/.java/.systemPrefs
 %dir %{_sysconfdir}/.java
 %dir %{_jvmdir}/%{sdkdir -- %{?1}}
@@ -1057,6 +1058,9 @@ Source8: tapsets-icedtea-%{icedteaver}.tar.xz
 
 # Desktop files. Adapted from IcedTea
 Source9: jconsole.desktop.in
+
+# Release notes
+Source10: NEWS
 
 # nss configuration file
 Source11: nss.cfg.in
@@ -1738,6 +1742,11 @@ if ! echo $suffix | grep -q "debug" ; then
   cp -a %{buildoutputdir -- $suffix}/bundles/jdk-%{newjavaver}%{ea_designator_zip}+%{buildver}%{lts_designator_zip}-docs.zip $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip
 fi
 
+# Install release notes
+commondocdir=${RPM_BUILD_ROOT}%{_defaultdocdir}/%{uniquejavadocdir -- $suffix}
+install -d -m 755 ${commondocdir}
+cp -a %{SOURCE10} ${commondocdir}
+
 # Install icons and menu entries
 for s in 16 24 32 48 ; do
   install -D -p -m 644 \
@@ -1954,6 +1963,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Jun 18 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.5-0.3.ea
+- Add release notes.
+- Amend release notes, removing issue actually fixed in 11.0.6.
+
 * Tue Jun 23 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.5-0.2.ea
 - Sync JDK-8247874 patch with upstream status in 11.0.9.
 - Add missing ChangeLog entry from last series of commits.
