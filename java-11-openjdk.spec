@@ -1111,6 +1111,8 @@ Patch6:    rh1566890-CVE_2018_3639-speculative_store_bypass.patch
 Patch7: pr3695-toggle_system_crypto_policy.patch
 # S390 ambiguous log2_intptr call
 Patch8: s390-8214206_fix.patch
+# Replacement in VersionProps.java.template not working when --with-vendor-bug-url contains '&'
+Patch9: jdk8247874-fix_ampersand_in_vm_bug_url.patch
 
 #############################################
 #
@@ -1378,6 +1380,7 @@ pushd %{top_level_dir_name}
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
+%patch9 -p1
 popd # openjdk
 
 %patch1000
@@ -1941,6 +1944,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon Jun 22 2020 Jayashree Huttanagoudar <jhuttana@redhat.com> - 1:1.0.8.5-0.2.ea
+- Added a patch jdk8247874-fix_ampersand_in_vm_bug_url.patch
+
 * Thu Jun 18 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.8.5-0.2.ea
 - set vendor property and vendor urls
 - made urls to be preconfigured by os
