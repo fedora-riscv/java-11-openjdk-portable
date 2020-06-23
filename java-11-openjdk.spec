@@ -1111,8 +1111,6 @@ Patch6:    rh1566890-CVE_2018_3639-speculative_store_bypass.patch
 Patch7: pr3695-toggle_system_crypto_policy.patch
 # S390 ambiguous log2_intptr call
 Patch8: s390-8214206_fix.patch
-# Replacement in VersionProps.java.template not working when --with-vendor-bug-url contains '&'
-Patch9: jdk8247874-fix_ampersand_in_vm_bug_url.patch
 
 #############################################
 #
@@ -1123,6 +1121,18 @@ Patch9: jdk8247874-fix_ampersand_in_vm_bug_url.patch
 # able to be removed once that release is out
 # and used by this RPM.
 #############################################
+
+#############################################
+#
+# Patches appearing in 11.0.9
+#
+# This section includes patches which are present
+# in the listed OpenJDK 11u release and should be
+# able to be removed once that release is out
+# and used by this RPM.
+#############################################
+# JDK-8247874: Replacement in VersionProps.java.template not working when --with-vendor-bug-url contains '&'
+Patch9: jdk8247874-fix_ampersand_in_vm_bug_url.patch
 
 #############################################
 #
@@ -1944,8 +1954,15 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue Jun 23 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.5-0.2.ea
+- Sync JDK-8247874 patch with upstream status in 11.0.9.
+- Add missing ChangeLog entry from last series of commits.
+
 * Mon Jun 22 2020 Jayashree Huttanagoudar <jhuttana@redhat.com> - 1:1.0.8.5-0.2.ea
 - Added a patch jdk8247874-fix_ampersand_in_vm_bug_url.patch
+
+* Thu Jun 18 2020 Jayashree Huttanagoudar <jhuttana@redhat.com> - 1:1.0.8.5-0.2.ea
+- Moved vendor_version_string to better place
 
 * Thu Jun 18 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.8.5-0.2.ea
 - set vendor property and vendor urls

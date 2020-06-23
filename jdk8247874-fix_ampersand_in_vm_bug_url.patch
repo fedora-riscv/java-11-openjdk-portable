@@ -1,8 +1,17 @@
-diff --git openjdk.orig/make/common/TextFileProcessing.gmk openjdk/make/common/TextFileProcessing.gmk.bkp
-index de6ca5c..04bd9e5 100644
+# HG changeset patch
+# User sgehwolf
+# Date 1592560575 -7200
+#      Fri Jun 19 11:56:15 2020 +0200
+# Node ID c523ff594ec50a45cb157cffc93c17e0414c066a
+# Parent  c17f1a4da248acfe3c1285fe332aea245eb84bb4
+8247874: Replacement in VersionProps.java.template not working when --with-vendor-bug-url contains '&'
+Summary: Backports parts of 8223319: Add copyright footer to specs and man pages
+Reviewed-by: andrew, phh
+
+diff --git openjdk.orig/make/common/TextFileProcessing.gmk openjdk/make/common/TextFileProcessing.gmk
 --- openjdk.orig/make/common/TextFileProcessing.gmk
-+++ openjdk/make/common/TextFileProcessing.gmk.bkp
-@@ -155,9 +155,10 @@ define SetupTextFileProcessingBody
++++ openjdk/make/common/TextFileProcessing.gmk
+@@ -155,9 +155,10 @@
      # Convert the REPLACEMENTS syntax ( A => B ; C => D ; ...) to a sed command
      # line (-e "s/A/B/g" -e "s/C/D/g" ...), basically by replacing '=>' with '/'
      # and ';' with '/g" -e "s/', and adjusting for edge cases.
