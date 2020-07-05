@@ -1969,10 +1969,10 @@ require "copy_jdk_configs.lua"
 * Tue Jun 23 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.7-0.0.ea
 - Update to shenandoah-jdk-11.0.8+7 (EA)
 
-* Thu Jun 18 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.6-0.0.ea
+* Tue Jun 23 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.6-0.0.ea
 - Update to shenandoah-jdk-11.0.8+6 (EA)
 
-* Thu Jun 18 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.5-0.3.ea
+* Tue Jun 23 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.5-0.3.ea
 - Add release notes.
 - Amend release notes, removing issue actually fixed in 11.0.6.
 
