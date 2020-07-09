@@ -230,7 +230,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        8
-%global rpmrelease      0
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -948,9 +948,9 @@ Provides: java-sdk-%{javaver}%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-devel%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-%{origin}-devel%{?1} = %{epoch}:%{version}-%{release}
 %if %is_system_jdk
-Provides: java-devel-%{origin}%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-sdk-%{origin}%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-devel%{?1} = %{epoch}:%{version}-%{release}
+Provides: java-%{origin}-devel%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-sdk%{?1} = %{epoch}:%{version}-%{release}
 %endif
 }
@@ -981,6 +981,7 @@ Provides: java-%{javaver}-demo%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-%{origin}-demo%{?1} = %{epoch}:%{version}-%{release}
 %if %is_system_jdk
 Provides: java-demo%{?1} = %{epoch}:%{version}-%{release}
+Provides: java-%{origin}-demo%{?1} = %{epoch}:%{version}-%{release}
 %endif
 }
 
@@ -1007,6 +1008,7 @@ Provides: java-%{javaver}-src%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 %if %is_system_jdk
 Provides: java-src%{?1} = %{epoch}:%{version}-%{release}
+Provides: java-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 %endif
 }
 
@@ -1963,6 +1965,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Jul 09 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.8-0.1.ea
+- Re-introduce java-openjdk-src & java-openjdk-demo for system_jdk builds.
+- Fix accidental renaming of java-openjdk-devel to java-devel-openjdk.
+
 * Tue Jun 30 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.8-0.0.ea
 - Update to shenandoah-jdk-11.0.8+8 (EA)
 
