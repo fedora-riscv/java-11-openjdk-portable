@@ -318,6 +318,7 @@ Live versions of these release notes can be found at:
   - JDK-8245649: Revert 8245397 backport of 8230591
   - JDK-8246031: SSLSocket.getSession() doesn't close connection for timeout/ interrupts
   - JDK-8246613: Choose the default SecureRandom algo based on registration ordering
+  - JDK-8248505: Unexpected NoSuchAlgorithmException when using secure random impl from BCFIPS provider
 
 Notes on individual issues:
 ===========================

@@ -229,7 +229,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        9
+%global buildver        10
 %global rpmrelease      0
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
@@ -247,7 +247,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           0
+%global is_ga           1
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -1965,6 +1965,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Sat Jul 11 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.10-0
+- Update to shenandoah-jdk-11.0.8+10 (GA)
+- Switch to GA mode for final release.
+- Update release notes with last minute fix (JDK-8248505).
+
 * Fri Jul 10 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.8.9-0.0.ea
 - Update to shenandoah-jdk-11.0.8+9 (EA)
 - Update release notes for 11.0.8 release.
