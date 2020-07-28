@@ -131,6 +131,9 @@
 # No docs nor bootcycle for debug builds
 %global debug_targets images static-libs-image
 
+# Disable LTO as this causes build failures at the moment.
+# See RHBZ#1861401
+%define _lto_cflags %{nil}
 
 # Filter out flags from the optflags macro that cause problems with the OpenJDK build
 # We filter out -O flags so that the optimization of HotSpot is not lowered from O3 to O2
@@ -230,7 +233,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        10
-%global rpmrelease      0
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1017,7 +1020,7 @@ Provides: java-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}.1
+Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1965,6 +1968,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue Jul 28 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.8.10-1
+- Disable LTO as this breaks the build. See RHBZ#1861401.
+
 * Tue Jul 28 2020 Fedora Release Engineering <releng@fedoraproject.org> - 1:11.0.8.10-0.1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
 
