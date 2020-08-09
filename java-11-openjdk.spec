@@ -210,7 +210,7 @@
 # Used via new version scheme. JDK 11 was
 # GA'ed in September 2018 => 18.9
 %global vendor_version_string 18.9
-%global securityver 8
+%global securityver 9
 # buildjdkver is usually same as %%{majorver},
 # but in time of bootstrap of next jdk, it is majorver-1, 
 # and this it is better to change it here, on single place
@@ -232,7 +232,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        10
+%global buildver        1
 %global rpmrelease      1
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
@@ -250,7 +250,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           1
+%global is_ga           0
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -833,22 +833,7 @@ exit 0
 }
 
 %define files_static_libs() %{expand:
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libj2pkcs11.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libj2pcsc.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libnio.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libprefs.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libjava.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libjli.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libnet.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libjimage.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libjaas.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libfdlibm.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libj2gss.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libsunec.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libjsig.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libextnet.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libverify.a
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libzip.a
+%{_jvmdir}/%{sdkdir -- %{?1}}/lib/lib*.a
 }
 
 %define files_javadoc() %{expand:
@@ -1140,8 +1125,6 @@ Patch8: s390-8214206_fix.patch
 # able to be removed once that release is out
 # and used by this RPM.
 #############################################
-# JDK-8247874: Replacement in VersionProps.java.template not working when --with-vendor-bug-url contains '&'
-Patch9: jdk8247874-fix_ampersand_in_vm_bug_url.patch
 
 #############################################
 #
@@ -1399,7 +1382,6 @@ pushd %{top_level_dir_name}
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
-%patch9 -p1
 popd # openjdk
 
 %patch1000
@@ -1968,6 +1950,12 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Sun Aug 09 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.9.1-0.1.ea
+- Update to shenandoah-jdk-11.0.9+1 (EA)
+- Switch to EA mode for 11.0.9 pre-release builds.
+- Drop JDK-8247874 backport now applied upstream.
+- JDK-8245832 increases the set of static libraries, so try and include them all with a wildcard.
+
 * Tue Jul 28 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.8.10-1
 - Disable LTO as this breaks the build. See RHBZ#1861401.
 
