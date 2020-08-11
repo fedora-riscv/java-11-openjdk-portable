@@ -79,14 +79,32 @@
 # we need to distinguish between big and little endian PPC64
 %global ppc64le         ppc64le
 %global ppc64be         ppc64 ppc64p7
+# Set of architectures which support multiple ABIs
 %global multilib_arches %{power64} sparc64 x86_64
-%global jit_arches      %{ix86} x86_64 sparcv9 sparc64 %{aarch64} %{power64} %{arm} s390x
+# Set of architectures for which we build debug builds
+%global debug_arches    %{ix86} x86_64 sparcv9 sparc64 %{aarch64} %{power64} s390x
+# Set of architectures with a Just-In-Time (JIT) compiler
+%global jit_arches      %{debug_arches} %{arm}
+# Set of architectures which run a full bootstrap cycle
+%global bootstrap_arches %{jit_arches}
+# Set of architectures which support SystemTap tapsets
+%global systemtap_arches %{jit_arches}
+# Set of architectures with a Ahead-Of-Time (AOT) compiler
 %global aot_arches      x86_64 %{aarch64}
+# Set of architectures which support the serviceability agent
+%global sa_arches       %{ix86} x86_64 sparcv9 sparc64 %{aarch64} %{power64} %{arm}
+# Set of architectures which support class data sharing
+# See https://bugzilla.redhat.com/show_bug.cgi?id=513605
+# MetaspaceShared::generate_vtable_methods is not implemented for the PPC JIT
+%global share_arches    %{ix86} x86_64 sparcv9 sparc64 %{aarch64} %{arm} s390x
+# Set of architectures for which we build the Shenandoah garbage collector
+%global shenandoah_arches x86_64 %{aarch64}
+# Set of architectures for which we build the Z garbage collector
+%global zgc_arches x86_64
 
 # By default, we build a debug build during main build on JIT architectures
 %if %{with slowdebug}
-%ifarch %{jit_arches}
-%ifnarch %{arm}
+%ifarch %{debug_arches}
 %global include_debug_build 1
 %else
 %global include_debug_build 0
@@ -94,15 +112,23 @@
 %else
 %global include_debug_build 0
 %endif
-%else
-%global include_debug_build 0
-%endif
 
-# On x86_64 and AArch64, we use the Shenandoah HotSpot
-%ifarch x86_64 %{aarch64}
+# On certain architectures, we compile the Shenandoah GC
+%ifarch %{shenandoah_arches}
 %global use_shenandoah_hotspot 1
+%global shenandoah_feature shenandoahgc
 %else
 %global use_shenandoah_hotspot 0
+%global shenandoah_feature -shenandoahgc
+%endif
+
+# On certain architectures, we compile the ZGC
+%ifarch %{zgc_arches}
+%global use_zgc_hotspot 1
+%global zgc_feature zgc
+%else
+%global use_zgc_hotspot 0
+%global zgc_feature -zgc
 %endif
 
 %if %{include_debug_build}
@@ -117,7 +143,7 @@
 # is expected in one single case at the end of the build
 %global rev_build_loop  %{build_loop2} %{build_loop1}
 
-%ifarch %{jit_arches}
+%ifarch %{bootstrap_arches}
 %global bootstrap_build 1
 %else
 %global bootstrap_build 1
@@ -198,7 +224,7 @@
 
 
 
-%ifarch %{jit_arches}
+%ifarch %{systemtap_arches}
 %global with_systemtap 1
 %else
 %global with_systemtap 0
@@ -233,7 +259,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        1
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -349,12 +375,8 @@ exit 0
 
 
 %define post_headless() %{expand:
-%ifarch %{jit_arches}
-# MetaspaceShared::generate_vtable_methods not implemented for PPC JIT
-%ifnarch %{ppc64le}
-# see https://bugzilla.redhat.com/show_bug.cgi?id=513605
+%ifarch %{share_arches}
 %{jrebindir -- %{?1}}/java -Xshare:dump >/dev/null 2>/dev/null
-%endif
 %endif
 
 PRIORITY=%{priority}
@@ -445,10 +467,8 @@ alternatives \\
 %endif
   --slave %{_bindir}/jlink jlink %{sdkbindir -- %{?1}}/jlink \\
   --slave %{_bindir}/jmod jmod %{sdkbindir -- %{?1}}/jmod \\
-%ifarch %{jit_arches}
-%ifnarch s390x
+%ifarch %{sa_arches}
   --slave %{_bindir}/jhsdb jhsdb %{sdkbindir -- %{?1}}/jhsdb \\
-%endif
 %endif
   --slave %{_bindir}/jar jar %{sdkbindir -- %{?1}}/jar \\
   --slave %{_bindir}/jarsigner jarsigner %{sdkbindir -- %{?1}}/jarsigner \\
@@ -640,11 +660,9 @@ exit 0
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libnio.so
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libprefs.so
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/librmi.so
-# Zero and S390x don't have SA
-%ifarch %{jit_arches}
-%ifnarch s390x
+# Some architectures don't have the serviceability agent
+%ifarch %{sa_arches}
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libsaproc.so
-%endif
 %endif
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libsctp.so
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libsunec.so
@@ -662,10 +680,8 @@ exit 0
 %{_mandir}/man1/rmiregistry-%{uniquesuffix -- %{?1}}.1*
 %{_mandir}/man1/unpack200-%{uniquesuffix -- %{?1}}.1*
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/server/
-%ifarch %{jit_arches}
-%ifnarch %{power64}
+%ifarch %{share_arches}
 %attr(444, root, root) %ghost %{_jvmdir}/%{sdkdir -- %{?1}}/lib/server/classes.jsa
-%endif
 %endif
 %dir %{etcjavasubdir}
 %dir %{etcjavadir -- %{?1}}
@@ -731,11 +747,9 @@ exit 0
 %{_jvmdir}/%{sdkdir -- %{?1}}/bin/jdeprscan
 %{_jvmdir}/%{sdkdir -- %{?1}}/bin/jfr
 %{_jvmdir}/%{sdkdir -- %{?1}}/bin/jimage
-# Zero and S390x don't have SA
-%ifarch %{jit_arches}
-%ifnarch s390x
+# Some architectures don't have the serviceability agent
+%ifarch %{sa_arches}
 %{_jvmdir}/%{sdkdir -- %{?1}}/bin/jhsdb
-%endif
 %endif
 %{_jvmdir}/%{sdkdir -- %{?1}}/bin/jinfo
 %{_jvmdir}/%{sdkdir -- %{?1}}/bin/jlink
@@ -1508,9 +1522,7 @@ bash ../configure \
     --with-extra-ldflags="%{ourldflags}" \
     --with-num-cores="$NUM_PROC" \
     --disable-javac-server \
-%ifarch x86_64
-    --with-jvm-features=zgc \
-%endif
+    --with-jvm-features="%{shenandoah_feature},%{zgc_feature}" \
     --disable-warnings-as-errors
 
 # Debug builds don't need same targets as release for
@@ -1950,6 +1962,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue Aug 11 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.9.1-0.2.ea
+- Cleanup architecture and JVM feature handling in preparation for using upstreamed Shenandoah.
+
 * Sun Aug 09 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.9.1-0.1.ea
 - Update to shenandoah-jdk-11.0.9+1 (EA)
 - Switch to EA mode for 11.0.9 pre-release builds.
