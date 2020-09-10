@@ -259,7 +259,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        6
-%global rpmrelease      0
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -847,7 +847,7 @@ exit 0
 }
 
 %define files_static_libs() %{expand:
-%{_jvmdir}/%{sdkdir -- %{?1}}/lib/lib*.a
+%{_jvmdir}/%{sdkdir -- %{?1}}/lib/static/linux-%{archinstall}/glibc/lib*.a
 }
 
 %define files_javadoc() %{expand:
@@ -1730,8 +1730,9 @@ pushd %{buildoutputdir $suffix}/images/%{jdkimage}
 
 popd
 # Install static libs artefacts
+mkdir -p $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/lib/static/linux-%{archinstall}/glibc
 cp -a %{buildoutputdir -- $suffix}/images/%{static_libs_image}/lib/*.a \
-  $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/lib
+  $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/lib/static/linux-%{archinstall}/glibc
 
 
 if ! echo $suffix | grep -q "debug" ; then
@@ -1962,6 +1963,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue Sep 15 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.9.6-0.1.ea
+- Update static-libs packaging to new layout
+
 * Tue Sep 15 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.9.6-0.0.ea
 - Update to jdk-11.0.9+6 (EA)
 - Update tarball generation script to use PR3802, handling JDK-8233228 & JDK-8177334
