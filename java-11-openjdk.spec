@@ -258,8 +258,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        6
-%global rpmrelease      1
+%global buildver        7
+%global rpmrelease      0
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1963,6 +1963,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon Sep 28 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.9.7-0.0.ea
+- Update to jdk-11.0.9+7 (EA)
+
 * Tue Sep 15 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.9.6-0.1.ea
 - Update static-libs packaging to new layout
 
