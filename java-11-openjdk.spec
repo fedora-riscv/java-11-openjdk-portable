@@ -258,7 +258,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global minorver        0
-%global buildver        10
+%global buildver        11
 %global rpmrelease      0
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
@@ -276,7 +276,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           0
+%global is_ga           1
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -847,6 +847,9 @@ exit 0
 }
 
 %define files_static_libs() %{expand:
+%dir %{_jvmdir}/%{sdkdir -- %{?1}}/lib/static
+%dir %{_jvmdir}/%{sdkdir -- %{?1}}/lib/static/linux-%{archinstall}
+%dir %{_jvmdir}/%{sdkdir -- %{?1}}/lib/static/linux-%{archinstall}/glibc
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/static/linux-%{archinstall}/glibc/lib*.a
 }
 
@@ -904,7 +907,7 @@ Requires: ca-certificates
 Requires: javapackages-filesystem
 # Require zone-info data provided by tzdata-java sub-package
 # 2020a required as of JDK-8243541 in 11.0.8+4
-Requires: tzdata-java >= 2020a
+Requires: tzdata-java >= 2020b
 # for support of kernel stream control
 # libsctp.so.1 is being `dlopen`ed on demand
 Requires: lksctp-tools%{?_isa}
@@ -1117,34 +1120,20 @@ Patch4: pr3694-rh1340845-support_fedora_rhel_system_crypto_policy.patch
 Patch6:    rh1566890-CVE_2018_3639-speculative_store_bypass.patch
 # PR3695: Allow use of system crypto policy to be disabled by the user
 Patch7: pr3695-toggle_system_crypto_policy.patch
-# S390 ambiguous log2_intptr call
+
+#############################################
+#
+# Patches appearing in 11.0.10
+#
+# This section includes patches which are present
+# in the listed OpenJDK 11u release and should be
+# able to be removed once that release is out
+# and used by this RPM.
+#############################################
+# JDK-8222286: S390 ambiguous log2_intptr call
 Patch8: s390-8214206_fix.patch
-
-#############################################
-#
-# Patches appearing in 11.0.8
-#
-# This section includes patches which are present
-# in the listed OpenJDK 11u release and should be
-# able to be removed once that release is out
-# and used by this RPM.
-#############################################
-
-#############################################
-#
-# Patches appearing in 11.0.9
-#
-# This section includes patches which are present
-# in the listed OpenJDK 11u release and should be
-# able to be removed once that release is out
-# and used by this RPM.
-#############################################
-
-#############################################
-#
-# JDK 9+ only patches
-#
-#############################################
+# JDK-8254177: (tz) Upgrade time-zone data to tzdata2020b
+Patch9: jdk8254177-tzdata2020b.patch
 
 BuildRequires: autoconf
 BuildRequires: automake
@@ -1182,8 +1171,8 @@ BuildRequires: java-%{buildjdkver}-openjdk-devel
 %ifnarch %{jit_arches}
 BuildRequires: libffi-devel
 %endif
-# 2020a required as of JDK-8243541 in 11.0.8+4
-BuildRequires: tzdata-java >= 2020a
+# 2020b required as of JDK-8254177 in October CPU
+BuildRequires: tzdata-java >= 2020b
 # Earlier versions have a bug in tree vectorization on PPC
 BuildRequires: gcc >= 4.8.3-8
 
@@ -1396,6 +1385,7 @@ pushd %{top_level_dir_name}
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
+%patch9 -p1
 popd # openjdk
 
 %patch1000
@@ -1963,6 +1953,15 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon Oct 19 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.9.11-0
+- Fix directory ownership of static-libs package
+
+* Thu Oct 15 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.9.11-0
+- Update to jdk-11.0.9+11
+- Update release notes for 11.0.9 release.
+- Add backport of JDK-8254177 to update to tzdata 2020b
+- Require tzdata 2020b due to resource changes in JDK-8254177
+
 * Mon Oct 05 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.9.10-0.0.ea
 - Update to jdk-11.0.9+10 (EA)
 
