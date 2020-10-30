@@ -259,7 +259,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        11
-%global rpmrelease      0
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -855,7 +855,7 @@ exit 0
 
 %define files_javadoc() %{expand:
 %doc %{_javadocdir}/%{uniquejavadocdir -- %{?1}}
-%license %{buildoutputdir -- %{?1}}/images/%{jdkimage}/legal
+%license %{_jvmdir}/%{sdkdir -- %{?1}}/legal
 %if %is_system_jdk
 %if %{is_release_build -- %{?1}}
 %ghost %{_javadocdir}/java
@@ -865,7 +865,7 @@ exit 0
 
 %define files_javadoc_zip() %{expand:
 %doc %{_javadocdir}/%{uniquejavadocdir -- %{?1}}.zip
-%license %{buildoutputdir -- %{?1}}/images/%{jdkimage}/legal
+%license %{_jvmdir}/%{sdkdir -- %{?1}}/legal
 %if %is_system_jdk
 %if %{is_release_build -- %{?1}}
 %ghost %{_javadocdir}/java-zip
@@ -1953,6 +1953,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Thu Oct 29 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.9.11-1
+- Move all license files to NVR-specific JVM directory.
+- This bad placement was killing parallel installability and thus having a bad impact on leapp, if used.
+
 * Mon Oct 19 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.9.11-0
 - Fix directory ownership of static-libs package
 
