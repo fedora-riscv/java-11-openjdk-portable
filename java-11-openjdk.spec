@@ -259,7 +259,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        11
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1134,6 +1134,8 @@ Patch7: pr3695-toggle_system_crypto_policy.patch
 Patch8: s390-8214206_fix.patch
 # JDK-8254177: (tz) Upgrade time-zone data to tzdata2020b
 Patch9: jdk8254177-tzdata2020b.patch
+# JDK-8250861: Crash in MinINode::Ideal(PhaseGVN*, bool)
+Patch10: jdk8250861-crash_in_MinINode_Ideal.patch
 
 BuildRequires: autoconf
 BuildRequires: automake
@@ -1386,6 +1388,7 @@ pushd %{top_level_dir_name}
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
+%patch10 -p1
 popd # openjdk
 
 %patch1000
@@ -1488,9 +1491,11 @@ bash ../configure \
 %ifarch %{ppc64le}
     --with-jobs=1 \
 %endif
-    --with-version-build=%{buildver} \
+    --with-version-build=1 \
     --with-version-pre="%{ea_designator}" \
     --with-version-opt=%{lts_designator} \
+    --with-version-patch=1 \
+    --with-version-date="2020-11-04" \
     --with-vendor-version-string="%{vendor_version_string}" \
     --with-vendor-name="Red Hat, Inc." \
     --with-vendor-url="https://www.redhat.com/" \
@@ -1729,7 +1734,8 @@ if ! echo $suffix | grep -q "debug" ; then
   # Install Javadoc documentation
   install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}
   cp -a %{buildoutputdir -- $suffix}/images/docs $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}
-  cp -a %{buildoutputdir -- $suffix}/bundles/jdk-%{newjavaver}%{ea_designator_zip}+%{buildver}%{lts_designator_zip}-docs.zip $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip
+  #cp -a %{buildoutputdir -- $suffix}/bundles/jdk-%{newjavaver}%{ea_designator_zip}+%{buildver}%{lts_designator_zip}-docs.zip $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip
+  cp -a %{buildoutputdir -- $suffix}/bundles/jdk-11.0.9.1+1%{lts_designator_zip}-docs.zip $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip
 fi
 
 # Install release notes
@@ -1953,6 +1959,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Wed Nov 04 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.9.11-2
+- Update to jdk-11.0.9.1+1
+- RPM version stays at 11.0.9.11-2 so as to not break upgrade path.
+- Adds a single patch for JDK-8250861.
+
 * Thu Oct 29 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.9.11-1
 - Move all license files to NVR-specific JVM directory.
 - This bad placement was killing parallel installability and thus having a bad impact on leapp, if used.
