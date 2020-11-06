@@ -259,7 +259,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        11
-%global rpmrelease      2
+%global rpmrelease      3
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1959,6 +1959,9 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Fri Nov 06 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.9.11-3
+- Update release notes for 11.0.9.1 release.
+
 * Wed Nov 04 2020 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.9.11-2
 - Update to jdk-11.0.9.1+1
 - RPM version stays at 11.0.9.11-2 so as to not break upgrade path.
