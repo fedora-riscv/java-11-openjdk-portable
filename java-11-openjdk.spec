@@ -62,8 +62,8 @@
 # the ghosts are here to allow installation via query like `dnf install /usr/bin/java`
 # you can list those files, with appropriate sections: cat *.spec | grep -e --install -e --slave -e post_ 
 # TODO - fix those hardcoded lists via single list
-# those files ,must *NOT* be ghosted for *slowdebug* packages
-# FIXME - if you are moving jshell or jlink or simialr, always modify all three sections
+# Those files must *NOT* be ghosted for *slowdebug* packages
+# FIXME - if you are moving jshell or jlink or similar, always modify all three sections
 # you can check via headless and devels:
 #    rpm -ql --noghost java-11-openjdk-headless-11.0.1.13-8.fc29.x86_64.rpm  | grep bin
 # == rpm -ql           java-11-openjdk-headless-slowdebug-11.0.1.13-8.fc29.x86_64.rpm  | grep bin
@@ -259,7 +259,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        11
-%global rpmrelease      3
+%global rpmrelease      4
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -347,6 +347,8 @@
 %define sdkbindir()     %{expand:%{_jvmdir}/%{sdkdir -- %{?1}}/bin}
 %define jrebindir()     %{expand:%{_jvmdir}/%{sdkdir -- %{?1}}/bin}
 
+%global alt_java_name     alt-java
+
 %global rpm_state_dir %{_localstatedir}/lib/rpm-state/
 
 %if %{with_systemtap}
@@ -388,6 +390,7 @@ ext=.gz
 alternatives \\
   --install %{_bindir}/java java %{jrebindir -- %{?1}}/java $PRIORITY  --family %{name}.%{_arch} \\
   --slave %{_jvmdir}/jre jre %{_jvmdir}/%{sdkdir -- %{?1}} \\
+  --slave %{_bindir}/%{alt_java_name} %{alt_java_name} %{jrebindir -- %{?1}}/%{alt_java_name} \\
   --slave %{_bindir}/jjs jjs %{jrebindir -- %{?1}}/jjs \\
   --slave %{_bindir}/keytool keytool %{jrebindir -- %{?1}}/keytool \\
   --slave %{_bindir}/pack200 pack200 %{jrebindir -- %{?1}}/pack200 \\
@@ -396,6 +399,8 @@ alternatives \\
   --slave %{_bindir}/unpack200 unpack200 %{jrebindir -- %{?1}}/unpack200 \\
   --slave %{_mandir}/man1/java.1$ext java.1$ext \\
   %{_mandir}/man1/java-%{uniquesuffix -- %{?1}}.1$ext \\
+  --slave %{_mandir}/man1/%{alt_java_name}.1$ext %{alt_java_name}.1$ext \\
+  %{_mandir}/man1/%{alt_java_name}-%{uniquesuffix -- %{?1}}.1$ext \\
   --slave %{_mandir}/man1/jjs.1$ext jjs.1$ext \\
   %{_mandir}/man1/jjs-%{uniquesuffix -- %{?1}}.1$ext \\
   --slave %{_mandir}/man1/keytool.1$ext keytool.1$ext \\
@@ -614,6 +619,7 @@ exit 0
 %{_jvmdir}/%{jrelnk -- %{?1}}
 %dir %{_jvmdir}/%{sdkdir -- %{?1}}/bin
 %{_jvmdir}/%{sdkdir -- %{?1}}/bin/java
+%{_jvmdir}/%{sdkdir -- %{?1}}/bin/%{alt_java_name}
 %{_jvmdir}/%{sdkdir -- %{?1}}/bin/jjs
 %{_jvmdir}/%{sdkdir -- %{?1}}/bin/keytool
 %{_jvmdir}/%{sdkdir -- %{?1}}/bin/pack200
@@ -673,6 +679,7 @@ exit 0
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/jfr/default.jfc
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/jfr/profile.jfc
 %{_mandir}/man1/java-%{uniquesuffix -- %{?1}}.1*
+%{_mandir}/man1/%{alt_java_name}-%{uniquesuffix -- %{?1}}.1*
 %{_mandir}/man1/jjs-%{uniquesuffix -- %{?1}}.1*
 %{_mandir}/man1/keytool-%{uniquesuffix -- %{?1}}.1*
 %{_mandir}/man1/pack200-%{uniquesuffix -- %{?1}}.1*
@@ -718,6 +725,7 @@ exit 0
 %if %is_system_jdk
 %if %{is_release_build -- %{?1}}
 %ghost %{_bindir}/java
+%ghost %{_bindir}/%{alt_java_name}
 %ghost %{_jvmdir}/jre
 # https://bugzilla.redhat.com/show_bug.cgi?id=1312019
 %ghost %{_bindir}/jjs
@@ -800,6 +808,7 @@ exit 0
 %if %{is_release_build -- %{?1}}
 %ghost %{_bindir}/javac
 %ghost %{_jvmdir}/java
+%ghost %{_jvmdir}/%{alt_java_name}
 %ghost %{_bindir}/jaotc
 %ghost %{_bindir}/jlink
 %ghost %{_bindir}/jmod
@@ -1555,6 +1564,14 @@ install -m 644 nss.cfg $JAVA_HOME/conf/security/
 rm $JAVA_HOME/lib/tzdb.dat
 ln -s %{_datadir}/javazi-1.8/tzdb.dat $JAVA_HOME/lib/tzdb.dat
 
+# Create fake alt-java as a placeholder for future alt-java
+pushd ${JAVA_HOME}
+cp -a bin/java bin/%{alt_java_name}
+# add alt-java man page
+echo "Hardened java binary recommended for launching untrusted code from the Web e.g. javaws" > man/man1/%{alt_java_name}.1
+cat man/man1/java.1 >> man/man1/%{alt_java_name}.1
+popd
+
 # build cycles
 done
 
@@ -1708,7 +1725,6 @@ pushd %{buildoutputdir $suffix}/images/%{jdkimage}
   pushd $RPM_BUILD_ROOT%{_jvmdir}
     ln -sf %{sdkdir -- $suffix} %{jrelnk -- $suffix}
   popd
-
 
   # Install man pages
   install -d -m 755 $RPM_BUILD_ROOT%{_mandir}/man1
@@ -1959,6 +1975,10 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Mon Nov 23 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.9.11-4
+- Create a copy of java as alt-java with alternatives and man pages
+- java-11-openjdk doesn't have a JRE tree, so don't try and copy alt-java there...
+
 * Fri Nov 06 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.9.11-3
 - Update release notes for 11.0.9.1 release.
 
@@ -2542,7 +2562,7 @@ require "copy_jdk_configs.lua"
 - renamed zip javadoc
 
 * Tue Apr 10 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:10.0.0.46-12
-- Enable basic EC ciphers test in %check.
+- Enable basic EC ciphers test in %%check.
 
 * Tue Apr 10 2018 Severin Gehwolf <sgehwolf@redhat.com> - 1:10.0.0.46-11
 - Port Martin Balao's JDK 9 patch for system NSS support to JDK 10.
