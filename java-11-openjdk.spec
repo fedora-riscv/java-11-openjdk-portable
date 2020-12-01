@@ -259,7 +259,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        11
-%global rpmrelease      4
+%global rpmrelease      5
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; untill openjdk 1.8 we were using 18..... so when moving to 11 we had to add another digit
 %if %is_system_jdk
@@ -1102,6 +1102,8 @@ Source15: TestSecurityProperties.java
 # NSS via SunPKCS11 Provider (disabled comment
 # due to memory leak).
 Patch1000: rh1648249-add_commented_out_nss_cfg_provider_to_java_security.patch
+# enable build of spectre/meltdown hardened alt-java
+Patch600: rh1750419-redhat_alt_java.patch
 
 # Ignore AWTError when assistive technologies are loaded
 Patch1:    rh1648242-accessible_toolkit_crash_do_not_break_jvm.patch
@@ -1125,8 +1127,6 @@ Patch2:    rh1648644-java_access_bridge_privileged_security.patch
 Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk10_and_up.patch
 # PR3694, RH1340845: Add security.useSystemPropertiesFile option to java.security to use system crypto policy
 Patch4: pr3694-rh1340845-support_fedora_rhel_system_crypto_policy.patch
-# RH1566890: CVE-2018-3639
-Patch6:    rh1566890-CVE_2018_3639-speculative_store_bypass.patch
 # PR3695: Allow use of system crypto policy to be disabled by the user
 Patch7: pr3695-toggle_system_crypto_policy.patch
 
@@ -1393,7 +1393,6 @@ pushd %{top_level_dir_name}
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
-%patch6 -p1
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
@@ -1401,6 +1400,7 @@ pushd %{top_level_dir_name}
 popd # openjdk
 
 %patch1000
+%patch600
 
 # Extract systemtap tapsets
 %if %{with_systemtap}
@@ -1566,7 +1566,6 @@ ln -s %{_datadir}/javazi-1.8/tzdb.dat $JAVA_HOME/lib/tzdb.dat
 
 # Create fake alt-java as a placeholder for future alt-java
 pushd ${JAVA_HOME}
-cp -a bin/java bin/%{alt_java_name}
 # add alt-java man page
 echo "Hardened java binary recommended for launching untrusted code from the Web e.g. javaws" > man/man1/%{alt_java_name}.1
 cat man/man1/java.1 >> man/man1/%{alt_java_name}.1
@@ -1975,6 +1974,11 @@ require "copy_jdk_configs.lua"
 
 
 %changelog
+* Tue Dec 01 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.9.11-5
+- removed patch6, rh1566890-CVE_2018_3639-speculative_store_bypass.patch, surpassed by new patch
+- added patch600, rh1750419-redhat_alt_java.patch, suprassing removed patch
+- no longer copying of java->alt-java as it is created by  patch600
+
 * Mon Nov 23 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.9.11-4
 - Create a copy of java as alt-java with alternatives and man pages
 - java-11-openjdk doesn't have a JRE tree, so don't try and copy alt-java there...
