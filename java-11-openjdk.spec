@@ -1102,7 +1102,7 @@ Source15: TestSecurityProperties.java
 # NSS via SunPKCS11 Provider (disabled comment
 # due to memory leak).
 Patch1000: rh1648249-add_commented_out_nss_cfg_provider_to_java_security.patch
-# enable build of spectre/meltdown hardened alt-java
+# enable build of speculative store bypass hardened alt-java
 Patch600: rh1750419-redhat_alt_java.patch
 
 # Ignore AWTError when assistive technologies are loaded
