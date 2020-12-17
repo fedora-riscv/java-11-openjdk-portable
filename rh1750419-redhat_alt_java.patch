@@ -1,12 +1,13 @@
 diff -r 1356affa5e44 make/launcher/Launcher-java.base.gmk
 --- openjdk/make/launcher/Launcher-java.base.gmk      Wed Nov 25 08:27:15 2020 +0100
 +++ openjdk/make/launcher/Launcher-java.base.gmk      Tue Dec 01 12:29:30 2020 +0100
-@@ -41,6 +41,15 @@
+@@ -41,6 +41,16 @@
      OPTIMIZATION := HIGH, \
  ))
  
++#Wno-error=cpp is present to allow commented warning in ifdef part of main.c
 +$(eval $(call SetupBuildLauncher, alt-java, \
-+    CFLAGS := -DEXPAND_CLASSPATH_WILDCARDS -DENABLE_ARG_FILES -DREDHAT_ALT_JAVA, \
++    CFLAGS := -DEXPAND_CLASSPATH_WILDCARDS -DENABLE_ARG_FILES -DREDHAT_ALT_JAVA -Wno-error=cpp, \
 +    LDFLAGS_solaris := -R$(OPENWIN_HOME)/lib$(OPENJDK_TARGET_CPU_ISADIR), \
 +    LIBS_windows := user32.lib comctl32.lib, \
 +    EXTRA_RC_FLAGS := $(JAVA_RC_FLAGS), \
@@ -98,12 +99,16 @@ diff -r 25e94aa812b2 src/share/bin/alt_main.h
 diff -r 25e94aa812b2 src/share/bin/main.c
 --- openjdk/src/java.base/share/native/launcher/main.c	Wed Feb 05 12:20:36 2020 -0300
 +++ openjdk/src/java.base/share/native/launcher/main.c	Tue Jun 02 17:15:28 2020 +0100
-@@ -34,6 +34,10 @@
+@@ -34,6 +34,14 @@
  #include "jli_util.h"
  #include "jni.h"
  
++#ifdef REDHAT_ALT_JAVA
 +#if defined(__linux__) && defined(__x86_64__)
 +#include "alt_main.h"
++#else
++#warning alt-java requested but SSB mitigation not available on this platform.
++#endif
 +#endif
 +
  #ifdef _MSC_VER
