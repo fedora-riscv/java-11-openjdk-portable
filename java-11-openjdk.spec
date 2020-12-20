@@ -284,7 +284,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        11
-%global rpmrelease      7
+%global rpmrelease      8
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -356,6 +356,8 @@
 # Never generate lib-style provides/requires for slowdebug packages
 %global __provides_exclude_from ^.*/%{uniquesuffix -- %{debug_suffix_unquoted}}/.*$
 %global __requires_exclude_from ^.*/%{uniquesuffix -- %{debug_suffix_unquoted}}/.*$
+%global __provides_exclude_from ^.*/%{uniquesuffix -- %{fastdebug_suffix_unquoted}}/.*$
+%global __requires_exclude_from ^.*/%{uniquesuffix -- %{fastdebug_suffix_unquoted}}/.*$
 %else
 # Don't generate provides/requires for JDK provided shared libraries at all.
 %global __provides_exclude ^(%{_privatelibs}|%{_publiclibs})$
@@ -2155,8 +2157,8 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
-* Sat Dec 19 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.9.11-7
-- introduced fastdebug build cycle and subpackages
+* Sat Dec 19 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.9.11-8
+- removed lib-style provides for fastdebug_suffix_unquoted
 
 * Thu Dec 17 2020 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.9.11-6
 - introduced nm based check to verify alt-java on x86_64 is patched, and no other alt-java or java is patched
