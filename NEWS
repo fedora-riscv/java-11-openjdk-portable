@@ -3,6 +3,143 @@ Key:
 JDK-X  - https://bugs.openjdk.java.net/browse/JDK-X
 CVE-XXXX-YYYY: https://cve.mitre.org/cgi-bin/cvename.cgi?name=XXXX-YYYY
 
+New in release OpenJDK 11.0.10 (2021-01-19):
+=============================================
+Live versions of these release notes can be found at:
+  * https://bitly.com/openjdk11010
+  * https://builds.shipilev.net/backports-monitor/release-notes-11.0.10.txt
+
+* Other changes
+  - JDK-7185258: [macosx] Deadlock in SunToolKit.realSync()
+  - JDK-8152332: [macosx] JFileChooser cannot be serialized on Mac OS X
+  - JDK-8161684: [testconf] Add VerifyOops' testing into compiler tiers
+  - JDK-8191006: hsdis disassembler plugin does not compile with binutils 2.29+
+  - JDK-8198334: java/awt/FileDialog/8003399/bug8003399.java fails in headless mode
+  - JDK-8200151: Add 8 JNDI tests to com/sun/jndi/dns/ConfigTests/
+  - JDK-8208279: Add 8 JNDI tests to com/sun/jndi/dns/EnvTests/
+  - JDK-8208483: Add 5 JNDI tests to com/sun/jndi/dns/FactoryTests/
+  - JDK-8208542: Add 4 JNDI tests to com/sun/jndi/dns/ListTests/
+  - JDK-8208665: Amend cross-compilation docs with qemu-debootstrap recipe
+  - JDK-8210088: ProblemList gc/epsilon/TestMemoryMXBeans.java
+  - JDK-8210339: Add 10 JNDI tests to com/sun/jndi/dns/FedTests/
+  - JDK-8212226: SurfaceManager throws "Invalid Image variant" for MultiResolutionImage (Windows)
+  - JDK-8213400: Support choosing group name in keytool keypair generation
+  - JDK-8213535: Windows HiDPI html lightweight tooltips are truncated
+  - JDK-8213698: Improve devkit creation and add support for linux/ppc64/ppc64le/s390x
+  - JDK-8216012: Infinite loop in RSA KeyPairGenerator
+  - JDK-8216324: GetClassMethods is confused by the presence of default methods in super interfaces
+  - JDK-8217429: WebSocket over authenticating proxy fails to send Upgrade headers
+  - JDK-8217976: test/jdk/java/net/httpclient/websocket/WebSocketProxyTest.java fails intermittently
+  - JDK-8218851: JVM crash in custom classloader stress test, JDK 12 & 13
+  - JDK-8220420: Cleanup c1_LinearScan
+  - JDK-8222286: Fix for JDK-8213419 is broken on s390
+  - JDK-8222533: jtreg test jdk/internal/platform/cgroup/TestCgroupMetrics.java fails on SLES12.3 linux ppc64le machine
+  - JDK-8224506: [TESTBUG] TestDockerMemoryMetrics.java fails with exitValue = 137
+  - JDK-8224555: vmTestbase/nsk/jvmti/scenarios/contention/TC02/tc02t001/TestDescription.java failed
+  - JDK-8225329: -XX:+PrintBiasedLockingStatistics causes crash during initialization on Windows platforms
+  - JDK-8227006: [linux] Runtime.availableProcessors execution time increased by factor of 100
+  - JDK-8227647: [Graal] Test8009761.java fails due to "RuntimeException: static java.lang.Object compiler.uncommontrap.Test8009761.m3(boolean,boolean) not compiled"
+  - JDK-8232114: JVM crashed at imjpapi.dll in native code
+  - JDK-8234147: Avoid looking up standard charsets in core libraries
+  - JDK-8236512: PKCS11 Connection closed after Cipher.doFinal and NoPadding
+  - JDK-8236944: The legVecZ operand should be limited to zmm0-zmm15 registers
+  - JDK-8237186: Fix typo in copyright header of java/io/Reader/TransferTo.java
+  - JDK-8237499: JFR: Include stack trace in the ThreadStart event
+  - JDK-8237512: AArch64: aarch64TestHook leaks a BufferBlob
+  - JDK-8237524: AArch64: String.compareTo() may return incorrect result
+  - JDK-8237950: C2 compilation fails with "Live Node limit exceeded limit" during ConvI2L::Ideal optimization
+  - JDK-8239105: Add exception for expiring Digicert root certificates to VerifyCACerts test
+  - JDK-8239477: jdk/jfr/jcmd/TestJcmdStartStopDefault.java fails -XX:+VerifyOops with "verify_oop: rsi: broken oop"
+  - JDK-8239886: Minimal VM build fails after JDK-8237499
+  - JDK-8240633: Memory leaks in the implementations of FileChooserUI
+  - JDK-8240690: Race condition between EDT and BasicDirectoryModel.FilesLoader.run0()
+  - JDK-8241234: Unify monitor enter/exit runtime entries.
+  - JDK-8241311: Move some charset mapping tests from closed to open
+  - JDK-8241797: Add some tests to the problem list
+  - JDK-8242029: AArch64: skip G1 array copy pre-barrier if marking not active
+  - JDK-8242335: Additional Tests for RSASSA-PSS
+  - JDK-8242480: Negative value may be returned by getFreeSwapSpaceSize() in the docker
+  - JDK-8242614: cleanup duplicated test ldap server in some com/sun/jndi/ldap/ tests
+  - JDK-8242846: Bring back test/jdk/tools/jlink/plugins/OrderResourcesPluginTest.java
+  - JDK-8243114: Implement montgomery{Multiply,Square}intrinsics on Windows
+  - JDK-8243290: Improve diagnostic messages for class verification and redefinition failures
+  - JDK-8243617: compiler/onSpinWait/TestOnSpinWaitC1.java test uses wrong class
+  - JDK-8243619: compiler/codecache/CheckSegmentedCodeCache.java test misses -version
+  - JDK-8244142: some hotspot/runtime tests don't check exit code of forked JVM
+  - JDK-8244278: Excessive code cache flushes and sweeps
+  - JDK-8244819: hsdis does not compile with binutils 2.34+
+  - JDK-8245400: Upgrade to LittleCMS 2.11
+  - JDK-8246381: VM crashes with "Current BasicObjectLock* below than low_mark"
+  - JDK-8246434: Threads::print_on_error assumes that the heap has been set up
+  - JDK-8246648: issue with OperatingSystemImpl getFreeSwapSpaceSize in docker after 8242480
+  - JDK-8247201: Print potential pointer value of readable stack memory in hs_err file
+  - JDK-8247763: assert(outer->outcnt() == 2) failed: 'only phis' failure in LoopNode::verify_strip_mined()
+  - JDK-8247867: Upgrade to freetype 2.10.2
+  - JDK-8248190: Enable Power10 system and implement new byte-reverse instructions
+  - JDK-8248226: TestCloneAccessStressGCM fails with -XX:-ReduceBulkZeroing
+  - JDK-8248347: windows build broken by JDK-8243114
+  - JDK-8248532: Every time I change keyboard language at my MacBook, Java crashes
+  - JDK-8248552: C2 crashes with SIGFPE due to division by zero
+  - JDK-8248596: [TESTBUG] compiler/loopopts/PartialPeelingUnswitch.java times out with Graal enabled
+  - JDK-8248745: Add jarsigner and keytool tests for restricted algorithms
+  - JDK-8248791: sun/util/resources/cldr/TimeZoneNamesTest.java fails with -XX:-ReduceInitialCardMarks -XX:-ReduceBulkZeroing
+  - JDK-8248845: AArch64: stack corruption after spilling vector register
+  - JDK-8249176: Update GlobalSignR6CA test certificates
+  - JDK-8249183: JVM crash in "AwtFrame::WmSize" method
+  - JDK-8249192: MonitorInfo stores raw oops across safepoints
+  - JDK-8249602: C2: assert(cnt == _outcnt) failed: no insertions allowed
+  - JDK-8249603: C1: assert(has_error == false) failed: register allocation invalid
+  - JDK-8249605: C2: assert(no_dead_loop) failed: dead loop detected
+  - JDK-8249607: C2: assert(!had_error) failed: bad dominance
+  - JDK-8249608: Vector register used by C2 compiled method corrupted at safepoint
+  - JDK-8249672: Include microcode revision in features_string on x86
+  - JDK-8249821: Separate libharfbuzz from libfontmanager
+  - JDK-8250598: Hyper-V is detected in spite of running on host OS
+  - JDK-8250605: Linux x86_32 builds fail after JDK-8249821
+  - JDK-8250665: Wrong translation for the month name of May in ar_JO,LB,SY
+  - JDK-8250772: Test com/sun/jndi/ldap/NamingExceptionMessageTest.java fails intermittently with javax.naming.ServiceUnavailableException
+  - JDK-8250894: Provide a configure option to build and run against the platform libharfbuzz
+  - JDK-8250928: JFR: Improve hash algorithm for stack traces
+  - JDK-8251118: BiasedLocking::preserve_marks should not have a HandleMark
+  - JDK-8251189: com/sun/jndi/ldap/LdapDnsProviderTest.java failed due to timeout
+  - JDK-8251397: NPE on ClassValue.ClassValueMap.cacheArray
+  - JDK-8251456: [TESTBUG] compiler/vectorization/TestVectorsNotSavedAtSafepoint.java failed OutOfMemoryError
+  - JDK-8251458: Parse::do_lookupswitch fails with "assert(_cnt >= 0) failed"
+  - JDK-8251949: ZGC: Set explicit heap size for compiler/gcbarriers tests
+  - JDK-8252090: JFR: StreamWriterHost::write_unbuffered() stucks in an infinite loop OpenJDK (build 13.0.1+9)
+  - JDK-8252415: Bump update version for OpenJDK: jdk-11.0.10
+  - JDK-8252470: java/awt/dnd/DisposeFrameOnDragCrash/DisposeFrameOnDragTest.java fails on Windows
+  - JDK-8252497: Incorrect numeric currency code for ROL
+  - JDK-8252660: Shenandoah: support manageable SoftMaxHeapSize option
+  - JDK-8252696: Loop unswitching may cause out of bound array load to be executed
+  - JDK-8252754: Hash code calculation of JfrStackTrace is inconsistent
+  - JDK-8253224: Shenandoah: ShenandoahStrDedupQueue destructor calls virtual num_queues()
+  - JDK-8253226: Shenandoah: remove unimplemented ShenandoahStrDedupQueue::verify
+  - JDK-8253284: Zero OrderAccess barrier mappings are incorrect
+  - JDK-8253375: OSX build fails with Xcode 12.0 (12A7209)
+  - JDK-8253778: ShenandoahSafepoint::is_at_shenandoah_safepoint should not access VMThread state from other threads
+  - JDK-8253791: Issue with useAppleColor check in CSystemColors.m
+  - JDK-8254081: java/security/cert/PolicyNode/GetPolicyQualifiers.java fails due to an expired certificate
+  - JDK-8254166: Zero: return-type warning in zeroInterpreter_zero.cpp
+  - JDK-8254177: (tz) Upgrade time-zone data to tzdata2020b
+  - JDK-8254185: Fix Code cache sweeper heuristics for JDK 11
+  - JDK-8254190: [s390] interpreter misses exception check after calling monitorenter
+  - JDK-8254790: SIGSEGV in string_indexof_char and stringL_indexof_char intrinsics
+
+Notes on individual issues:
+===========================
+
+security-libs/java.security:
+
+JDK-8213821: -groupname Option Added to keytool Key Pair Generation
+===================================================================
+A new `-groupname` option has been added to `keytool -genkeypair` so
+that a user can specify a named group when generating a key pair. For
+example, `keytool -genkeypair -keyalg EC -groupname secp384r1` will
+generate an EC key pair by using the `secp384r1` curve. Because there
+might be multiple curves with the same size, using the `-groupname`
+option is preferred over the `-keysize` option.
+
 New in release OpenJDK 11.0.9.1 (2020-10-20):
 =============================================
 Live versions of these release notes can be found at:

@@ -44,10 +44,11 @@
 %global normal_suffix ""
 
 %global debug_warning This package is unoptimised with full debugging. Install only as needed and remove ASAP.
-%global debug_on with full debug on
+%global debug_on with full debugging on
+%global fastdebug_on with minimal debugging on
 %global fastdebug_warning This package is optimised with full debugging. Install only as needed and remove ASAP.
-%global for_fastdebug_on with minimal debug on
-%global for_debug for packages with debug on
+%global for_fastdebug_on for packages with minimal debugging on
+%global for_debug for packages with debugging on
 
 %if %{with release}
 %global include_normal_build 1
@@ -256,16 +257,18 @@
 %endif
 
 # New Version-String scheme-style defines
-# If you bump majorver, you must bump also vendor_version_string
-%global majorver 11
+%global featurever 11
+%global interimver 0
+%global updatever 10
+%global patchver 0
+# If you bump featurever, you must bump also vendor_version_string
 # Used via new version scheme. JDK 11 was
 # GA'ed in September 2018 => 18.9
 %global vendor_version_string 18.9
-%global securityver 9
-# buildjdkver is usually same as %%{majorver},
-# but in time of bootstrap of next jdk, it is majorver-1, 
+# buildjdkver is usually same as %%{featurever},
+# but in time of bootstrap of next jdk, it is featurever-1,
 # and this it is better to change it here, on single place
-%global buildjdkver %{majorver}
+%global buildjdkver %{featurever}
 # Add LTS designator for RHEL builds
 %if 0%{?rhel}
   %global lts_designator "LTS"
@@ -282,26 +285,37 @@
 %global origin          openjdk
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
-%global minorver        0
-%global buildver        11
-%global rpmrelease      9
+%global buildver        1
+%global rpmrelease      0
 #%%global tagsuffix      ""
-# priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
+# Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
-%global priority %( printf '%02d%02d%02d%02d' %{majorver} %{minorver} %{securityver} %{buildver} )
+# Using 10 digits may overflow the int used for priority, so we combine the patch and build versions
+# It is very unlikely we will ever have a patch version > 4 or a build version > 20, so we combine as (patch * 20) + build.
+# This means 11.0.9.0+11 would have had a priority of 11000911 as before
+# A 11.0.9.1+1 would have had a priority of 11000921 (20 * 1 + 1), thus ensuring it is bigger than 11.0.9.0+11
+%global combiver $( expr 20 '*' %{patchver} + %{buildver} )
+%global priority %( printf '%02d%02d%02d%02d' %{featurever} %{interimver} %{updatever} %{combiver} )
 %else
 # for techpreview, using 1, so slowdebugs can have 0
 %global priority %( printf '%08d' 1 )
 %endif
-%global newjavaver      %{majorver}.%{minorver}.%{securityver}
+%global newjavaver      %{featurever}.%{interimver}.%{updatever}.%{patchver}
 
-%global javaver         %{majorver}
+# Omit trailing 0 in filenames when the patch version is 0
+%if 0%{?patchver} > 0
+%global filever %{newjavaver}
+%else
+%global filever %{featurever}.%{interimver}.%{updatever}
+%endif
+
+%global javaver         %{featurever}
 
 # Define milestone (EA for pre-releases, GA for releases)
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           1
+%global is_ga           0
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -332,7 +346,7 @@
 %endif
 
 # parametrized macros are order-sensitive
-%global compatiblename  java-%{majorver}-%{origin}
+%global compatiblename  java-%{featurever}-%{origin}
 %global fullversion     %{compatiblename}-%{version}-%{release}
 # images directories from upstream build
 %global jdkimage                jdk
@@ -1070,7 +1084,7 @@ Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}
 # provides >= 1.6.0 must specify the epoch, "java >= 1:1.6.0".
 
 Epoch:   1
-Summary: %{origin_nice} Runtime Environment %{majorver}
+Summary: %{origin_nice} %{featurever} Runtime Environment
 
 # HotSpot code is licensed under GPLv2
 # JDK library code is licensed under GPLv2 with the Classpath exception
@@ -1092,7 +1106,7 @@ URL:      http://openjdk.java.net/
 
 # to regenerate source0 (jdk) run update_package.sh
 # update_package.sh contains hard-coded repos, revisions, tags, and projects to regenerate the source archives
-Source0: jdk-updates-jdk%{majorver}u-jdk-%{newjavaver}+%{buildver}%{?tagsuffix:-%{tagsuffix}}-4curve.tar.xz
+Source0: jdk-updates-jdk%{featurever}u-jdk-%{filever}+%{buildver}%{?tagsuffix:-%{tagsuffix}}-4curve.tar.xz
 
 # Use 'icedtea_sync.sh' to update the following
 # They are based on code contained in the IcedTea project (3.x).
@@ -1166,10 +1180,6 @@ Patch7: pr3695-toggle_system_crypto_policy.patch
 # able to be removed once that release is out
 # and used by this RPM.
 #############################################
-# JDK-8222286: S390 ambiguous log2_intptr call
-Patch8: s390-8214206_fix.patch
-# JDK-8254177: (tz) Upgrade time-zone data to tzdata2020b
-Patch9: jdk8254177-tzdata2020b.patch
 # JDK-8250861: Crash in MinINode::Ideal(PhaseGVN*, bool)
 Patch10: jdk8250861-crash_in_MinINode_Ideal.patch
 
@@ -1186,6 +1196,7 @@ BuildRequires: freetype-devel
 BuildRequires: giflib-devel
 BuildRequires: gcc-c++
 BuildRequires: gdb
+BuildRequires: harfbuzz-devel
 BuildRequires: lcms2-devel
 BuildRequires: libjpeg-devel
 BuildRequires: libpng-devel
@@ -1223,251 +1234,251 @@ BuildRequires: systemtap-sdt-devel
 %{java_rpo %{nil}}
 
 %description
-The %{origin_nice} runtime environment %{majorver}.
+The %{origin_nice} %{featurever} runtime environment.
 
 %if %{include_debug_build}
 %package slowdebug
-Summary: %{origin_nice} Runtime Environment %{majorver} %{debug_on}
+Summary: %{origin_nice} %{featurever} Runtime Environment %{debug_on}
 
 %{java_rpo -- %{debug_suffix_unquoted}}
 %description slowdebug
-The %{origin_nice} runtime environment %{majorver}.
+The %{origin_nice} %{featurever} runtime environment.
 %{debug_warning}
 %endif
 
 %if %{include_fastdebug_build}
 %package fastdebug
-Summary: %{origin_nice} Runtime Environment %{majorver} %{fastdebug_on}
+Summary: %{origin_nice} %{featurever} Runtime Environment %{fastdebug_on}
 Group:   Development/Languages
 
 %{java_rpo -- %{fastdebug_suffix_unquoted}}
 %description fastdebug
-The %{origin_nice} runtime environment.
+The %{origin_nice} %{featurever} runtime environment.
 %{fastdebug_warning}
 %endif
 
 %if %{include_normal_build}
 %package headless
-Summary: %{origin_nice} Headless Runtime Environment %{majorver}
+Summary: %{origin_nice} %{featurever} Headless Runtime Environment
 
 %{java_headless_rpo %{nil}}
 
 %description headless
-The %{origin_nice} runtime environment %{majorver} without audio and video support.
+The %{origin_nice} %{featurever} runtime environment without audio and video support.
 %endif
 
 %if %{include_debug_build}
 %package headless-slowdebug
-Summary: %{origin_nice} Runtime Environment %{majorver} %{debug_on}
+Summary: %{origin_nice} %{featurever} Runtime Environment %{debug_on}
 
 %{java_headless_rpo -- %{debug_suffix_unquoted}}
 
 %description headless-slowdebug
-The %{origin_nice} runtime environment %{majorver} without audio and video support.
+The %{origin_nice} %{featurever} runtime environment without audio and video support.
 %{debug_warning}
 %endif
 
 %if %{include_fastdebug_build}
 %package headless-fastdebug
-Summary: %{origin_nice} Runtime Environment %{fastdebug_on}
+Summary: %{origin_nice} %{featurever} Runtime Environment %{fastdebug_on}
 Group:   Development/Languages
 
 %{java_headless_rpo -- %{fastdebug_suffix_unquoted}}
 
 %description headless-fastdebug
-The %{origin_nice} runtime environment %{majorver} without audio and video support.
+The %{origin_nice} %{featurever} runtime environment without audio and video support.
 %{fastdebug_warning}
 %endif
 
 %if %{include_normal_build}
 %package devel
-Summary: %{origin_nice} Development Environment %{majorver}
+Summary: %{origin_nice} %{featurever} Development Environment
 
 %{java_devel_rpo %{nil}}
 
 %description devel
-The %{origin_nice} development tools %{majorver}.
+The %{origin_nice} %{featurever} development tools.
 %endif
 
 %if %{include_debug_build}
 %package devel-slowdebug
-Summary: %{origin_nice} Development Environment %{majorver} %{debug_on}
+Summary: %{origin_nice} %{featurever} Development Environment %{debug_on}
 
 %{java_devel_rpo -- %{debug_suffix_unquoted}}
 
 %description devel-slowdebug
-The %{origin_nice} development tools %{majorver}.
+The %{origin_nice} %{featurever} development tools.
 %{debug_warning}
 %endif
 
 %if %{include_fastdebug_build}
 %package devel-fastdebug
-Summary: %{origin_nice} Development Environment %{majorver} %{fastdebug_on}
+Summary: %{origin_nice} %{featurever} Development Environment %{fastdebug_on}
 Group:   Development/Tools
 
 %{java_devel_rpo -- %{fastdebug_suffix_unquoted}}
 
 %description devel-fastdebug
-The %{origin_nice} development tools %{majorver}.
+The %{origin_nice} %{featurever} development tools              .
 %{fastdebug_warning}
 %endif
 
 %if %{include_normal_build}
 %package static-libs
-Summary: %{origin_nice} libraries for static linking %{majorver}
+Summary: %{origin_nice} %{featurever} libraries for static linking
 
 %{java_static_libs_rpo %{nil}}
 
 %description static-libs
-The %{origin_nice} libraries for static linking %{majorver}.
+The %{origin_nice} %{featurever} libraries for static linking.
 %endif
 
 %if %{include_debug_build}
 %package static-libs-slowdebug
-Summary: %{origin_nice} libraries for static linking %{majorver} %{debug_on}
+Summary: %{origin_nice} %{featurever} libraries for static linking %{debug_on}
 
 %{java_static_libs_rpo -- %{debug_suffix_unquoted}}
 
 %description static-libs-slowdebug
-The %{origin_nice} libraries for static linking %{majorver}.
+The %{origin_nice} %{featurever} libraries for static linking.
 %{debug_warning}
 %endif
 
 %if %{include_fastdebug_build}
 %package static-libs-fastdebug
-Summary: %{origin_nice} libraries for static linking %{majorver} %{fastdebug_on}
+Summary: %{origin_nice} %{featurever} libraries for static linking %{fastdebug_on}
 
 %{java_static_libs_rpo -- %{fastdebug_suffix_unquoted}}
 
 %description static-libs-fastdebug
-The %{origin_nice} libraries for static linking %{majorver}.
+The %{origin_nice} %{featurever} libraries for static linking.
 %{fastdebug_warning}
 %endif
 
 %if %{include_normal_build}
 %package jmods
-Summary: JMods for %{origin_nice} %{majorver}
+Summary: JMods for %{origin_nice} %{featurever}
 
 %{java_jmods_rpo %{nil}}
 
 %description jmods
-The JMods for %{origin_nice}.
+The JMods for %{origin_nice} %{featurever}.
 %endif
 
 %if %{include_debug_build}
 %package jmods-slowdebug
-Summary: JMods for %{origin_nice} %{majorver} %{debug_on}
+Summary: JMods for %{origin_nice} %{featurever} %{debug_on}
 
 %{java_jmods_rpo -- %{debug_suffix_unquoted}}
 
 %description jmods-slowdebug
-The JMods for %{origin_nice} %{majorver}.
+The JMods for %{origin_nice} %{featurever}.
 %{debug_warning}
 %endif
 
 %if %{include_fastdebug_build}
 %package jmods-fastdebug
-Summary: JMods for %{origin_nice} %{majorver} %{fastdebug_on}
+Summary: JMods for %{origin_nice} %{featurever} %{fastdebug_on}
 Group:   Development/Tools
 
 %{java_jmods_rpo -- %{fastdebug_suffix_unquoted}}
 
 %description jmods-fastdebug
-The JMods for %{origin_nice} %{majorver}.
+The JMods for %{origin_nice} %{featurever}.
 %{fastdebug_warning}
 %endif
 
 
 %if %{include_normal_build}
 %package demo
-Summary: %{origin_nice} Demos %{majorver}
+Summary: %{origin_nice} %{featurever} Demos
 
 %{java_demo_rpo %{nil}}
 
 %description demo
-The %{origin_nice} demos %{majorver}.
+The %{origin_nice} %{featurever} demos.
 %endif
 
 %if %{include_debug_build}
 %package demo-slowdebug
-Summary: %{origin_nice} Demos %{majorver} %{debug_on}
+Summary: %{origin_nice} %{featurever} Demos %{debug_on}
 
 %{java_demo_rpo -- %{debug_suffix_unquoted}}
 
 %description demo-slowdebug
-The %{origin_nice} demos %{majorver}.
+The %{origin_nice} %{featurever} demos.
 %{debug_warning}
 %endif
 
 %if %{include_fastdebug_build}
 %package demo-fastdebug
-Summary: %{origin_nice} Demos %{majorver} %{fastdebug_on}
+Summary: %{origin_nice} %{featurever} Demos %{fastdebug_on}
 Group:   Development/Languages
 
 %{java_demo_rpo -- %{fastdebug_suffix_unquoted}}
 
 %description demo-fastdebug
-The %{origin_nice} demos %{majorver}.
+The %{origin_nice} %{featurever} demos.
 %{fastdebug_warning}
 %endif
 
 %if %{include_normal_build}
 %package src
-Summary: %{origin_nice} Source Bundle %{majorver}
+Summary: %{origin_nice} %{featurever} Source Bundle
 
 %{java_src_rpo %{nil}}
 
 %description src
-The java-%{origin}-src sub-package contains the complete %{origin_nice} %{majorver}
+The %{compatiblename}-src sub-package contains the complete %{origin_nice} %{featurever}
 class library source code for use by IDE indexers and debuggers.
 %endif
 
 %if %{include_debug_build}
 %package src-slowdebug
-Summary: %{origin_nice} Source Bundle %{majorver} %{for_debug}
+Summary: %{origin_nice} %{featurever} Source Bundle %{for_debug}
 
 %{java_src_rpo -- %{debug_suffix_unquoted}}
 
 %description src-slowdebug
-The java-%{origin}-src-slowdebug sub-package contains the complete %{origin_nice} %{majorver}
- class library source code for use by IDE indexers and debuggers. Debugging %{for_debug}.
+The %{compatiblename}-src-slowdebug sub-package contains the complete %{origin_nice} %{featurever}
+ class library source code for use by IDE indexers and debuggers, %{for_debug}.
 %endif
 
 %if %{include_fastdebug_build}
 %package src-fastdebug
-Summary: %{origin_nice} Source Bundle %{majorver} %{for_fastdebug}
+Summary: %{origin_nice} %{featurever} Source Bundle %{for_fastdebug}
 Group:   Development/Languages
 
 %{java_src_rpo -- %{fastdebug_suffix_unquoted}}
 
 %description src-fastdebug
-The java-%{origin}-src-fastdebug sub-package contains the complete %{origin_nice} %{majorver}
- class library source code for use by IDE indexers and debuggers. Debugging %{for_fastdebug}.
+The %{compatiblename}-src-fastdebug sub-package contains the complete %{origin_nice} %{featurever}
+ class library source code for use by IDE indexers and debuggers, %{for_fastdebug}.
 %endif
 
 
 %if %{include_normal_build}
 %package javadoc
-Summary: %{origin_nice} %{majorver} API documentation
+Summary: %{origin_nice} %{featurever} API documentation
 Requires: javapackages-filesystem
 Obsoletes: javadoc-slowdebug < 1:11.0.3.7-4
 
 %{java_javadoc_rpo %{nil}}
 
 %description javadoc
-The %{origin_nice} %{majorver} API documentation.
+The %{origin_nice} %{featurever} API documentation.
 %endif
 
 %if %{include_normal_build}
 %package javadoc-zip
-Summary: %{origin_nice} %{majorver} API documentation compressed in a single archive
+Summary: %{origin_nice} %{featurever} API documentation compressed in a single archive
 Requires: javapackages-filesystem
 Obsoletes: javadoc-zip-slowdebug < 1:11.0.3.7-4
 
 %{java_javadoc_rpo %{nil}}
 
 %description javadoc-zip
-The %{origin_nice} %{majorver} API documentation compressed in a single archive.
+The %{origin_nice} %{featurever} API documentation compressed in a single archive.
 %endif
 
 %prep
@@ -1515,8 +1526,6 @@ pushd %{top_level_dir_name}
 %patch3 -p1
 %patch4 -p1
 %patch7 -p1
-%patch8 -p1
-%patch9 -p1
 %patch10 -p1
 popd # openjdk
 
@@ -1627,8 +1636,6 @@ bash ../configure \
     --with-version-build=%{buildver} \
     --with-version-pre="%{ea_designator}" \
     --with-version-opt=%{lts_designator} \
-    --with-version-patch=1 \
-    --with-version-date="2020-11-04" \
     --with-vendor-version-string="%{vendor_version_string}" \
     --with-vendor-name="Red Hat, Inc." \
     --with-vendor-url="https://www.redhat.com/" \
@@ -1643,6 +1650,7 @@ bash ../configure \
     --with-giflib=system \
     --with-libpng=system \
     --with-lcms=system \
+    --with-harfbuzz=system \
     --with-stdc++lib=dynamic \
     --with-extra-cxxflags="$EXTRA_CPP_FLAGS" \
     --with-extra-cflags="$EXTRA_CFLAGS" \
@@ -1883,8 +1891,9 @@ if ! echo $suffix | grep -q "debug" ; then
   # Install Javadoc documentation
   install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}
   cp -a %{buildoutputdir -- $suffix}/images/docs $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}
-  #cp -a %{buildoutputdir -- $suffix}/bundles/jdk-%{newjavaver}%{ea_designator_zip}+%{buildver}%{lts_designator_zip}-docs.zip $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip  || ls -l %{buildoutputdir -- $suffix}/bundles/
-  cp -a %{buildoutputdir -- $suffix}/bundles/jdk-11.0.9.1+11-docs.zip $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip || ls -l %{buildoutputdir -- $suffix}/bundles/
+  built_doc_archive=jdk-%{filever}%{ea_designator_zip}+%{buildver}%{lts_designator_zip}-docs.zip
+  cp -a %{buildoutputdir -- $suffix}/bundles/${built_doc_archive} \
+     $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip || ls -l %{buildoutputdir -- $suffix}/bundles/
 fi
 
 # Install release notes
@@ -2157,6 +2166,17 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Tue Dec 22 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.1-0.0.ea
+- Update to jdk-11.0.10.0+1
+- Update release notes to 11.0.10.0+1
+- Use JEP-322 Time-Based Versioning so we can handle a future 11.0.9.1-like release correctly.
+- Still use 11.0.x rather than 11.0.x.0 for file naming, as the trailing zero is omitted from tags.
+- Revert configure and built_doc_archive hacks to build 11.0.9.1 from 11.0.9.0 sources, and synced with RHEL version.
+- Cleanup debug package descriptions and version number placement.
+- Switch to EA mode for 11.0.10 pre-release builds.
+- Drop JDK-8222286 & JDK-8254177 as applied upstream
+- Use system harfbuzz now this is supported.
+
 * Tue Dec 22 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.9.11-9
 - fixed missing condition for fastdebug packages being counted as debug ones
 
