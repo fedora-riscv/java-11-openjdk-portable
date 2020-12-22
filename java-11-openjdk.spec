@@ -74,7 +74,7 @@
 # == rpm -ql           java-11-openjdk-headless-slowdebug-11.0.1.13-8.fc29.x86_64.rpm  | grep bin
 # != rpm -ql           java-11-openjdk-headless-11.0.1.13-8.fc29.x86_64.rpm  | grep bin
 # similarly for other %%{_jvmdir}/{jre,java} and %%{_javadocdir}/{java,java-zip}
-%define is_release_build() %( if [ "%{?1}" == "%{debug_suffix_unquoted}" ]; then echo "0" ; else echo "1"; fi )
+%define is_release_build() %( if [ "%{?1}" == "%{debug_suffix_unquoted}" -o "%{?1}" == "%{fastdebug_suffix_unquoted}" ]; then echo "0" ; else echo "1"; fi )
 
 # while JDK is a techpreview(is_system_jdk=0), some provides are turned off. Once jdk stops to be an techpreview, move it to 1
 # as sytem JDK, we mean any JDK which can run whole system java stack without issues (like bytecode issues, module issues, dependencies...)
@@ -284,7 +284,7 @@
 %global top_level_dir_name   %{origin}
 %global minorver        0
 %global buildver        11
-%global rpmrelease      8
+%global rpmrelease      9
 #%%global tagsuffix      ""
 # priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -2157,6 +2157,9 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Tue Dec 22 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.9.11-9
+- fixed missing condition for fastdebug packages being counted as debug ones
+
 * Sat Dec 19 2020 Jiri Vanek <jvanek@redhat.com> - 1:11.0.9.11-8
 - removed lib-style provides for fastdebug_suffix_unquoted
 
