@@ -1228,6 +1228,7 @@ BuildRequires: gcc >= 4.8.3-8
 %if %{with_systemtap}
 BuildRequires: systemtap-sdt-devel
 %endif
+BuildRequires: make
 
 # this is always built, also during debug-only build
 # when it is built in debug-only this package is just placeholder
