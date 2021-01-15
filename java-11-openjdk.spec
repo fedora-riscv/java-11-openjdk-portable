@@ -285,7 +285,7 @@
 %global origin          openjdk
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
-%global buildver        1
+%global buildver        8
 %global rpmrelease      0
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
@@ -1180,8 +1180,6 @@ Patch7: pr3695-toggle_system_crypto_policy.patch
 # able to be removed once that release is out
 # and used by this RPM.
 #############################################
-# JDK-8250861: Crash in MinINode::Ideal(PhaseGVN*, bool)
-Patch10: jdk8250861-crash_in_MinINode_Ideal.patch
 
 BuildRequires: autoconf
 BuildRequires: automake
@@ -1527,7 +1525,6 @@ pushd %{top_level_dir_name}
 %patch3 -p1
 %patch4 -p1
 %patch7 -p1
-%patch10 -p1
 popd # openjdk
 
 %patch1000
@@ -2167,6 +2164,12 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Thu Jan 14 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.8-0.0.ea
+- Update to jdk-11.0.10.0+8
+- Update release notes to 11.0.10.0+8.
+- Update tarball generation script to use PR3818 which handles JDK-8171279 changes
+- Drop JDK-8250861 as applied upstream.
+
 * Tue Dec 22 2020 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.1-0.0.ea
 - Update to jdk-11.0.10.0+1
 - Update release notes to 11.0.10.0+1
