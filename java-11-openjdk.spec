@@ -286,7 +286,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global buildver        8
-%global rpmrelease      0
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1170,6 +1170,8 @@ Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk1
 Patch4: pr3694-rh1340845-support_fedora_rhel_system_crypto_policy.patch
 # PR3695: Allow use of system crypto policy to be disabled by the user
 Patch7: pr3695-toggle_system_crypto_policy.patch
+# JDK-8259949: Use i686 instead of i586 on x86 when -fcf-protection is passed to the compiler, as CMOV is needed
+Patch8: jdk8259949-allow_cf-protection_on_x86.patch
 
 #############################################
 #
@@ -1525,6 +1527,7 @@ pushd %{top_level_dir_name}
 %patch3 -p1
 %patch4 -p1
 %patch7 -p1
+%patch8 -p1
 popd # openjdk
 
 %patch1000
@@ -2164,6 +2167,9 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Mon Jan 18 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.8-0.1.ea
+- Use -march=i686 for x86 builds if -fcf-protection is detected (needs CMOV)
+
 * Thu Jan 14 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.8-0.0.ea
 - Update to jdk-11.0.10.0+8
 - Update release notes to 11.0.10.0+8.
