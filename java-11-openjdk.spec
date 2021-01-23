@@ -174,6 +174,11 @@
 %else
 %global bootstrap_build 1
 %endif
+# Need to support noarch for srpm build
+%ifarch noarch
+%global archinstall %{nil}
+%global stapinstall %{nil}
+%endif
 
 %if %{bootstrap_build}
 %global release_targets bootcycle-images static-libs-image docs-zip
@@ -2182,6 +2187,9 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Sat Jan 23 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.8-0.2.ea
+- Need to support noarch for creating source RPMs for non-scratch builds.
+
 * Mon Jan 18 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.8-0.2.ea
 - Introduce stapinstall variable to set SystemTap arch directory correctly (e.g. arm64 on aarch64)
 
