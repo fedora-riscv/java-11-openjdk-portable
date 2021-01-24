@@ -5,10 +5,10 @@
 # Examples:
 #
 # Produce release, fastdebug *and* slowdebug builds on x86_64 (default):
-# $ rpmbuild -ba java-1.8.0-openjdk.spec
+# $ rpmbuild -ba java-11-openjdk.spec
 #
 # Produce only release builds (no slowdebug builds) on x86_64:
-# $ rpmbuild -ba java-1.8.0-openjdk.spec --without slowdebug --without fastdebug
+# $ rpmbuild -ba java-11-openjdk.spec --without slowdebug --without fastdebug
 #
 # Only produce a release build on x86_64:
 # $ fedpkg mockbuild --without slowdebug --without fastdebug
@@ -111,7 +111,7 @@
 # Set of architectures for which alt-java has SSB mitigation
 %global ssbd_arches x86_64
 
-# By default, we build a debug build during main build on JIT architectures
+# By default, we build a slowdebug build during main build on JIT architectures
 %if %{with slowdebug}
 %ifarch %{debug_arches}
 %global include_debug_build 1
@@ -298,7 +298,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global buildver        8
-%global rpmrelease      3
+%global rpmrelease      4
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1335,7 +1335,7 @@ Group:   Development/Tools
 %{java_devel_rpo -- %{fastdebug_suffix_unquoted}}
 
 %description devel-fastdebug
-The %{origin_nice} %{featurever} development tools              .
+The %{origin_nice} %{featurever} development tools.
 %{fastdebug_warning}
 %endif
 
@@ -1483,9 +1483,7 @@ Obsoletes: javadoc-slowdebug < 1:11.0.3.7-4
 
 %description javadoc
 The %{origin_nice} %{featurever} API documentation.
-%endif
 
-%if %{include_normal_build}
 %package javadoc-zip
 Summary: %{origin_nice} %{featurever} API documentation compressed in a single archive
 Requires: javapackages-filesystem
@@ -2191,6 +2189,10 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Sun Jan 24 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.8-0.4.ea
+- Update build documentation to reflect this is java-11-openjdk, not java-1.8.0-openjdk
+- Remove redundant closure and immediate reopening of include_normal_build block.
+
 * Sun Jan 24 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.8-0.3.ea
 - Use RSA as default for keytool, as DSA is disabled in all crypto policies except LEGACY
 - Adjust RH1842572 patch due to context change from JDK-8213400
