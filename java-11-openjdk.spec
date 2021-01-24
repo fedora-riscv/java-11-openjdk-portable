@@ -298,7 +298,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global buildver        8
-%global rpmrelease      2
+%global rpmrelease      3
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1163,6 +1163,9 @@ Patch1:    rh1648242-accessible_toolkit_crash_do_not_break_jvm.patch
 # Restrict access to java-atk-wrapper classes
 Patch2:    rh1648644-java_access_bridge_privileged_security.patch
 
+# RH1582504: Use RSA as default for keytool, as DSA is disabled in all crypto policies except LEGACY
+Patch1003: rh1842572-rsa_default_for_keytool.patch
+
 #############################################
 #
 # Shenandoah specific patches
@@ -1552,6 +1555,7 @@ popd # openjdk
 
 %patch1000
 %patch600
+%patch1003
 
 # Extract systemtap tapsets
 %if %{with_systemtap}
@@ -2187,6 +2191,10 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Sun Jan 24 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.8-0.3.ea
+- Use RSA as default for keytool, as DSA is disabled in all crypto policies except LEGACY
+- Adjust RH1842572 patch due to context change from JDK-8213400
+
 * Sat Jan 23 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.8-0.2.ea
 - Need to support noarch for creating source RPMs for non-scratch builds.
 
