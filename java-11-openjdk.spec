@@ -101,9 +101,9 @@
 # Set of architectures which support the serviceability agent
 %global sa_arches       %{ix86} x86_64 sparcv9 sparc64 %{aarch64} %{power64} %{arm}
 # Set of architectures which support class data sharing
-# See https://bugzilla.redhat.com/show_bug.cgi?id=513605
-# MetaspaceShared::generate_vtable_methods is not implemented for the PPC JIT
-%global share_arches    %{ix86} x86_64 sparcv9 sparc64 %{aarch64} %{arm} s390x
+# As of JDK-8005165 in OpenJDK 10, class sharing is not arch-specific
+# However, it does segfault on the Zero assembler port, so currently JIT only
+%global share_arches    %{jit_arches}
 # Set of architectures for which we build the Shenandoah garbage collector
 %global shenandoah_arches x86_64 %{aarch64}
 # Set of architectures for which we build the Z garbage collector
@@ -318,7 +318,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global buildver        8
-%global rpmrelease      4
+%global rpmrelease      5
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -2199,6 +2199,9 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Mon Jan 25 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.8-0.5.ea
+- Following JDK-8005165, class data sharing can be enabled on all JIT architectures
+
 * Sun Jan 24 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.8-0.4.ea
 - Include a test in the RPM to check the build has the correct vendor information.
 
