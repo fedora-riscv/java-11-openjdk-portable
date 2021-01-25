@@ -87,8 +87,10 @@
 %global ppc64be         ppc64 ppc64p7
 # Set of architectures which support multiple ABIs
 %global multilib_arches %{power64} sparc64 x86_64
-# Set of architectures for which we build debug builds
+# Set of architectures for which we build slowdebug builds
 %global debug_arches    %{ix86} x86_64 sparcv9 sparc64 %{aarch64} %{power64} s390x
+# Set of architectures for which we build fastdebug builds
+%global fastdebug_arches x86_64 ppc64le aarch64
 # Set of architectures with a Just-In-Time (JIT) compiler
 %global jit_arches      %{debug_arches} %{arm}
 # Set of architectures which run a full bootstrap cycle
@@ -97,7 +99,6 @@
 %global systemtap_arches %{jit_arches}
 # Set of architectures with a Ahead-Of-Time (AOT) compiler
 %global aot_arches      x86_64 %{aarch64}
-%global fastdebug_arches x86_64 ppc64le aarch64
 # Set of architectures which support the serviceability agent
 %global sa_arches       %{ix86} x86_64 sparcv9 sparc64 %{aarch64} %{power64} %{arm}
 # Set of architectures which support class data sharing
@@ -173,11 +174,6 @@
 %global bootstrap_build 1
 %else
 %global bootstrap_build 1
-%endif
-# Need to support noarch for srpm build
-%ifarch noarch
-%global archinstall %{nil}
-%global stapinstall %{nil}
 %endif
 
 %if %{bootstrap_build}
@@ -260,6 +256,11 @@
 %ifarch sparc64
 %global archinstall sparcv9
 %global stapinstall %{_target_cpu}
+%endif
+# Need to support noarch for srpm build
+%ifarch noarch
+%global archinstall %{nil}
+%global stapinstall %{nil}
 %endif
 
 %ifarch %{systemtap_arches}
@@ -971,7 +972,7 @@ Requires: ca-certificates
 # Require javapackages-filesystem for ownership of /usr/lib/jvm/ and macros
 Requires: javapackages-filesystem
 # Require zone-info data provided by tzdata-java sub-package
-# 2020a required as of JDK-8243541 in 11.0.8+4
+# 2020b required as of JDK-8254177 in October CPU
 Requires: tzdata-java >= 2020b
 # for support of kernel stream control
 # libsctp.so.1 is being `dlopen`ed on demand
@@ -1158,16 +1159,14 @@ Source16: CheckVendor.java
 #
 ############################################
 
-# NSS via SunPKCS11 Provider (disabled comment
-# due to memory leak).
-Patch1000: rh1648249-add_commented_out_nss_cfg_provider_to_java_security.patch
-# enable build of speculative store bypass hardened alt-java
-Patch600: rh1750419-redhat_alt_java.patch
-
 # Ignore AWTError when assistive technologies are loaded
 Patch1:    rh1648242-accessible_toolkit_crash_do_not_break_jvm.patch
 # Restrict access to java-atk-wrapper classes
 Patch2:    rh1648644-java_access_bridge_privileged_security.patch
+# NSS via SunPKCS11 Provider (disabled due to memory leak).
+Patch1000: rh1648249-add_commented_out_nss_cfg_provider_to_java_security.patch
+# enable build of speculative store bypass hardened alt-java
+Patch600: rh1750419-redhat_alt_java.patch
 
 # RH1582504: Use RSA as default for keytool, as DSA is disabled in all crypto policies except LEGACY
 Patch1003: rh1842572-rsa_default_for_keytool.patch
@@ -1182,8 +1181,11 @@ Patch1003: rh1842572-rsa_default_for_keytool.patch
 
 #############################################
 #
-# OpenJDK specific patches
+# Upstreamable patches
 #
+# This section includes patches which need to
+# be reviewed & pushed to the current development
+# tree of OpenJDK.
 #############################################
 
 Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk10_and_up.patch
@@ -1759,6 +1761,10 @@ $JAVA_HOME/bin/java $(echo $(basename %{SOURCE14})|sed "s|\.java||")
 $JAVA_HOME/bin/javac -d . %{SOURCE15}
 $JAVA_HOME/bin/java -Djava.security.disableSystemPropertiesFile=true $(echo $(basename %{SOURCE15})|sed "s|\.java||")
 
+# Check correct vendor values have been set
+$JAVA_HOME/bin/javac -d . %{SOURCE16}
+$JAVA_HOME/bin/java $(echo $(basename %{SOURCE16})|sed "s|\.java||") "%{oj_vendor}" %{oj_vendor_url} %{oj_vendor_bug_url}
+
 # Check java launcher has no SSB mitigation
 if ! nm $JAVA_HOME/bin/java | grep set_speculation ; then true ; else false; fi
 
@@ -1768,10 +1774,6 @@ nm $JAVA_HOME/bin/%{alt_java_name} | grep set_speculation
 %else
 if ! nm $JAVA_HOME/bin/%{alt_java_name} | grep set_speculation ; then true ; else false; fi
 %endif
-
-# Check correct vendor values have been set
-$JAVA_HOME/bin/javac -d . %{SOURCE16}
-$JAVA_HOME/bin/java $(echo $(basename %{SOURCE16})|sed "s|\.java||") "%{oj_vendor}" %{oj_vendor_url} %{oj_vendor_bug_url}
 
 # Check debug symbols in static libraries (smoke test)
 export STATIC_LIBS_HOME=$(pwd)/%{buildoutputdir -- $suffix}/images/%{static_libs_image}
@@ -2199,6 +2201,9 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Mon Jan 25 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.8-0.5.ea
+- Fix location and comment differences from RHEL.
+
 * Mon Jan 25 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.8-0.5.ea
 - Following JDK-8005165, class data sharing can be enabled on all JIT architectures
 
