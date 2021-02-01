@@ -9,6 +9,8 @@ Live versions of these release notes can be found at:
   * https://bitly.com/openjdk11010
   * https://builds.shipilev.net/backports-monitor/release-notes-11.0.10.txt
 
+* Security fixes
+  - JDK-8247619: Improve Direct Buffering of Characters
 * Other changes
   - JDK-6722928: Support SSPI as a native GSS-API provider
   - JDK-7185258: [macosx] Deadlock in SunToolKit.realSync()
