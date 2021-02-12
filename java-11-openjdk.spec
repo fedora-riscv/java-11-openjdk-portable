@@ -22,9 +22,16 @@
 %bcond_without slowdebug
 # Enable release builds by default on relevant arches.
 %bcond_without release
+# Enable static library builds by default.
+%bcond_without staticlibs
 
 # Workaround for stripping of debug symbols from static libraries
+%if %{with staticlibs}
 %define __brp_strip_static_archive %{nil}
+%global include_staticlibs 1
+%else
+%global include_staticlibs 0
+%endif
 
 # The -g flag says to use strip -g instead of full strip on DSOs or EXEs.
 # This fixes detailed NMT and other tools which need minimal debug info.
@@ -38,10 +45,14 @@
 # (initiated in https://bugzilla.redhat.com/show_bug.cgi?id=1482192)
 %global debug_suffix_unquoted -slowdebug
 %global fastdebug_suffix_unquoted -fastdebug
+%global main_suffix_unquoted -main
+%global staticlibs_suffix_unquoted -staticlibs
 # quoted one for shell operations
 %global debug_suffix "%{debug_suffix_unquoted}"
 %global fastdebug_suffix "%{fastdebug_suffix_unquoted}"
 %global normal_suffix ""
+%global main_suffix "%{main_suffix_unquoted}"
+%global staticlibs_suffix "%{staticlibs_suffix_unquoted}"
 
 %global debug_warning This package is unoptimised with full debugging. Install only as needed and remove ASAP.
 %global debug_on with full debugging on
@@ -170,6 +181,12 @@
 # Test slowdebug first as it provides the best diagnostics
 %global rev_build_loop  %{slowdebug_build} %{fastdebug_build} %{normal_build}
 
+%if %{include_staticlibs}
+%global staticlibs_loop %{staticlibs_suffix}
+%else
+%global staticlibs_loop %{nil}
+%endif
+
 %ifarch %{bootstrap_arches}
 %global bootstrap_build 1
 %else
@@ -177,12 +194,20 @@
 %endif
 
 %if %{bootstrap_build}
-%global release_targets bootcycle-images static-libs-image docs-zip
+%global release_targets bootcycle-images docs-zip
 %else
-%global release_targets images docs-zip static-libs-image
+%global release_targets images docs-zip
 %endif
 # No docs nor bootcycle for debug builds
-%global debug_targets images static-libs-image
+%global debug_targets images
+
+%if %{include_staticlibs}
+# Extra target for producing the static-libraries. Separate from
+# other targets since this target is configured to use in-tree
+# AWT dependencies: lcms, libjpeg, libpng, libharfbuzz, giflib
+# and possibly others
+%global static_libs_target static-libs-image
+%endif
 
 # Disable LTO as this causes build failures at the moment.
 # See RHBZ#1861401
@@ -318,8 +343,9 @@
 %global origin          openjdk
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
+%global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        9
-%global rpmrelease      0
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -368,7 +394,7 @@
 %global jdkimage                jdk
 %global static_libs_image       static-libs
 # output dir stub
-%define buildoutputdir() %{expand:openjdk/build%{?1}}
+%define buildoutputdir() %{expand:build/jdk11.build%{?1}}
 # we can copy the javadoc to not arched dir, or make it not noarch
 %define uniquejavadocdir()    %{expand:%{fullversion}.%{_arch}%{?1}}
 # main id and dir of this jdk
@@ -1347,6 +1373,8 @@ The %{origin_nice} %{featurever} development tools.
 %{fastdebug_warning}
 %endif
 
+%if %{include_staticlibs}
+
 %if %{include_normal_build}
 %package static-libs
 Summary: %{origin_nice} %{featurever} libraries for static linking
@@ -1377,6 +1405,9 @@ Summary: %{origin_nice} %{featurever} libraries for static linking %{fastdebug_o
 %description static-libs-fastdebug
 The %{origin_nice} %{featurever} libraries for static linking.
 %{fastdebug_warning}
+%endif
+
+# staticlibs
 %endif
 
 %if %{include_normal_build}
@@ -1547,9 +1578,10 @@ if [ $prioritylength -ne 8 ] ; then
 fi
 
 # OpenJDK patches
+# Remove libraries that are linked by both static and dynamic builds
+sh %{SOURCE12} %{top_level_dir_name}
 
-# Remove libraries that are linked
-sh %{SOURCE12}
+# Patch the JDK
 pushd %{top_level_dir_name}
 %patch1 -p1
 %patch2 -p1
@@ -1651,13 +1683,34 @@ else
   debugbuild=`echo $suffix  | sed "s/-//g"`
 fi
 
-# Variable used in hs_err hook on build failures
-top_dir_abs_path=$(pwd)/%{top_level_dir_name}
+for loop in %{main_suffix} %{staticlibs_loop} ; do
 
-mkdir -p %{buildoutputdir -- $suffix}
-pushd %{buildoutputdir -- $suffix}
+if test "x${loop}" = "x%{main_suffix}" ; then
+    # Copy the source tree so we can remove all in-tree libraries
+    cp -a %{top_level_dir_name} %{top_level_dir_name_backup}
+    # Remove all libraries that are linked
+    sh %{SOURCE12} %{top_level_dir_name} full
+    # Variable used by configure and hs_err hook on build failures
+    link_opt="system"
+    # Debug builds don't need same targets as release for
+    # build speed-up
+    maketargets="%{release_targets}"
+    if echo $debugbuild | grep -q "debug" ; then
+	maketargets="%{debug_targets}"
+    fi
+else
+    # Variable used by configure and hs_err hook on build failures
+    link_opt="bundled"
+    # Static library cycle only builds the static libraries
+    maketargets="%{static_libs_target}"
+fi
 
-bash ../configure \
+top_dir_abs_src_path=$(pwd)/%{top_level_dir_name}
+top_dir_abs_build_path=$(pwd)/%{buildoutputdir -- ${suffix}${loop}}
+mkdir -p ${top_dir_abs_build_path}
+pushd ${top_dir_abs_build_path}
+
+bash ${top_dir_abs_src_path}/configure \
 %ifnarch %{jit_arches}
     --with-jvm-variants=zero \
 %endif
@@ -1677,11 +1730,11 @@ bash ../configure \
     --with-native-debug-symbols=internal \
     --enable-unlimited-crypto \
     --with-zlib=system \
-    --with-libjpeg=system \
-    --with-giflib=system \
-    --with-libpng=system \
-    --with-lcms=system \
-    --with-harfbuzz=system \
+    --with-libjpeg=${link_opt} \
+    --with-giflib=${link_opt} \
+    --with-libpng=${link_opt} \
+    --with-lcms=${link_opt} \
+    --with-harfbuzz=${link_opt} \
     --with-stdc++lib=dynamic \
     --with-extra-cxxflags="$EXTRA_CPP_FLAGS" \
     --with-extra-cflags="$EXTRA_CFLAGS" \
@@ -1692,33 +1745,37 @@ bash ../configure \
     --with-jvm-features="%{shenandoah_feature},%{zgc_feature}" \
     --disable-warnings-as-errors
 
-# Debug builds don't need same targets as release for
-# build speed-up
-maketargets="%{release_targets}"
-if echo $debugbuild | grep -q "debug" ; then
-  maketargets="%{debug_targets}"
-fi
 make \
     JAVAC_FLAGS=-g \
     LOG=trace \
     WARNINGS_ARE_ERRORS="-Wno-error" \
     CFLAGS_WARNINGS_ARE_ERRORS="-Wno-error" \
-    $maketargets || ( pwd; find $top_dir_abs_path -name "hs_err_pid*.log" | xargs cat && false )
+    $maketargets || ( pwd; find ${top_dir_abs_src_path} ${top_dir_abs_build_path} -name "hs_err_pid*.log" | xargs cat && false )
+
+popd >& /dev/null
+
+# Restore original source tree if we modified it by removing full in-tree sources
+if [ -d %{top_level_dir_name_backup} ] ; then
+    rm -rf %{top_level_dir_name}
+    mv %{top_level_dir_name_backup} %{top_level_dir_name}
+fi
+
+done # end of main / staticlibs loop
+
+top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
 
 # the build (erroneously) removes read permissions from some jars
 # this is a regression in OpenJDK 7 (our compiler):
 # http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1437
-find images/%{jdkimage} -iname '*.jar' -exec chmod ugo+r {} \;
+find ${top_dir_abs_main_build_path}/images/%{jdkimage} -iname '*.jar' -exec chmod ugo+r {} \;
 
 # Build screws up permissions on binaries
 # https://bugs.openjdk.java.net/browse/JDK-8173610
-find images/%{jdkimage} -iname '*.so' -exec chmod +x {} \;
-find images/%{jdkimage}/bin/ -exec chmod +x {} \;
-
-popd >& /dev/null
+find ${top_dir_abs_main_build_path}/images/%{jdkimage} -iname '*.so' -exec chmod +x {} \;
+find ${top_dir_abs_main_build_path}/images/%{jdkimage}/bin/ -exec chmod +x {} \;
 
 # Install nss.cfg right away as we will be using the JRE above
-export JAVA_HOME=$(pwd)/%{buildoutputdir -- $suffix}/images/%{jdkimage}
+export JAVA_HOME=${top_dir_abs_main_build_path}/images/%{jdkimage}
 
 # Install nss.cfg right away as we will be using the JRE above
 install -m 644 nss.cfg $JAVA_HOME/conf/security/
@@ -1735,14 +1792,19 @@ cat man/man1/java.1 >> man/man1/%{alt_java_name}.1
 popd
 
 # build cycles
-done
+done # end of release / debug cycle loop
 
 %check
 
 # We test debug first as it will give better diagnostics on a crash
 for suffix in %{rev_build_loop} ; do
 
-export JAVA_HOME=$(pwd)/%{buildoutputdir -- $suffix}/images/%{jdkimage}
+top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
+%if %{include_staticlibs}
+top_dir_abs_staticlibs_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{staticlibs_loop}}
+%endif
+
+export JAVA_HOME=${top_dir_abs_main_build_path}/images/%{jdkimage}
 
 #check Shenandoah is enabled
 %if %{use_shenandoah_hotspot}
@@ -1775,10 +1837,12 @@ nm $JAVA_HOME/bin/%{alt_java_name} | grep set_speculation
 if ! nm $JAVA_HOME/bin/%{alt_java_name} | grep set_speculation ; then true ; else false; fi
 %endif
 
+%if %{include_staticlibs}
 # Check debug symbols in static libraries (smoke test)
-export STATIC_LIBS_HOME=$(pwd)/%{buildoutputdir -- $suffix}/images/%{static_libs_image}
+export STATIC_LIBS_HOME=${top_dir_abs_staticlibs_build_path}/images/%{static_libs_image}
 readelf --debug-dump $STATIC_LIBS_HOME/lib/libfdlibm.a | grep w_remainder.c
 readelf --debug-dump $STATIC_LIBS_HOME/lib/libfdlibm.a | grep e_remainder.c
+%endif
 
 # Check debug symbols are present and can identify code
 find "$JAVA_HOME" -iname '*.so' -print0 | while read -d $'\0' lib
@@ -1869,12 +1933,17 @@ STRIP_KEEP_SYMTAB=libjvm*
 
 for suffix in %{build_loop} ; do
 
+top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
+%if %{include_staticlibs}
+top_dir_abs_staticlibs_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{staticlibs_loop}}
+%endif
+jdk_image=${top_dir_abs_main_build_path}/images/%{jdkimage}
+
 # Install the jdk
 mkdir -p $RPM_BUILD_ROOT%{_jvmdir}
-cp -a %{buildoutputdir -- $suffix}/images/%{jdkimage} \
-  $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}
+cp -a ${jdk_image} $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}
 
-pushd %{buildoutputdir $suffix}/images/%{jdkimage}
+pushd ${jdk_image}
 
 %if %{with_systemtap}
   # Install systemtap support files
@@ -1918,17 +1987,19 @@ pushd %{buildoutputdir $suffix}/images/%{jdkimage}
 
 popd
 # Install static libs artefacts
+%if %{include_staticlibs}
 mkdir -p $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/lib/static/linux-%{archinstall}/glibc
-cp -a %{buildoutputdir -- $suffix}/images/%{static_libs_image}/lib/*.a \
+cp -a ${top_dir_abs_staticlibs_build_path}/images/%{static_libs_image}/lib/*.a \
   $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/lib/static/linux-%{archinstall}/glibc
+%endif
 
 if ! echo $suffix | grep -q "debug" ; then
   # Install Javadoc documentation
   install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}
-  cp -a %{buildoutputdir -- $suffix}/images/docs $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}
+  cp -a ${top_dir_abs_main_build_path}/images/docs $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}
   built_doc_archive=jdk-%{filever}%{ea_designator_zip}+%{buildver}%{lts_designator_zip}-docs.zip
-  cp -a %{buildoutputdir -- $suffix}/bundles/${built_doc_archive} \
-     $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip || ls -l %{buildoutputdir -- $suffix}/bundles/
+  cp -a ${top_dir_abs_main_build_path}/bundles/${built_doc_archive} \
+     $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip || ls -l ${top_dir_abs_main_build_path}/bundles/
 fi
 
 # Install release notes
@@ -2131,8 +2202,10 @@ require "copy_jdk_configs.lua"
 %files devel
 %{files_devel %{nil}}
 
+%if %{include_staticlibs}
 %files static-libs
 %{files_static_libs %{nil}}
+%endif
 
 %files jmods
 %{files_jmods %{nil}}
@@ -2163,8 +2236,10 @@ require "copy_jdk_configs.lua"
 %files devel-slowdebug
 %{files_devel -- %{debug_suffix_unquoted}}
 
+%if %{include_staticlibs}
 %files static-libs-slowdebug
 %{files_static_libs -- %{debug_suffix_unquoted}}
+%endif
 
 %files jmods-slowdebug
 %{files_jmods -- %{debug_suffix_unquoted}}
@@ -2186,8 +2261,10 @@ require "copy_jdk_configs.lua"
 %files devel-fastdebug
 %{files_devel -- %{fastdebug_suffix_unquoted}}
 
+%if %{include_staticlibs}
 %files static-libs-fastdebug
 %{files_static_libs -- %{fastdebug_suffix_unquoted}}
+%endif
 
 %files jmods-fastdebug
 %{files_jmods -- %{fastdebug_suffix_unquoted}}
@@ -2201,6 +2278,11 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Fri Feb 12 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.9-1
+- Perform static library build on a separate source tree with bundled image libraries
+- Make static library build optional
+- Based on initial work by Severin Gehwolf
+
 * Mon Feb  1 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.10.0.9-0
 - Update to jdk-11.0.10.0+9
 - Update release notes to 11.0.10.0+9

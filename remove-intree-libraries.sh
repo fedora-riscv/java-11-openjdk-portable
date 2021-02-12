@@ -1,24 +1,52 @@
 #!/bin/sh
 
+# Arguments: <JDK TREE> <MINIMAL|FULL>
+TREE=${1}
+TYPE=${2}
+
 ZIP_SRC=src/java.base/share/native/libzip/zlib/
 JPEG_SRC=src/java.desktop/share/native/libjavajpeg/
 GIF_SRC=src/java.desktop/share/native/libsplashscreen/giflib/
 PNG_SRC=src/java.desktop/share/native/libsplashscreen/libpng/
 LCMS_SRC=src/java.desktop/share/native/liblcms/
 
-cd openjdk
+if test "x${TREE}" = "x"; then
+    echo "$0 <JDK_TREE> (MINIMAL|FULL)";
+    exit 1;
+fi
+
+if test "x${TYPE}" = "x"; then
+    TYPE=minimal;
+fi
+
+if test "x${TYPE}" != "xminimal" -a "x${TYPE}" != "xfull"; then
+    echo "Type must be minimal or full";
+    exit 2;
+fi
+
+echo "Removing in-tree libraries from ${TREE}"
+echo "Cleansing operation: ${TYPE}";
+
+cd ${TREE}
 
 echo "Removing built-in libs (they will be linked)"
 
+# On full runs, allow for zlib having already been deleted by minimal
 echo "Removing zlib"
-if [ ! -d ${ZIP_SRC} ]; then
+if [ "x${TYPE}" = "xminimal" -a ! -d ${ZIP_SRC} ]; then
 	echo "${ZIP_SRC} does not exist. Refusing to proceed."
 	exit 1
 fi	
 rm -rvf ${ZIP_SRC}
 
+# Minimal is limited to just zlib so finish here
+if test "x${TYPE}" = "xminimal"; then
+    echo "Finished.";
+    exit 0;
+fi
+
 echo "Removing libjpeg"
-if [ ! -f ${JPEG_SRC}/jdhuff.c ]; then # some file that sound definitely exist
+if [ ! -f ${JPEG_SRC}/jdhuff.c ]; then # some file that should definitely exist
 	echo "${JPEG_SRC} does not contain jpeg sources. Refusing to proceed."
 	exit 1
 fi	
