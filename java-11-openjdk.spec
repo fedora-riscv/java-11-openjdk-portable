@@ -297,7 +297,7 @@
 # New Version-String scheme-style defines
 %global featurever 11
 %global interimver 0
-%global updatever 10
+%global updatever 11
 %global patchver 0
 # If you bump featurever, you must bump also vendor_version_string
 # Used via new version scheme. JDK 11 was
@@ -344,8 +344,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        9
-%global rpmrelease      2
+%global buildver        1
+%global rpmrelease      0
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -374,7 +374,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           1
+%global is_ga           0
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -1006,8 +1006,8 @@ Requires: ca-certificates
 # Require javapackages-filesystem for ownership of /usr/lib/jvm/ and macros
 Requires: javapackages-filesystem
 # Require zone-info data provided by tzdata-java sub-package
-# 2020b required as of JDK-8254177 in October CPU
-Requires: tzdata-java >= 2020b
+# 2020f required as of JDK-8259048 in October CPU
+Requires: tzdata-java >= 2020f
 # for support of kernel stream control
 # libsctp.so.1 is being `dlopen`ed on demand
 Requires: lksctp-tools%{?_isa}
@@ -1277,8 +1277,8 @@ BuildRequires: java-%{buildjdkver}-openjdk-devel
 %ifnarch %{jit_arches}
 BuildRequires: libffi-devel
 %endif
-# 2020b required as of JDK-8254177 in October CPU
-BuildRequires: tzdata-java >= 2020b
+# 2020f required as of JDK-8259048 in October CPU
+BuildRequires: tzdata-java >= 2020f
 # Earlier versions have a bug in tree vectorization on PPC
 BuildRequires: gcc >= 4.8.3-8
 
@@ -2286,6 +2286,12 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Sun Feb 21 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.11.0.1-0.0.ea
+- Update to jdk-11.0.11.0+1
+- Update release notes to 11.0.11.0+1
+- Switch to EA mode for 11.0.11 pre-release builds.
+- Require tzdata 2020f to match upstream change JDK-8259048
+
 * Fri Feb 19 2021 Stephan Bergmann <sbergman@redhat.com> - 1:11.0.10.0.9-2
 - Hardcode /usr/sbin/alternatives for Flatpak builds
 
