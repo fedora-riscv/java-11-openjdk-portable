@@ -10,7 +10,9 @@ Live versions of these release notes can be found at:
   * https://builds.shipilev.net/backports-monitor/release-notes-11.0.11.txt
 
 * Other changes
+  - JDK-7107012: sun.jvm.hotspot.code.CompressedReadStream readDouble() conversion to long mishandled
   - JDK-7146776: deadlock between URLStreamHandler.getHostAddress and file.Handler.openconnection
+  - JDK-8086003: Test fails on OSX with java.lang.RuntimeException 'Narrow klass base: 0x0000000000000000, Narrow klass shift: 3' missing
   - JDK-8168869: jdeps: localized messages don't use proper line breaks
   - JDK-8180837: SunPKCS11-NSS tests failing with CKR_ATTRIBUTE_READ_ONLY and CKR_MECHANISM_PARAM_INVALID
   - JDK-8202343: Disable TLS 1.0 and 1.1
@@ -29,6 +31,7 @@ Live versions of these release notes can be found at:
   - JDK-8218482: sun/security/krb5/auto/ReplayCachePrecise.java failed - no KrbException thrown
   - JDK-8221584: SIGSEGV in os::PlatformEvent::unpark() in JvmtiRawMonitor::raw_exit while posting method exit event
   - JDK-8221995: AARCH64: problems with CAS instructions encoding
+  - JDK-8222518: Remove unnecessary caching of Parker object in java.lang.Thread
   - JDK-8222785: aarch64: add necessary masking for immediate shift counts
   - JDK-8223186: HotSpot compile warnings from GCC 9
   - JDK-8225773: jdeps --check produces NPE if there are missing module dependences
@@ -37,12 +40,17 @@ Live versions of these release notes can be found at:
   - JDK-8229396: jdeps ignores multi-release when generate-module-info used on command line
   - JDK-8229474: Shenandoah: Cleanup CM::update_roots()
   - JDK-8232225: Rework the fix for JDK-8071483
+  - JDK-8232905: JFR fails with assertion: assert(t->unflushed_size() == 0) failed: invariant
   - JDK-8233164: C2 fails with assert(phase->C->get_alias_index(t) == phase->C->get_alias_index(t_adr)) failed: correct memory chain
   - JDK-8233910: java/awt/ColorClass/AlphaColorTest.java is failing intermittently in nightly lnux-x64 system
   - JDK-8233912: aarch64: minor improvements of atomic operations
+  - JDK-8234508: VM_HeapWalkOperation::iterate_over_object reads non-strong fields with an on-strong load barrier
   - JDK-8234742: Improve handshake logging
   - JDK-8234796: Refactor Handshake::execute to take a more complex type than ThreadClosure
+  - JDK-8235324: Dying objects are published from users of CollectedHeap::object_iterate
   - JDK-8235351: Lookup::unreflect should bind with the original caller independent of Method's accessible flag
+  - JDK-8237369: Shenandoah: failed vmTestbase/nsk/jvmti/AttachOnDemand/attach021/TestDescription.java test
+  - JDK-8237392: Shenandoah: Remove unreliable assertion
   - JDK-8237483: AArch64 C1 OopMap inserted twice fatal error
   - JDK-8237495: Java MIDI fails with a dereferenced memory error when asked to send a raw 0xF7
   - JDK-8239355: (dc) Initial value of SO_SNDBUF should allow sending large datagrams (macOS)
@@ -55,28 +63,38 @@ Live versions of these release notes can be found at:
   - JDK-8241911: AArch64: Fix a potential register clash issue in reduce_add2I
   - JDK-8242030: Wrong package declarations in jline classes after JDK-8241598
   - JDK-8242565: Policy initialization issues when the denyAfter constraint is enabled
+  - JDK-8243618: compiler/rtm/cli tests can be run w/o WhiteBox
   - JDK-8243670: Unexpected test result caused by C2 MergeMemNode::Ideal
   - JDK-8244088: [Regression] Switch of Gnome theme ends up in deadlocked UI
   - JDK-8244154: Update SunPKCS11 provider with PKCS11 v3.0 header files
   - JDK-8244340: Handshake processing thread lacks yielding
   - JDK-8244573: java.lang.ArrayIndexOutOfBoundsException thrown for malformed class file
+  - JDK-8244683: A TSA server used by tests
   - JDK-8245005: javax/net/ssl/compatibility/BasicConnectTest.java failed with No enum constant
   - JDK-8245026: PsAdaptiveSizePolicy::_old_gen_policy_is_ready is unused
+  - JDK-8245283: JFR: Can't handle constant dynamic used by Jacoco agent
   - JDK-8245512: CRC32 optimization using AVX512 instructions
+  - JDK-8246709: sun/security/tools/jarsigner/TsacertOptionTest.java compilation failed after JDK-8244683
   - JDK-8247200: assert((unsigned)fpargs < 32)
   - JDK-8247766: [aarch64] guarantee(val < (1U << nbits)) failed: Field too big for insn.
   - JDK-8248336: AArch64: C2: offset overflow in BoxLockNode::emit
   - JDK-8248865: Document JNDI/LDAP timeout properties
   - JDK-8248901: Signed immediate support in .../share/assembler.hpp is broken.
+  - JDK-8249543: Force DirectBufferAllocTest to run with -ExplicitGCInvokesConcurrent
   - JDK-8249588: libwindowsaccessbridge issues on 64bit Windows
   - JDK-8249749: modify a primitive array through a stream and a for cycle causes jre crash
+  - JDK-8249787: Make TestGCLocker more resilient with concurrent GCs
   - JDK-8250911: [windows] os::pd_map_memory() error detection broken
   - JDK-8251255: [linux] Add process-memory information to hs-err and VM.info
+  - JDK-8251359: Shenandoah: filter null oops before calling enqueue/SATB barrier
   - JDK-8251925: C2: RenaissanceStressTest fails with assert(!had_error): bad dominance
+  - JDK-8251944: Add Shenandoah test config to compiler/gcbarriers/UnsafeIntrinsicsTest.java
   - JDK-8251992: VM crashed running TestComplexAddrExpr.java test with -XX:UseAVX=X
   - JDK-8253220: Epsilon: clean up unused code/declarations
   - JDK-8253274: The CycleDMImagetest brokes the system
+  - JDK-8253353: Crash in C2: guarantee(n != NULL) failed: No Node
   - JDK-8253368: TLS connection always receives close_notify exception
+  - JDK-8255401: Shenandoah: Allow oldval and newval registers to overlap in cmpxchg_oop()
   - JDK-8253404: C2: assert(C->live_nodes() <= C->max_node_limit()) failed: Live Node limit exceeded limit
   - JDK-8253476: TestUseContainerSupport.java fails on some Linux kernels w/o swap limit capabilities
   - JDK-8253524: C2: Refactor code that clones predicates during loop unswitching
@@ -103,6 +121,7 @@ Live versions of these release notes can be found at:
   - JDK-8256061: RegisterSaver::save_live_registers() omits upper halves of ZMM0-15 registers
   - JDK-8256187: [TEST_BUG] Automate bug4275046.java test
   - JDK-8256258: some missing NULL checks or asserts after CodeCache::find_blob_unsafe
+  - JDK-8256290: javac/lambda/T8031967.java fails with StackOverflowError on x86_32
   - JDK-8256359: AArch64: runtime/ReservedStack/ReservedStackTestCompiler.java fails
   - JDK-8256387: Unexpected result if patching an entire instruction on AArch64
   - JDK-8256488: [aarch64] Use ldpq/stpq instead of ld4/st4 for small copies in StubGenerator::copy_memory
@@ -142,16 +161,27 @@ Live versions of these release notes can be found at:
   - JDK-8258534: Epsilon: clean up unused includes
   - JDK-8258805: Japanese characters not entered by mouse click on Windows 10
   - JDK-8258833: Cancel multi-part cipher operations in SunPKCS11 after failures
+  - JDK-8258836: JNI local refs exceed capacity getDiagnosticCommandInfo
   - JDK-8258884: [TEST_BUG] Convert applet-based test open/test/jdk/javax/swing/JMenuItem/8031573/bug8031573.java to a regular java test
   - JDK-8259049: Uninitialized variable after JDK-8257513
+  - JDK-8259580: Shenandoah: uninitialized label in VerifyThreadGCState
   - JDK-8259231: Epsilon: improve performance under contention during virtual space expansion
   - JDK-8259312: VerifyCACerts.java fails as soneraclass2ca cert will expire in 90 days
   - JDK-8259319: Illegal package access when SunPKCS11 requires SunJCE's classes
   - JDK-8259339: AllocateUninitializedArray C2 intrinsic fails with void.class input
   - JDK-8259446: runtime/jni/checked/TestCheckedReleaseArrayElements.java fails with stderr not empty
+  - JDK-8259619: C1: 3-arg StubAssembler::call_RT stack-use condition is incorrect
   - JDK-8259706: C2 compilation fails with assert(vtable_index == Method::invalid_vtable_index) failed: correct sentinel value
+  - JDK-8259773: Incorrect encoding of AVX-512 kmovq instruction
+  - JDK-8259849: Shenandoah: Rename store-val to IU-barrier
+  - JDK-8259954: gc/shenandoah/mxbeans tests fail with -Xcomp
   - JDK-8260029: aarch64: fix typo in verify_oop_array
   - JDK-8260308: Update LogCompilation junit to 4.13.1
+  - JDK-8260338: Some fields in HaltNode is not cloned
+  - JDK-8260378: [TESTBUG] DcmdMBeanTestCheckJni.java reports false positive
+  - JDK-8260502: [s390] NativeMovRegMem::verify() fails because it's too strict
+  - JDK-8260632: Build failures after JDK-8253353
+  - JDK-8261089: [TESTBUG] native library of test TestCheckedReleaseCriticalArray.java fails to compile with gcc 4.x
 
 Notes on individual issues:
 ===========================
