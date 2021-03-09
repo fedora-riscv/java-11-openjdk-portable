@@ -22,6 +22,7 @@ Live versions of these release notes can be found at:
   - JDK-8210578: AArch64: Invalid encoding for fmlsvs instruction
   - JDK-8211051: jdeps usage of --dot-output doesn't provide valid output for modular jar
   - JDK-8211057: Gensrc step CompileProperties generates unstable CompilerProperties output
+  - JDK-8211150: G1 Full GC not purging code root memory and hence causing memory leak
   - JDK-8211825: ModuleLayer.defineModulesWithXXX does not setup delegation when module reads automatic module
   - JDK-8212218: [TESTBUG] runtime/ErrorHandling/TestHeapDumpOnOutOfMemoryErrorInMetaspace.java timed out
   - JDK-8213909: jdeps --print-module-deps should report missing dependences
@@ -120,6 +121,7 @@ Live versions of these release notes can be found at:
   - JDK-8256056: Deoptimization stub doesn't save vector registers on x86
   - JDK-8256061: RegisterSaver::save_live_registers() omits upper halves of ZMM0-15 registers
   - JDK-8256187: [TEST_BUG] Automate bug4275046.java test
+  - JDK-8256220: C1: x86_32 fails with -XX:UseSSE=1 after JDK-8210764 due to mishandled lir_neg
   - JDK-8256258: some missing NULL checks or asserts after CodeCache::find_blob_unsafe
   - JDK-8256290: javac/lambda/T8031967.java fails with StackOverflowError on x86_32
   - JDK-8256359: AArch64: runtime/ReservedStack/ReservedStackTestCompiler.java fails
@@ -148,6 +150,7 @@ Live versions of these release notes can be found at:
   - JDK-8257594: C2 compiled checkcast of non-null object triggers endless deoptimization/recompilation cycle
   - JDK-8257633: Missing -mmacosx-version-min=X flag when linking libjvm
   - JDK-8257670: sun/security/ssl/SSLSocketImpl/SSLSocketLeak.java reports leaks
+  - JDK-8257707: Fix incorrect format string in Http1HeaderParser
   - JDK-8257798: [PPC64] undefined reference to Klass::vtable_start_offset()
   - JDK-8257884: Re-enable sun/security/ssl/SSLSocketImpl/SSLSocketLeak.java as automatic test
   - JDK-8257910: [JVMCI] Set exception_seen accordingly in the runtime.
@@ -164,12 +167,14 @@ Live versions of these release notes can be found at:
   - JDK-8258836: JNI local refs exceed capacity getDiagnosticCommandInfo
   - JDK-8258884: [TEST_BUG] Convert applet-based test open/test/jdk/javax/swing/JMenuItem/8031573/bug8031573.java to a regular java test
   - JDK-8259049: Uninitialized variable after JDK-8257513
+  - JDK-8259451: Zero: skip serviceability/sa tests, set vm.hasSA to false
   - JDK-8259580: Shenandoah: uninitialized label in VerifyThreadGCState
   - JDK-8259231: Epsilon: improve performance under contention during virtual space expansion
   - JDK-8259312: VerifyCACerts.java fails as soneraclass2ca cert will expire in 90 days
   - JDK-8259319: Illegal package access when SunPKCS11 requires SunJCE's classes
   - JDK-8259339: AllocateUninitializedArray C2 intrinsic fails with void.class input
   - JDK-8259446: runtime/jni/checked/TestCheckedReleaseArrayElements.java fails with stderr not empty
+  - JDK-8259949: x86 32-bit build fails when -fcf-protection is passed in the compiler flags
   - JDK-8259619: C1: 3-arg StubAssembler::call_RT stack-use condition is incorrect
   - JDK-8259706: C2 compilation fails with assert(vtable_index == Method::invalid_vtable_index) failed: correct sentinel value
   - JDK-8259773: Incorrect encoding of AVX-512 kmovq instruction
@@ -178,10 +183,13 @@ Live versions of these release notes can be found at:
   - JDK-8260029: aarch64: fix typo in verify_oop_array
   - JDK-8260308: Update LogCompilation junit to 4.13.1
   - JDK-8260338: Some fields in HaltNode is not cloned
+  - JDK-8260349: Cannot programmatically retrieve Metaspace max set via JAVA_TOOL_OPTIONS
   - JDK-8260378: [TESTBUG] DcmdMBeanTestCheckJni.java reports false positive
   - JDK-8260502: [s390] NativeMovRegMem::verify() fails because it's too strict
   - JDK-8260632: Build failures after JDK-8253353
   - JDK-8261089: [TESTBUG] native library of test TestCheckedReleaseCriticalArray.java fails to compile with gcc 4.x
+  - JDK-8261310: PPC64 Zero build fails with 'VMError::controlled_crash(int)::FunctionDescriptor functionDescriptor' has incomplete type and cannot be defined
+  - JDK-8261334: NMT: tuning statistic shows incorrect hash distribution
 
 Notes on individual issues:
 ===========================
