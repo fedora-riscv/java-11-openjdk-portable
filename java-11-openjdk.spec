@@ -318,7 +318,7 @@
 
 # Define vendor information used by OpenJDK
 %global oj_vendor Red Hat, Inc.
-%global oj_vendor_url "https://www.redhat.com/"
+%global oj_vendor_url https://www.redhat.com/
 # Define what url should JVM offer in case of a crash report
 # order may be important, epel may have rhel declared
 %if 0%{?epel}
@@ -345,7 +345,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        3
-%global rpmrelease      0
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1830,7 +1830,7 @@ $JAVA_HOME/bin/java -Djava.security.disableSystemPropertiesFile=true $(echo $(ba
 
 # Check correct vendor values have been set
 $JAVA_HOME/bin/javac -d . %{SOURCE16}
-$JAVA_HOME/bin/java $(echo $(basename %{SOURCE16})|sed "s|\.java||") "%{oj_vendor}" %{oj_vendor_url} %{oj_vendor_bug_url}
+$JAVA_HOME/bin/java $(echo $(basename %{SOURCE16})|sed "s|\.java||") "%{oj_vendor}" "%{oj_vendor_url}" "%{oj_vendor_bug_url}"
 
 # Check java launcher has no SSB mitigation
 if ! nm $JAVA_HOME/bin/java | grep set_speculation ; then true ; else false; fi
@@ -2283,6 +2283,10 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Sun Mar 28 2021 Jayashree Huttanagoudar <jhuttana@redhat.com> - 1:11.0.11.0.3-0.1.ea
+- Fix issue where CheckVendor.java test erroneously passes when it should fail.
+- Add proper quoting so '&' is not treated as a special character by the shell.
+
 * Mon Mar 08 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.11.0.3-0.0.ea
 - Update to jdk-11.0.11.0+3
 - Update release notes to 11.0.11.0+3
