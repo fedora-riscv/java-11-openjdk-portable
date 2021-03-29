@@ -344,8 +344,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        3
-%global rpmrelease      1
+%global buildver        4
+%global rpmrelease      0
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -2283,6 +2283,10 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Mon Mar 29 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.11.0.4-0.0.ea
+- Update to jdk-11.0.11.0+4
+- Update release notes to 11.0.11.0+4
+
 * Sun Mar 28 2021 Jayashree Huttanagoudar <jhuttana@redhat.com> - 1:11.0.11.0.3-0.1.ea
 - Fix issue where CheckVendor.java test erroneously passes when it should fail.
 - Add proper quoting so '&' is not treated as a special character by the shell.
