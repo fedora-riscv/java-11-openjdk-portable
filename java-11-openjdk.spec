@@ -337,7 +337,7 @@
 %endif
 
 # Define IcedTea version used for SystemTap tapsets and desktop file
-%global icedteaver      3.15.0
+%global icedteaver      6.0.0pre00-c848b93a8598
 
 # Standard JPackage naming and versioning defines
 %global origin          openjdk
@@ -345,7 +345,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        4
-%global rpmrelease      0
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1159,7 +1159,7 @@ URL:      http://openjdk.java.net/
 Source0: jdk-updates-jdk%{featurever}u-jdk-%{filever}+%{buildver}%{?tagsuffix:-%{tagsuffix}}-4curve.tar.xz
 
 # Use 'icedtea_sync.sh' to update the following
-# They are based on code contained in the IcedTea project (3.x).
+# They are based on code contained in the IcedTea project (6.x).
 # Systemtap tapsets. Zipped up to keep it small.
 Source8: tapsets-icedtea-%{icedteaver}.tar.xz
 
@@ -1615,11 +1615,12 @@ for suffix in %{build_loop} ; do
   for file in "tapset"$suffix/*.in; do
     OUTPUT_FILE=`echo $file | sed -e "s:\.stp\.in$:-%{version}-%{release}.%{_arch}.stp:g"`
     sed -e "s:@ABS_SERVER_LIBJVM_SO@:%{_jvmdir}/%{sdkdir -- $suffix}/lib/server/libjvm.so:g" $file > $file.1
+    sed -e "s:@JAVA_SPEC_VER@:%{javaver}:g" $file.1 > $file.2
 # TODO find out which architectures other than i686 have a client vm
 %ifarch %{ix86}
-    sed -e "s:@ABS_CLIENT_LIBJVM_SO@:%{_jvmdir}/%{sdkdir -- $suffix}/lib/client/libjvm.so:g" $file.1 > $OUTPUT_FILE
+    sed -e "s:@ABS_CLIENT_LIBJVM_SO@:%{_jvmdir}/%{sdkdir -- $suffix}/lib/client/libjvm.so:g" $file.2 > $OUTPUT_FILE
 %else
-    sed -e "/@ABS_CLIENT_LIBJVM_SO@/d" $file.1 > $OUTPUT_FILE
+    sed -e "/@ABS_CLIENT_LIBJVM_SO@/d" $file.2 > $OUTPUT_FILE
 %endif
     sed -i -e "s:@ABS_JAVA_HOME_DIR@:%{_jvmdir}/%{sdkdir -- $suffix}:g" $OUTPUT_FILE
     sed -i -e "s:@INSTALL_ARCH_DIR@:%{archinstall}:g" $OUTPUT_FILE
@@ -2283,6 +2284,10 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Mon Mar 29 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.11.0.4-0.1.ea
+- Update tapsets from IcedTea 6.x repository with fix for JDK-8015774 changes (_heap->_heaps)
+- Update icedtea_sync.sh with a VCS mode that retrieves sources from a Mercurial repository
+
 * Mon Mar 29 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.11.0.4-0.0.ea
 - Update to jdk-11.0.11.0+4
 - Update release notes to 11.0.11.0+4
