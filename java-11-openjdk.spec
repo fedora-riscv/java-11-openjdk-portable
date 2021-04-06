@@ -344,8 +344,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        4
-%global rpmrelease      1
+%global buildver        5
+%global rpmrelease      0
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -2284,6 +2284,10 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Tue Apr 06 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.11.0.5-0.0.ea
+- Update to jdk-11.0.11.0+5
+- Update release notes to 11.0.11.0+5
+
 * Mon Mar 29 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.11.0.4-0.1.ea
 - Update tapsets from IcedTea 6.x repository with fix for JDK-8015774 changes (_heap->_heaps)
 - Update icedtea_sync.sh with a VCS mode that retrieves sources from a Mercurial repository
