@@ -345,7 +345,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      0
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1011,11 +1011,13 @@ Requires: tzdata-java >= 2020f
 # for support of kernel stream control
 # libsctp.so.1 is being `dlopen`ed on demand
 Requires: lksctp-tools%{?_isa}
+%if ! 0%{?flatpak}
 # tool to copy jdk's configs - should be Recommends only, but then only dnf/yum enforce it,
 # not rpm transaction and so no configs are persisted when pure rpm -u is run. It may be
 # considered as regression
 Requires: copy-jdk-configs >= 3.3
 OrderWithRequires: copy-jdk-configs
+%endif
 # for printing support
 Requires: cups-libs
 # Post requires alternatives to install tool alternatives
@@ -2284,6 +2286,9 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Tue Apr 20 2021 Stephan Bergmann <sbergman@redhat.com> - 1:11.0.11.0.7-1.0.ea
+- Disable copy-jdk-configs for Flatpak builds
+
 * Sun Apr 11 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.11.0.7-0.0.ea
 - Update to jdk-11.0.11.0+7
 - Update release notes to 11.0.11.0+7
