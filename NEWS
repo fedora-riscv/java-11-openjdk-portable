@@ -94,6 +94,7 @@ Live versions of these release notes can be found at:
   - JDK-8249588: libwindowsaccessbridge issues on 64bit Windows
   - JDK-8249749: modify a primitive array through a stream and a for cycle causes jre crash
   - JDK-8249787: Make TestGCLocker more resilient with concurrent GCs
+  - JDK-8249867: xml declaration is not followed by a newline
   - JDK-8250911: [windows] os::pd_map_memory() error detection broken
   - JDK-8251255: [linux] Add process-memory information to hs-err and VM.info
   - JDK-8251359: Shenandoah: filter null oops before calling enqueue/SATB barrier
@@ -107,6 +108,7 @@ Live versions of these release notes can be found at:
   - JDK-8255368: Math.exp() gives wrong result for large values on x86 32-bit platforms
   - JDK-8255401: Shenandoah: Allow oldval and newval registers to overlap in cmpxchg_oop()
   - JDK-8253404: C2: assert(C->live_nodes() <= C->max_node_limit()) failed: Live Node limit exceeded limit
+  - JDK-8253409: Double-rounding possibility in float fma
   - JDK-8253476: TestUseContainerSupport.java fails on some Linux kernels w/o swap limit capabilities
   - JDK-8253524: C2: Refactor code that clones predicates during loop unswitching
   - JDK-8253644: C2: assert(skeleton_predicate_has_opaque(iff)) failed: unexpected
@@ -287,6 +289,37 @@ custom image is created with the list of modules output by jdeps when
 using the `--ignore-missing-deps` option for a non-modular
 application. Such an application, running on the custom image, might
 fail at runtime when missing dependence errors are suppressed.
+
+xml/jaxp:
+
+JDK-8249867 XML declaration is not followed by a newline
+========================================================
+
+The DOM Load and Save `LSSerializer` does not have an explicit control
+for whether or not the XML Declaration ends with a newline. In this
+release, a JDK implementation specific property
+`http://www.oracle.com/xml/jaxp/properties/isStandalone` and
+corresponding System property `jdk.xml.isStandalone` are added to
+control the addition of a newline and act independently without
+having to set the pretty-print property. This property can be used to
+reverse the incompatible change introduced in Java SE 7 Update 4 with
+an update of Xalan 2.7.1 where a newline is omitted when pretty-print
+is required.
+
+For details, please refer to the bug report and the java.xml module-summary.
+
+Usage:
+
+// to set the property, get an instance of LSSerializer and set it along with pretty-print
+LSSerializer ser = impl.createLSSerializer();
+ser.getDomConfig().setParameter("format-pretty-print", true);
+ser.getDomConfig().setParameter("http://www.oracle.com/xml/jaxp/properties/isStandalone", true);
+
+// to use the System property, set it before initializing a LSSerializer
+System.setProperty("jdk.xml.isStandalone", “true”);
+
+// to clear the property, place the line anywhere after the LSSerializer is initialized
+System.clearProperty("jdk.xml.isStandalone");
 
 New in release OpenJDK 11.0.10 (2021-01-19):
 =============================================
