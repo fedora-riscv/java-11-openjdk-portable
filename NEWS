@@ -212,6 +212,7 @@ Live versions of these release notes can be found at:
   - JDK-8260704: ParallelGC: oldgen expansion needs release-store for _end
   - JDK-8261022: Fix incorrect result of Math.abs() with char type
   - JDK-8261089: [TESTBUG] native library of test TestCheckedReleaseCriticalArray.java fails to compile with gcc 4.x
+  - JDK-8261209: isStandalone property: remove dependency on pretty-print
   - JDK-8261231: Windows IME was disabled after DnD operation
   - JDK-8261251: Shenandoah: Use object size for full GC humongous compaction
   - JDK-8261310: PPC64 Zero build fails with 'VMError::controlled_crash(int)::FunctionDescriptor functionDescriptor' has incomplete type and cannot be defined
