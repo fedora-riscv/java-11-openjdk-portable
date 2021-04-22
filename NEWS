@@ -9,6 +9,13 @@ Live versions of these release notes can be found at:
   * https://bitly.com/openjdk11011
   * https://builds.shipilev.net/backports-monitor/release-notes-11.0.11.txt
 
+* Security fixes
+  - JDK-8244473: Contextualize registration for JNDI
+  - JDK-8244543: Enhanced handling of abstract classes
+  - JDK-8249906, CVE-2021-2163: Enhance opening JARs
+  - JDK-8250568, CVE-2021-2161: Less ambiguous processing
+  - JDK-8253799: Make lists of normal filenames
+  - JDK-8257001: Improve Http Client Support
 * Other changes
   - JDK-7107012: sun.jvm.hotspot.code.CompressedReadStream readDouble() conversion to long mishandled
   - JDK-7146776: deadlock between URLStreamHandler.getHostAddress and file.Handler.openconnection
@@ -174,6 +181,7 @@ Live versions of these release notes can be found at:
   - JDK-8257997: sun/security/ssl/SSLSocketImpl/SSLSocketLeak.java again reports leaks after JDK-8257884
   - JDK-8257999: Parallel GC crash in gc/parallel/TestDynShrinkHeap.java: new region is not in covered_region
   - JDK-8258077: Using -Xcheck:jni can lead to a double-free after JDK-8193234
+  - JDK-8258247: Couple of issues in fix for JDK-8249906
   - JDK-8258373: Update the text handling in the JPasswordField
   - JDK-8258396: SIGILL in jdk.jfr.internal.PlatformRecorder.rotateDisk()
   - JDK-8258419: RSA cipher buffer cleanup
@@ -192,9 +200,11 @@ Live versions of these release notes can be found at:
   - JDK-8259312: VerifyCACerts.java fails as soneraclass2ca cert will expire in 90 days
   - JDK-8259319: Illegal package access when SunPKCS11 requires SunJCE's classes
   - JDK-8259339: AllocateUninitializedArray C2 intrinsic fails with void.class input
+  - JDK-8259428: AlgorithmId.getEncodedParams() should return copy
   - JDK-8259446: runtime/jni/checked/TestCheckedReleaseArrayElements.java fails with stderr not empty
   - JDK-8259949: x86 32-bit build fails when -fcf-protection is passed in the compiler flags
   - JDK-8259619: C1: 3-arg StubAssembler::call_RT stack-use condition is incorrect
+  - JDK-8259633: compiler/graalunit/CoreTest.java fails with NPE after JDK-8244543
   - JDK-8259706: C2 compilation fails with assert(vtable_index == Method::invalid_vtable_index) failed: correct sentinel value
   - JDK-8259707: LDAP channel binding does not work with StartTLS extension
   - JDK-8259773: Incorrect encoding of AVX-512 kmovq instruction
@@ -212,6 +222,7 @@ Live versions of these release notes can be found at:
   - JDK-8260704: ParallelGC: oldgen expansion needs release-store for _end
   - JDK-8261022: Fix incorrect result of Math.abs() with char type
   - JDK-8261089: [TESTBUG] native library of test TestCheckedReleaseCriticalArray.java fails to compile with gcc 4.x
+  - JDK-8261183: Follow on to Make lists of normal filenames
   - JDK-8261209: isStandalone property: remove dependency on pretty-print
   - JDK-8261231: Windows IME was disabled after DnD operation
   - JDK-8261251: Shenandoah: Use object size for full GC humongous compaction
@@ -226,6 +237,7 @@ Live versions of these release notes can be found at:
   - JDK-8261912: Code IfNode::fold_compares_helper more defensively
   - JDK-8261920: [AIX] jshell command throws java.io.IOError on non English locales
   - JDK-8262018: Wrong format in SAP copyright header of OsVersionTest
+  - JDK-8263069: Exclude some failing tests from security/infra/java/security/cert/CertPathValidator
 
 Notes on individual issues:
 ===========================
