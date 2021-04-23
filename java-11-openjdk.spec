@@ -345,7 +345,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        9
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1671,9 +1671,8 @@ export CFLAGS="$CFLAGS -mieee"
 
 # We use ourcppflags because the OpenJDK build seems to
 # pass EXTRA_CFLAGS to the HotSpot C++ compiler...
-# Explicitly set -fcommon as GCC 10+ defaults to -fno-common
-EXTRA_CFLAGS="%ourcppflags -Wno-error -fcommon"
-EXTRA_CPP_FLAGS="%ourcppflags -fcommon"
+EXTRA_CFLAGS="%ourcppflags -Wno-error"
+EXTRA_CPP_FLAGS="%ourcppflags"
 
 %ifarch %{power64} ppc
 # fix rpmlint warnings
@@ -2293,6 +2292,10 @@ cjc.mainProgram(arg)
 %endif
 
 %changelog
+* Fri Apr 30 2021 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.11.0.9-2
+- Remove -fcommon work-around as the OpenJDK 11
+  code has been fixed.
+
 * Fri Apr 29 2021 Jiri Vanek <jvanek@redhat.com> - 1:11.0.11.0.9-1
 - adapted to newst cjc to fix issue with rpm 4.17
 
