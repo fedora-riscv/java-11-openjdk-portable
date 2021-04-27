@@ -345,7 +345,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        9
-%global rpmrelease      0
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1015,7 +1015,7 @@ Requires: lksctp-tools%{?_isa}
 # tool to copy jdk's configs - should be Recommends only, but then only dnf/yum enforce it,
 # not rpm transaction and so no configs are persisted when pure rpm -u is run. It may be
 # considered as regression
-Requires: copy-jdk-configs >= 3.3
+Requires: copy-jdk-configs >= 3.9
 OrderWithRequires: copy-jdk-configs
 %endif
 # for printing support
@@ -2069,7 +2069,13 @@ done
 -- whether copy-jdk-configs is installed or not. If so, then configs are copied
 -- (copy_jdk_configs from %%{_libexecdir} used) or not copied at all
 local posix = require "posix"
-local debug = false
+
+if (os.getenv("debug") == "true") then
+  debug = true;
+  print("cjc: in spec debug is on")
+else 
+  debug = false;
+end
 
 SOURCE1 = "%{rpm_state_dir}/copy_jdk_configs.lua"
 SOURCE2 = "%{_libexecdir}/copy_jdk_configs.lua"
@@ -2098,8 +2104,9 @@ else
   end
 end
 -- run content of included file with fake args
+cjc = require "copy_jdk_configs.lua"
 arg = {"--currentjvm", "%{uniquesuffix %{nil}}", "--jvmdir", "%{_jvmdir %{nil}}", "--origname", "%{name}", "--origjavaver", "%{javaver}", "--arch", "%{_arch}", "--temp", "%{rpm_state_dir}/%{name}.%{_arch}"}
-require "copy_jdk_configs.lua"
+cjc.mainProgram(arg)
 
 %post
 %{post_script %{nil}}
@@ -2286,6 +2293,9 @@ require "copy_jdk_configs.lua"
 %endif
 
 %changelog
+* Fri Apr 29 2021 Jiri Vanek <jvanek@redhat.com> - 1:11.0.11.0.9-1
+- adapted to newst cjc to fix issue with rpm 4.17
+
 * Wed Apr 21 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.11.0.9-0
 - Update to jdk-11.0.11.0+9
 - Update release notes to 11.0.11.0+9
