@@ -2296,7 +2296,7 @@ cjc.mainProgram(arg)
 - Remove -fcommon work-around as the OpenJDK 11
   code has been fixed.
 
-* Fri Apr 29 2021 Jiri Vanek <jvanek@redhat.com> - 1:11.0.11.0.9-1
+* Fri Apr 30 2021 Jiri Vanek <jvanek@redhat.com> - 1:11.0.11.0.9-1
 - adapted to newst cjc to fix issue with rpm 4.17
 
 * Wed Apr 21 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.11.0.9-0
