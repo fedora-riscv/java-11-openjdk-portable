@@ -1,0 +1,311 @@
+diff -r bbc65dfa59d1 src/java.base/share/classes/java/security/SystemConfigurator.java
+--- openjdk/src/java.base/share/classes/java/security/SystemConfigurator.java	Thu Jan 23 18:22:31 2020 -0300
++++ openjdk/src/java.base/share/classes/java/security/SystemConfigurator.java	Sat Aug 01 23:16:51 2020 -0300
+@@ -1,11 +1,13 @@
+ /*
+- * Copyright (c) 2019, Red Hat, Inc.
++ * Copyright (c) 2019, 2020, Red Hat, Inc.
+  *
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+  *
+  * This code is free software; you can redistribute it and/or modify it
+  * under the terms of the GNU General Public License version 2 only, as
+- * published by the Free Software Foundation.
++ * published by the Free Software Foundation.  Oracle designates this
++ * particular file as subject to the "Classpath" exception as provided
++ * by Oracle in the LICENSE file that accompanied this code.
+  *
+  * This code is distributed in the hope that it will be useful, but WITHOUT
+  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+@@ -34,10 +36,10 @@
+ import java.util.Iterator;
+ import java.util.Map.Entry;
+ import java.util.Properties;
+-import java.util.function.Consumer;
+-import java.util.regex.Matcher;
+ import java.util.regex.Pattern;
+ 
++import jdk.internal.misc.SharedSecrets;
++import jdk.internal.misc.JavaSecuritySystemConfiguratorAccess;
+ import sun.security.util.Debug;
+ 
+ /**
+@@ -47,7 +49,7 @@
+  *
+  */
+ 
+-class SystemConfigurator {
++final class SystemConfigurator {
+ 
+     private static final Debug sdebug =
+             Debug.getInstance("properties");
+@@ -61,15 +63,16 @@
+     private static final String CRYPTO_POLICIES_CONFIG =
+             CRYPTO_POLICIES_BASE_DIR + "/config";
+ 
+-    private static final class SecurityProviderInfo {
+-        int number;
+-        String key;
+-        String value;
+-        SecurityProviderInfo(int number, String key, String value) {
+-            this.number = number;
+-            this.key = key;
+-            this.value = value;
+-        }
++    private static boolean systemFipsEnabled = false;
++
++    static {
++        SharedSecrets.setJavaSecuritySystemConfiguratorAccess(
++            new JavaSecuritySystemConfiguratorAccess() {
++                @Override
++                public boolean isSystemFipsEnabled() {
++                    return SystemConfigurator.isSystemFipsEnabled();
++                }
++            });
+     }
+ 
+     /*
+@@ -128,9 +131,9 @@
+                     String nonFipsKeystoreType = props.getProperty("keystore.type");
+                     props.put("keystore.type", keystoreTypeValue);
+                     if (keystoreTypeValue.equals("PKCS11")) {
+-                    	// If keystore.type is PKCS11, javax.net.ssl.keyStore
+-                    	// must be "NONE". See JDK-8238264.
+-                    	System.setProperty("javax.net.ssl.keyStore", "NONE");
++                        // If keystore.type is PKCS11, javax.net.ssl.keyStore
++                        // must be "NONE". See JDK-8238264.
++                        System.setProperty("javax.net.ssl.keyStore", "NONE");
+                     }
+                     if (System.getProperty("javax.net.ssl.trustStoreType") == null) {
+                         // If no trustStoreType has been set, use the
+@@ -144,12 +147,13 @@
+                         sdebug.println("FIPS mode default keystore.type = " +
+                                 keystoreTypeValue);
+                         sdebug.println("FIPS mode javax.net.ssl.keyStore = " +
+-                        		System.getProperty("javax.net.ssl.keyStore", ""));
++                                System.getProperty("javax.net.ssl.keyStore", ""));
+                         sdebug.println("FIPS mode javax.net.ssl.trustStoreType = " +
+                                 System.getProperty("javax.net.ssl.trustStoreType", ""));
+                     }
+                 }
+                 loadedProps = true;
++                systemFipsEnabled = true;
+             }
+         } catch (Exception e) {
+             if (sdebug != null) {
+@@ -160,13 +164,30 @@
+         return loadedProps;
+     }
+ 
++    /**
++     * Returns whether or not global system FIPS alignment is enabled.
++     *
++     * Value is always 'false' before java.security.Security class is
++     * initialized.
++     *
++     * Call from out of this package through SharedSecrets:
++     *   SharedSecrets.getJavaSecuritySystemConfiguratorAccess()
++     *           .isSystemFipsEnabled();
++     *
++     * @return  a boolean value indicating whether or not global
++     *          system FIPS alignment is enabled.
++     */
++    static boolean isSystemFipsEnabled() {
++        return systemFipsEnabled;
++    }
++
+     /*
+      * FIPS is enabled only if crypto-policies are set to "FIPS"
+      * and the com.redhat.fips property is true.
+      */
+     private static boolean enableFips() throws Exception {
+-        boolean fipsEnabled = Boolean.valueOf(System.getProperty("com.redhat.fips", "true"));
+-        if (fipsEnabled) {
++        boolean shouldEnable = Boolean.valueOf(System.getProperty("com.redhat.fips", "true"));
++        if (shouldEnable) {
+             String cryptoPoliciesConfig = new String(Files.readAllBytes(Path.of(CRYPTO_POLICIES_CONFIG)));
+             if (sdebug != null) { sdebug.println("Crypto config:\n" + cryptoPoliciesConfig); }
+             Pattern pattern = Pattern.compile("^FIPS$", Pattern.MULTILINE);
+diff -r bbc65dfa59d1 src/java.base/share/classes/jdk/internal/misc/JavaSecuritySystemConfiguratorAccess.java
+--- /dev/null	Thu Jan 01 00:00:00 1970 +0000
++++ openjdk/src/java.base/share/classes/jdk/internal/misc/JavaSecuritySystemConfiguratorAccess.java	Sat Aug 01 23:16:51 2020 -0300
+@@ -0,0 +1,30 @@
++/*
++ * Copyright (c) 2020, Red Hat, Inc.
++ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
++ *
++ * This code is free software; you can redistribute it and/or modify it
++ * under the terms of the GNU General Public License version 2 only, as
++ * published by the Free Software Foundation.  Oracle designates this
++ * particular file as subject to the "Classpath" exception as provided
++ * by Oracle in the LICENSE file that accompanied this code.
++ *
++ * This code is distributed in the hope that it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
++ * version 2 for more details (a copy is included in the LICENSE file that
++ * accompanied this code).
++ *
++ * You should have received a copy of the GNU General Public License version
++ * 2 along with this work; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
++ * or visit www.oracle.com if you need additional information or have any
++ * questions.
++ */
++
++package jdk.internal.misc;
++
++public interface JavaSecuritySystemConfiguratorAccess {
++    boolean isSystemFipsEnabled();
++}
+diff -r bbc65dfa59d1 src/java.base/share/classes/jdk/internal/misc/SharedSecrets.java
+--- openjdk/src/java.base/share/classes/jdk/internal/misc/SharedSecrets.java	Thu Jan 23 18:22:31 2020 -0300
++++ openjdk/src/java.base/share/classes/jdk/internal/misc/SharedSecrets.java	Sat Aug 01 23:16:51 2020 -0300
+@@ -76,6 +76,7 @@
+     private static JavaIORandomAccessFileAccess javaIORandomAccessFileAccess;
+     private static JavaSecuritySignatureAccess javaSecuritySignatureAccess;
+     private static JavaxCryptoSealedObjectAccess javaxCryptoSealedObjectAccess;
++    private static JavaSecuritySystemConfiguratorAccess javaSecuritySystemConfiguratorAccess;
+ 
+     public static JavaUtilJarAccess javaUtilJarAccess() {
+         if (javaUtilJarAccess == null) {
+@@ -361,4 +362,12 @@
+         }
+         return javaxCryptoSealedObjectAccess;
+     }
++
++    public static void setJavaSecuritySystemConfiguratorAccess(JavaSecuritySystemConfiguratorAccess jssca) {
++        javaSecuritySystemConfiguratorAccess = jssca;
++    }
++
++    public static JavaSecuritySystemConfiguratorAccess getJavaSecuritySystemConfiguratorAccess() {
++        return javaSecuritySystemConfiguratorAccess;
++    }
+ }
+diff -r bbc65dfa59d1 src/java.base/share/classes/sun/security/ssl/SSLContextImpl.java
+--- openjdk/src/java.base/share/classes/sun/security/ssl/SSLContextImpl.java	Thu Jan 23 18:22:31 2020 -0300
++++ openjdk/src/java.base/share/classes/sun/security/ssl/SSLContextImpl.java	Sat Aug 01 23:16:51 2020 -0300
+@@ -31,6 +31,7 @@
+ import java.security.cert.*;
+ import java.util.*;
+ import javax.net.ssl.*;
++import jdk.internal.misc.SharedSecrets;
+ import sun.security.action.GetPropertyAction;
+ import sun.security.provider.certpath.AlgorithmChecker;
+ import sun.security.validator.Validator;
+@@ -542,20 +543,38 @@
+ 
+         static {
+             if (SunJSSE.isFIPS()) {
+-                supportedProtocols = Arrays.asList(
+-                    ProtocolVersion.TLS13,
+-                    ProtocolVersion.TLS12,
+-                    ProtocolVersion.TLS11,
+-                    ProtocolVersion.TLS10
+-                );
++                if (SharedSecrets.getJavaSecuritySystemConfiguratorAccess()
++                        .isSystemFipsEnabled()) {
++                    // RH1860986: TLSv1.3 key derivation not supported with
++                    // the Security Providers available in system FIPS mode.
++                    supportedProtocols = Arrays.asList(
++                        ProtocolVersion.TLS12,
++                        ProtocolVersion.TLS11,
++                        ProtocolVersion.TLS10
++                    );
+ 
+-                serverDefaultProtocols = getAvailableProtocols(
+-                        new ProtocolVersion[] {
+-                    ProtocolVersion.TLS13,
+-                    ProtocolVersion.TLS12,
+-                    ProtocolVersion.TLS11,
+-                    ProtocolVersion.TLS10
+-                });
++                    serverDefaultProtocols = getAvailableProtocols(
++                            new ProtocolVersion[] {
++                        ProtocolVersion.TLS12,
++                        ProtocolVersion.TLS11,
++                        ProtocolVersion.TLS10
++                    });
++                } else {
++                    supportedProtocols = Arrays.asList(
++                        ProtocolVersion.TLS13,
++                        ProtocolVersion.TLS12,
++                        ProtocolVersion.TLS11,
++                        ProtocolVersion.TLS10
++                    );
++
++                    serverDefaultProtocols = getAvailableProtocols(
++                            new ProtocolVersion[] {
++                        ProtocolVersion.TLS13,
++                        ProtocolVersion.TLS12,
++                        ProtocolVersion.TLS11,
++                        ProtocolVersion.TLS10
++                    });
++                }
+             } else {
+                 supportedProtocols = Arrays.asList(
+                     ProtocolVersion.TLS13,
+@@ -620,6 +639,16 @@
+ 
+         static ProtocolVersion[] getSupportedProtocols() {
+             if (SunJSSE.isFIPS()) {
++                if (SharedSecrets.getJavaSecuritySystemConfiguratorAccess()
++                        .isSystemFipsEnabled()) {
++                    // RH1860986: TLSv1.3 key derivation not supported with
++                    // the Security Providers available in system FIPS mode.
++                    return new ProtocolVersion[] {
++                            ProtocolVersion.TLS12,
++                            ProtocolVersion.TLS11,
++                            ProtocolVersion.TLS10
++                    };
++                }
+                 return new ProtocolVersion[] {
+                         ProtocolVersion.TLS13,
+                         ProtocolVersion.TLS12,
+@@ -949,6 +978,16 @@
+ 
+         static ProtocolVersion[] getProtocols() {
+             if (SunJSSE.isFIPS()) {
++                if (SharedSecrets.getJavaSecuritySystemConfiguratorAccess()
++                        .isSystemFipsEnabled()) {
++                    // RH1860986: TLSv1.3 key derivation not supported with
++                    // the Security Providers available in system FIPS mode.
++                    return new ProtocolVersion[] {
++                            ProtocolVersion.TLS12,
++                            ProtocolVersion.TLS11,
++                            ProtocolVersion.TLS10
++                    };
++                }
+                 return new ProtocolVersion[]{
+                         ProtocolVersion.TLS13,
+                         ProtocolVersion.TLS12,
+diff -r bbc65dfa59d1 src/java.base/share/classes/sun/security/ssl/SunJSSE.java
+--- openjdk/src/java.base/share/classes/sun/security/ssl/SunJSSE.java	Thu Jan 23 18:22:31 2020 -0300
++++ openjdk/src/java.base/share/classes/sun/security/ssl/SunJSSE.java	Sat Aug 01 23:16:51 2020 -0300
+@@ -27,6 +27,8 @@
+ 
+ import java.security.*;
+ import java.util.*;
++
++import jdk.internal.misc.SharedSecrets;
+ import sun.security.rsa.SunRsaSignEntries;
+ import static sun.security.util.SecurityConstants.PROVIDER_VER;
+ import static sun.security.provider.SunEntries.createAliases;
+@@ -195,8 +197,13 @@
+             "sun.security.ssl.SSLContextImpl$TLS11Context", null, null);
+         ps("SSLContext", "TLSv1.2",
+             "sun.security.ssl.SSLContextImpl$TLS12Context", null, null);
+-        ps("SSLContext", "TLSv1.3",
+-            "sun.security.ssl.SSLContextImpl$TLS13Context", null, null);
++        if (!SharedSecrets.getJavaSecuritySystemConfiguratorAccess()
++                .isSystemFipsEnabled()) {
++            // RH1860986: TLSv1.3 key derivation not supported with
++            // the Security Providers available in system FIPS mode.
++            ps("SSLContext", "TLSv1.3",
++                "sun.security.ssl.SSLContextImpl$TLS13Context", null, null);
++        }
+         ps("SSLContext", "TLS",
+             "sun.security.ssl.SSLContextImpl$TLSContext",
+             (isfips? null : createAliases("SSL")), null);

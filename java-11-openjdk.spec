@@ -345,7 +345,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        9
-%global rpmrelease      3
+%global rpmrelease      4
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -805,6 +805,7 @@ exit 0
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/security/java.security
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/logging.properties
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/security/nss.cfg
+%config(noreplace) %{etcjavadir -- %{?1}}/conf/security/nss.fips.cfg
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/management/jmxremote.access
 # these are config templates, thus not config-noreplace
 %config  %{etcjavadir -- %{?1}}/conf/management/jmxremote.password.template
@@ -1020,6 +1021,8 @@ OrderWithRequires: copy-jdk-configs
 %endif
 # for printing support
 Requires: cups-libs
+# for FIPS PKCS11 provider
+Requires: nss
 # Post requires alternatives to install tool alternatives
 Requires(post):   %{alternatives_requires}
 # Postun requires alternatives to uninstall tool alternatives
@@ -1189,6 +1192,9 @@ Source15: TestSecurityProperties.java
 # Ensure vendor settings are correct
 Source16: CheckVendor.java
 
+# nss fips configuration file
+Source17: nss.fips.cfg.in
+
 ############################################
 #
 # RPM/distribution specific patches
@@ -1203,9 +1209,18 @@ Patch2:    rh1648644-java_access_bridge_privileged_security.patch
 Patch1000: rh1648249-add_commented_out_nss_cfg_provider_to_java_security.patch
 # enable build of speculative store bypass hardened alt-java
 Patch600: rh1750419-redhat_alt_java.patch
-
 # RH1582504: Use RSA as default for keytool, as DSA is disabled in all crypto policies except LEGACY
 Patch1003: rh1842572-rsa_default_for_keytool.patch
+
+# FIPS support patches
+# RH1655466: Support RHEL FIPS mode using SunPKCS11 provider
+Patch1001: rh1655466-global_crypto_and_fips.patch
+# RH1818909: No ciphersuites availale for SSLSocket in FIPS mode
+Patch1002: rh1818909-fips_default_keystore_type.patch
+# RH1860986: Disable TLSv1.3 with the NSS-FIPS provider until PKCS#11 v3.0 support is available
+Patch1004: rh1860986-disable_tlsv1.3_in_fips_mode.patch
+# RH1915071: Always initialise JavaSecuritySystemConfiguratorAccess
+Patch1007: rh1915071-always_initialise_configurator_access.patch
 
 #############################################
 #
@@ -1600,7 +1615,11 @@ popd # openjdk
 
 %patch1000
 %patch600
+%patch1001
+%patch1002
 %patch1003
+%patch1004
+%patch1007
 
 # Extract systemtap tapsets
 %if %{with_systemtap}
@@ -1652,6 +1671,9 @@ done
 # Setup nss.cfg
 sed -e "s:@NSS_LIBDIR@:%{NSS_LIBDIR}:g" %{SOURCE11} > nss.cfg
 
+# Setup nss.fips.cfg
+sed -e "s:@NSS_LIBDIR@:%{NSS_LIBDIR}:g" %{SOURCE17} > nss.fips.cfg
+sed -i -e "s:@NSS_SECMOD@:/etc/pki/nssdb:g" nss.fips.cfg
 
 %build
 # How many CPU's do we have?
@@ -1786,6 +1808,9 @@ export JAVA_HOME=${top_dir_abs_main_build_path}/images/%{jdkimage}
 
 # Install nss.cfg right away as we will be using the JRE above
 install -m 644 nss.cfg $JAVA_HOME/conf/security/
+
+# Install nss.fips.cfg: NSS configuration for global FIPS mode (crypto-policies)
+install -m 644 nss.fips.cfg $JAVA_HOME/conf/security/
 
 # Use system-wide tzdata
 rm $JAVA_HOME/lib/tzdb.dat
@@ -2292,6 +2317,23 @@ cjc.mainProgram(args)
 %endif
 
 %changelog
+* Wed Jun 02 2021 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.11.0.9-4
+- Update RH1655466 FIPS patch with changes in OpenJDK 8 version.
+- SunPKCS11 runtime provider name is a concatenation of "SunPKCS11-" and the name in the config file.
+- Change nss.fips.cfg config name to "NSS-FIPS" to avoid confusion with nss.cfg.
+- No need to substitute path to nss.fips.cfg as java.security file supports a java.home variable.
+- Disable FIPS mode support unless com.redhat.fips is set to "true".
+- Enable alignment with FIPS crypto policy by default (-Dcom.redhat.fips=false to disable).
+- Add explicit runtime dependency on NSS for the PKCS11 provider in FIPS mode
+- Move setup of JavaSecuritySystemConfiguratorAccess to Security class so it always occurs (RH1915071)
+- Resolves: rhbz#1830090
+
+* Wed Jun 02 2021 Martin Balao <mbalao@redhat.com> - 1:11.0.11.0.9-4
+- Support the FIPS mode crypto policy (RH1655466)
+- Use appropriate keystore types when in FIPS mode (RH1818909)
+- Disable TLSv1.3 when the FIPS crypto policy and the NSS-FIPS provider are in use (RH1860986)
+- Resolves: rhbz#1830090
+
 * Fri May 07 2021 Jiri Vanek <jvanek@redhat.com> - 1:11.0.11.0.9-3
 - removed cjc backward comaptiblity, to fix when both rpm 4.16 and 4.17 are in transaction
 
