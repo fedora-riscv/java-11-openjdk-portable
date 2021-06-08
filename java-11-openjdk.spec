@@ -345,7 +345,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        9
-%global rpmrelease      4
+%global rpmrelease      5
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -404,7 +404,7 @@
 # fix for https://bugzilla.redhat.com/show_bug.cgi?id=1111349
 #         https://bugzilla.redhat.com/show_bug.cgi?id=1590796#c14
 #         https://bugzilla.redhat.com/show_bug.cgi?id=1655938
-%global _privatelibs libsplashscreen[.]so.*|libawt_xawt[.]so.*|libjli[.]so.*|libattach[.]so.*|libawt[.]so.*|libextnet[.]so.*|libawt_headless[.]so.*|libdt_socket[.]so.*|libfontmanager[.]so.*|libinstrument[.]so.*|libj2gss[.]so.*|libj2pcsc[.]so.*|libj2pkcs11[.]so.*|libjaas[.]so.*|libjavajpeg[.]so.*|libjdwp[.]so.*|libjimage[.]so.*|libjsound[.]so.*|liblcms[.]so.*|libmanagement[.]so.*|libmanagement_agent[.]so.*|libmanagement_ext[.]so.*|libmlib_image[.]so.*|libnet[.]so.*|libnio[.]so.*|libprefs[.]so.*|librmi[.]so.*|libsaproc[.]so.*|libsctp[.]so.*|libsunec[.]so.*|libunpack[.]so.*|libzip[.]so.*
+%global _privatelibs libsplashscreen[.]so.*|libawt_xawt[.]so.*|libjli[.]so.*|libattach[.]so.*|libawt[.]so.*|libextnet[.]so.*|libawt_headless[.]so.*|libdt_socket[.]so.*|libfontmanager[.]so.*|libinstrument[.]so.*|libj2gss[.]so.*|libj2pcsc[.]so.*|libj2pkcs11[.]so.*|libjaas[.]so.*|libjavajpeg[.]so.*|libjdwp[.]so.*|libjimage[.]so.*|libjsound[.]so.*|liblcms[.]so.*|libmanagement[.]so.*|libmanagement_agent[.]so.*|libmanagement_ext[.]so.*|libmlib_image[.]so.*|libnet[.]so.*|libnio[.]so.*|libprefs[.]so.*|librmi[.]so.*|libsaproc[.]so.*|libsctp[.]so.*|libsunec[.]so.*|libsystemconf[.]so.*|libunpack[.]so.*|libzip[.]so.*
 %global _publiclibs libjawt[.]so.*|libjava[.]so.*|libjvm[.]so.*|libverify[.]so.*|libjsig[.]so.*
 %if %is_system_jdk
 %global __provides_exclude ^(%{_privatelibs})$
@@ -763,6 +763,7 @@ exit 0
 %endif
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libsctp.so
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libsunec.so
+%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libsystemconf.so
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libunpack.so
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libverify.so
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libzip.so
@@ -1021,8 +1022,6 @@ OrderWithRequires: copy-jdk-configs
 %endif
 # for printing support
 Requires: cups-libs
-# for FIPS PKCS11 provider
-Requires: nss
 # Post requires alternatives to install tool alternatives
 Requires(post):   %{alternatives_requires}
 # Postun requires alternatives to uninstall tool alternatives
@@ -1221,6 +1220,8 @@ Patch1002: rh1818909-fips_default_keystore_type.patch
 Patch1004: rh1860986-disable_tlsv1.3_in_fips_mode.patch
 # RH1915071: Always initialise JavaSecuritySystemConfiguratorAccess
 Patch1007: rh1915071-always_initialise_configurator_access.patch
+# RH1929465: Improve system FIPS detection
+Patch1008: rh1929465-improve_system_FIPS_detection.patch
 
 #############################################
 #
@@ -1280,8 +1281,8 @@ BuildRequires: libXrandr-devel
 BuildRequires: libXrender-devel
 BuildRequires: libXt-devel
 BuildRequires: libXtst-devel
-# Requirements for setting up the nss.cfg
-BuildRequires: nss-devel
+# Requirements for setting up the nss.cfg and FIPS support
+BuildRequires: nss-devel >= 3.53
 BuildRequires: pkgconfig
 BuildRequires: xorg-x11-proto-devel
 BuildRequires: zip
@@ -1620,6 +1621,7 @@ popd # openjdk
 %patch1003
 %patch1004
 %patch1007
+%patch1008
 
 # Extract systemtap tapsets
 %if %{with_systemtap}
@@ -1757,6 +1759,7 @@ bash ${top_dir_abs_src_path}/configure \
     --with-boot-jdk=/usr/lib/jvm/java-%{buildjdkver}-openjdk \
     --with-debug-level=$debugbuild \
     --with-native-debug-symbols=internal \
+    --enable-sysconf-nss \
     --enable-unlimited-crypto \
     --with-zlib=system \
     --with-libjpeg=${link_opt} \
@@ -2317,6 +2320,13 @@ cjc.mainProgram(args)
 %endif
 
 %changelog
+* Tue Jun 08 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.11.0.9-5
+- Minor code cleanups on FIPS detection patch and check for SECMOD_GetSystemFIPSEnabled in configure.
+- Remove unneeded Requires on NSS as it will now be dynamically linked and detected by RPM.
+
+* Tue Jun 08 2021 Martin Balao <mbalao@redhat.com> - 1:11.0.11.0.9-5
+- Detect FIPS using SECMOD_GetSystemFIPSEnabled in the new libsystemconf JDK library.
+
 * Wed Jun 02 2021 Andrew John Hughes <gnu.andrew@redhat.com> - 1:11.0.11.0.9-4
 - Update RH1655466 FIPS patch with changes in OpenJDK 8 version.
 - SunPKCS11 runtime provider name is a concatenation of "SunPKCS11-" and the name in the config file.
