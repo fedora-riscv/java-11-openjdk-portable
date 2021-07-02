@@ -14,6 +14,7 @@ Live versions of these release notes can be found at:
   - JDK-7106851: Test should not use System.exit
   - JDK-8073446: TimeZone getOffset API does not  return a dst offset between years 2038-2137
   - JDK-8076190: Customizing the generation of a PKCS12 keystore
+  - JDK-8153005: Upgrade the default PKCS12 encryption/MAC algorithms
   - JDK-8171303: sun/java2d/pipe/InterpolationQualityTest.java fails on Windows & Linux
   - JDK-8177068: incomplete classpath causes NPE in Flow
   - JDK-8187450: JNI local refs exceeds capacity warning in NetworkInterface::getAll
@@ -34,13 +35,17 @@ Live versions of these release notes can be found at:
   - JDK-8213845: ARM32: Interpreter doesn't call result handler after native calls
   - JDK-8214128: ARM32: wrong stack alignment on Deoptimization::unpack_frames
   - JDK-8214512: ARM32: Jtreg test compiler/c2/Test8062950.java fails on ARM
+  - JDK-8214854: JDWP: Unforseen output truncation in logging
   - JDK-8214922: Add vectorization support for fmin/fmax
+  - JDK-8215009: GCC 8 compilation error in libjli
   - JDK-8216259: AArch64: Vectorize Adler32 intrinsics
   - JDK-8216314: SIGILL in CodeHeapState::print_names()
   - JDK-8217348: assert(thread->is_Java_thread()) failed: just checking
   - JDK-8217465: [REDO] - Optimize CodeHeap Analytics
   - JDK-8217561: X86: Add floating-point Math.min/max intrinsics
   - JDK-8217918: C2: -XX:+AggressiveUnboxing is broken
+  - JDK-8218458: [TESTBUG] runtime/NMT/CheckForProperDetailStackTrace.java fails with Expected stack trace missing from output
+  - JDK-8219142: Remove unused JIMAGE_ResourcePath
   - JDK-8219586: CodeHeap State Analytics processes dead nmethods
   - JDK-8220407: compiler/intrinsics/math/TestFpMinMaxIntrinsics.java timedout
   - JDK-8222302: [TESTBUG]test/hotspot/jtreg/compiler/intrinsics/sha/cli/TestUseSHAOptionOnUnsupportedCPU.java fails on any other CPU
@@ -48,15 +53,18 @@ Live versions of these release notes can be found at:
   - JDK-8223020: aarch64: expand minI_rReg and maxI_rReg patterns into separate instructions
   - JDK-8223444: Improve CodeHeap Free Space Management
   - JDK-8223504: Improve performance of forall loops by better inlining of "iterator()" methods
+  - JDK-8223667: ASAN build broken
   - JDK-8225081: Remove Telia Company CA certificate expiring in April 2021
   - JDK-8225116: Test OwnedWindowsLeak.java intermittently fails
   - JDK-8225438: javax/net/ssl/TLSCommon/TestSessionLocalPrincipal.java failed with Read timed out
   - JDK-8225756: [testbug] compiler/loopstripmining/CheckLoopStripMining.java sets too short a SafepointTimeoutDelay
   - JDK-8226374: Restrict TLS signature schemes and named groups
   - JDK-8226627: assert(t->singleton()) failed: must be a constant
+  - JDK-8226721: Missing intrinsics for Math.ceil, floor, rint
   - JDK-8227222: vmTestbase/jit/FloatingPoint/gen_math/Loops04/Loops04.java failed XMM register should be 0-15
   - JDK-8230428: Cleanup dead CastIP node code in formssel.cpp
   - JDK-8231460: Performance issue (CodeHeap) with large free blocks
+  - JDK-8231713: x86_32 build failures after JDK-8226721 (Missing intrinsics for Math.ceil, floor, rint)
   - JDK-8231841: AArch64: debug.cpp help() is missing an AArch64 line for pns
   - JDK-8232591: AArch64: Add missing match rules for smaddl, smsubl and smnegl
   - JDK-8233185: HttpServer.stop() blocks indefinitely when called on dispatch thread
@@ -84,6 +92,7 @@ Live versions of these release notes can be found at:
   - JDK-8242010: Upgrade IANA Language Subtag Registry to Version 2020-04-01
   - JDK-8242429: Better implementation for sign extract
   - JDK-8242557: Add length limit for strings in PNGImageWriter
+  - JDK-8243155: AArch64: Add support for SqrtVF
   - JDK-8243240: AArch64: Add support for MulVB
   - JDK-8243559: Remove root certificates with 1024-bit keys
   - JDK-8243597: AArch64: Add support for integer vector abs
@@ -93,12 +102,18 @@ Live versions of these release notes can be found at:
   - JDK-8245511: G1 adaptive IHOP does not account for reclamation of humongous objects by young GC
   - JDK-8246274: G1 old gen allocation tracking is not in a separate class
   - JDK-8247354: [aarch64] PopFrame causes assert(oopDesc::is_oop(obj)) failed: not an oop
+  - JDK-8247408: IdealGraph bit check expression canonicalization
   - JDK-8247432: Update IANA Language Subtag Registry to Version 2020-09-29
   - JDK-8247438: JShell: When FailOverExecutionControlProvider fails the proximal cause is not shown
+  - JDK-8247753: UIManager.getSytemLookAndFeelClassName() returns wrong value on Fedora 32
+  - JDK-8248043: Need to eliminate excessive i2l conversions
   - JDK-8248411: [aarch64] Insufficient error handling when CodeBuffer is exhausted
+  - JDK-8248568: compiler/c2/TestBit.java failed: test missing from stdout/stderr
+  - JDK-8248870: AARCH64: I2L/L2I conversions can be skipped for masked positive values
   - JDK-8249142: java/awt/FontClass/CreateFont/DeleteFont.sh is unstable
   - JDK-8249719: MethodHandle performance suffers from bad ResolvedMethodTable hash function
   - JDK-8250635: MethodArityHistogram should use Compile_lock in favour of fancy checks
+  - JDK-8250876: Fix issues with cross-compile on macos
   - JDK-8251525: AARCH64: Faster Math.signum(fp)
   - JDK-8252259: AArch64: Adjust default value of FLOATPRESSURE
   - JDK-8252779: compiler/graalunit/HotspotTest.java failed after 8251525
@@ -143,7 +158,9 @@ Live versions of these release notes can be found at:
   - JDK-8260420: C2 compilation fails with assert(found_sfpt) failed: no node in loop that's not input to safepoint
   - JDK-8260426: awt debug_mem.c DMem_AllocateBlock might leak memory
   - JDK-8260432: allocateSpaceForGP in freetypeScaler.c might leak memory
+  - JDK-8260707: java/lang/instrument/PremainClass/InheritAgent0100.java times out
   - JDK-8260925: HttpsURLConnection does not work  with other JSSE provider.
+  - JDK-8260926: Trace resource exhausted events unconditionally
   - JDK-8261020: Wrong format parameter in create_emergency_chunk_path
   - JDK-8261027: AArch64: Support for LSE atomics C++ HotSpot code
   - JDK-8261167: print_process_memory_info add a close call after fopen
@@ -166,6 +183,7 @@ Live versions of these release notes can be found at:
   - JDK-8262093: java/util/concurrent/tck/JSR166TestCase.java failed "assert(false) failed: unexpected node"
   - JDK-8262110: DST starts from incorrect time in 2038
   - JDK-8262121: [11u] Redo 8244287: JFR: Methods samples have line number 0
+  - JDK-8262163: Extend settings printout in jcmd VM.metaspace
   - JDK-8262295: C2: Out-of-Bounds Array Load from Clone Source
   - JDK-8262298: G1BarrierSetC2::step_over_gc_barrier fails with assert "bad barrier shape"
   - JDK-8262446: DragAndDrop hangs on Windows
@@ -196,12 +214,14 @@ Live versions of these release notes can be found at:
   - JDK-8264360: Loop strip mining verification fails with "should be on the backedge"
   - JDK-8264626: C1 should be able to inline excluded methods
   - JDK-8264640: CMS ParScanClosure misses a barrier
+  - JDK-8264786: [macos] All Swing/AWT apps cause Allow Notifications prompt to appear when app is launched
   - JDK-8264821: DirectIOTest fails on a system with large block size
   - JDK-8264846: [macos] libjvm.dylib linker warning due to macOS version mismatch
   - JDK-8264923: PNGImageWriter.write_zTXt throws Exception with a typo
   - JDK-8264958: C2 compilation fails with assert "n is later than its clone"
   - JDK-8265099: Revert backport to 11u of 8236859: WebSocket over authenticating proxy fails with NPE
   - JDK-8265154: vinserti128 operand mix up for KNL platforms
+  - JDK-8265239: Shenandoah: Shenandoah heap region count could be off by 1
   - JDK-8265417: Backport of JDK-8249672 breaks Solaris x86 build
   - JDK-8265421: java/lang/String/StringRepeat.java test is missing a memory requirement
   - JDK-8265537: x86 version string truncated after JDK-8249672 11u backport
@@ -209,6 +229,8 @@ Live versions of these release notes can be found at:
   - JDK-8265690: Use the latest Ubuntu base image version in Docker testing
   - JDK-8265718: Build failure after JDK-8258414 11u backport
   - JDK-8265750: Fatal error in safepoint.cpp after backport of 8258414
+  - JDK-8265784: [C2] Hoisting of DecodeN leaves MachTemp inputs behind
+  - JDK-8266713: [AIX] Build failure after 11u backport of JDK-8247753
 
 Notes on individual issues:
 ===========================
@@ -261,6 +283,20 @@ The following root certificate have been removed from the cacerts truststore:
 
 Alias Name: soneraclass2ca
 Distinguished Name: CN=Sonera Class2 CA, O=Sonera, C=FI
+
+JDK-8242069: Upgraded the Default PKCS12 Encryption and MAC Algorithms
+======================================================================
+The default encryption and MAC algorithms used in a PKCS #12 keystore
+have been updated. The new algorithms are based on AES-256 and SHA-256
+and are stronger than the old algorithms that were based on RC2,
+DESede, and SHA-1. See the security properties starting with
+`keystore.pkcs12` in the `java.security` file for detailed
+information.
+
+For compatibility, a new system property named
+`keystore.pkcs12.legacy` is defined that will revert the algorithms to
+use the older, weaker algorithms. There is no value defined for this
+property.
 
 security-libs/javax.net.ssl:
 
