@@ -342,8 +342,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        2
-%global rpmrelease      1
+%global buildver        3
+%global rpmrelease      0
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -2314,6 +2314,10 @@ cjc.mainProgram(args)
 %endif
 
 %changelog
+* Mon Jul 05 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.12.0.3-0.0.ea
+- Update to jdk-11.0.12.0+3
+- Update release notes to 11.0.12.0+3
+
 * Fri Jul 02 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.12.0.2-0.1.ea
 - Use the "reverse" build loop (debug first) as the main and only build loop to get more diagnostics.
 - Remove restriction on disabling product build, as debug packages no longer have javadoc packages.

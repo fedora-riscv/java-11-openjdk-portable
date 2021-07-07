@@ -38,6 +38,7 @@ Live versions of these release notes can be found at:
   - JDK-8214854: JDWP: Unforseen output truncation in logging
   - JDK-8214922: Add vectorization support for fmin/fmax
   - JDK-8215009: GCC 8 compilation error in libjli
+  - JDK-8216184: CDS/appCDS tests failed on Windows due to long path to a classlist file
   - JDK-8216259: AArch64: Vectorize Adler32 intrinsics
   - JDK-8216314: SIGILL in CodeHeapState::print_names()
   - JDK-8217348: assert(thread->is_Java_thread()) failed: just checking
@@ -47,6 +48,7 @@ Live versions of these release notes can be found at:
   - JDK-8218458: [TESTBUG] runtime/NMT/CheckForProperDetailStackTrace.java fails with Expected stack trace missing from output
   - JDK-8219142: Remove unused JIMAGE_ResourcePath
   - JDK-8219586: CodeHeap State Analytics processes dead nmethods
+  - JDK-8220074: Clean up GCC 8.3 errors in LittleCMS
   - JDK-8220407: compiler/intrinsics/math/TestFpMinMaxIntrinsics.java timedout
   - JDK-8222302: [TESTBUG]test/hotspot/jtreg/compiler/intrinsics/sha/cli/TestUseSHAOptionOnUnsupportedCPU.java fails on any other CPU
   - JDK-8222412: AARCH64: multiple instructions encoding issues
@@ -66,6 +68,7 @@ Live versions of these release notes can be found at:
   - JDK-8231460: Performance issue (CodeHeap) with large free blocks
   - JDK-8231713: x86_32 build failures after JDK-8226721 (Missing intrinsics for Math.ceil, floor, rint)
   - JDK-8231841: AArch64: debug.cpp help() is missing an AArch64 line for pns
+  - JDK-8232084: HotSpot build failed with GCC 9.2.1
   - JDK-8232591: AArch64: Add missing match rules for smaddl, smsubl and smnegl
   - JDK-8233185: HttpServer.stop() blocks indefinitely when called on dispatch thread
   - JDK-8233787: Break cycle in vm_version* includes
@@ -94,6 +97,7 @@ Live versions of these release notes can be found at:
   - JDK-8242557: Add length limit for strings in PNGImageWriter
   - JDK-8243155: AArch64: Add support for SqrtVF
   - JDK-8243240: AArch64: Add support for MulVB
+  - JDK-8243452: JFR: Could not create chunk in repository with over 200 recordings
   - JDK-8243559: Remove root certificates with 1024-bit keys
   - JDK-8243597: AArch64: Add support for integer vector abs
   - JDK-8244031: HttpClient should have more tests for HEAD requests
@@ -111,11 +115,13 @@ Live versions of these release notes can be found at:
   - JDK-8248568: compiler/c2/TestBit.java failed: test missing from stdout/stderr
   - JDK-8248870: AARCH64: I2L/L2I conversions can be skipped for masked positive values
   - JDK-8249142: java/awt/FontClass/CreateFont/DeleteFont.sh is unstable
+  - JDK-8249189: AARCH64: more L2I conversions can be skipped
   - JDK-8249719: MethodHandle performance suffers from bad ResolvedMethodTable hash function
   - JDK-8250635: MethodArityHistogram should use Compile_lock in favour of fancy checks
   - JDK-8250876: Fix issues with cross-compile on macos
   - JDK-8251525: AARCH64: Faster Math.signum(fp)
   - JDK-8252259: AArch64: Adjust default value of FLOATPRESSURE
+  - JDK-8252311: AArch64: save two words in itable lookup stub
   - JDK-8252779: compiler/graalunit/HotspotTest.java failed after 8251525
   - JDK-8252883: AccessDeniedException caused by delayed file deletion on Windows
   - JDK-8253167: ARM32 builds fail after JDK-8247910
@@ -123,6 +129,7 @@ Live versions of these release notes can be found at:
   - JDK-8253923: C2 doesn't always run loop opts for compilations that include loops
   - JDK-8253948: Memory leak in ImageFileReader
   - JDK-8254631: Better support ALPN byte wire values in SunJSSE
+  - JDK-8254717: isAssignableFrom checks in KeyFactorySpi.engineGetKeySpec appear to be backwards
   - JDK-8255086: Update the root locale display names
   - JDK-8255625: AArch64: Implement Base64.encodeBlock accelerator/intrinsic
   - JDK-8255763: C2: OSR miscompilation caused by invalid memory instruction placement
@@ -158,6 +165,7 @@ Live versions of these release notes can be found at:
   - JDK-8260420: C2 compilation fails with assert(found_sfpt) failed: no node in loop that's not input to safepoint
   - JDK-8260426: awt debug_mem.c DMem_AllocateBlock might leak memory
   - JDK-8260432: allocateSpaceForGP in freetypeScaler.c might leak memory
+  - JDK-8260653: Unreachable nodes keep speculative types alive
   - JDK-8260707: java/lang/instrument/PremainClass/InheritAgent0100.java times out
   - JDK-8260925: HttpsURLConnection does not work  with other JSSE provider.
   - JDK-8260926: Trace resource exhausted events unconditionally
@@ -197,6 +205,7 @@ Live versions of these release notes can be found at:
   - JDK-8263260: [s390] Support latest hardware (z14 and z15)
   - JDK-8263311: Watch registry changes for remote printers update instead of polling
   - JDK-8263361: Incorrect arraycopy stub selected by C2 for SATB collectors
+  - JDK-8263404: RsaPrivateKeySpec is always recognized as RSAPrivateCrtKeySpec in RSAKeyFactory.engineGetKeySpec
   - JDK-8263425: AArch64: two potential bugs in C1 LIRGenerator::generate_address()
   - JDK-8263448: CTW: fatal error: meet not symmetric
   - JDK-8263504: Some OutputMachOpcodes fields are uninitialized
@@ -230,7 +239,9 @@ Live versions of these release notes can be found at:
   - JDK-8265718: Build failure after JDK-8258414 11u backport
   - JDK-8265750: Fatal error in safepoint.cpp after backport of 8258414
   - JDK-8265784: [C2] Hoisting of DecodeN leaves MachTemp inputs behind
+  - JDK-8265938: C2's conditional move optimization does not handle top Phi
   - JDK-8266713: [AIX] Build failure after 11u backport of JDK-8247753
+  - JDK-8266892: avoid maybe-uninitialized gcc warnings on linux s390x
 
 Notes on individual issues:
 ===========================
