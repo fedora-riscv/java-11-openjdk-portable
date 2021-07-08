@@ -17,11 +17,13 @@ Live versions of these release notes can be found at:
   - JDK-8153005: Upgrade the default PKCS12 encryption/MAC algorithms
   - JDK-8171303: sun/java2d/pipe/InterpolationQualityTest.java fails on Windows & Linux
   - JDK-8177068: incomplete classpath causes NPE in Flow
+  - JDK-8185734: [Windows] Structured Exception Catcher missing around gtest execution
   - JDK-8187450: JNI local refs exceeds capacity warning in NetworkInterface::getAll
   - JDK-8190763: Class cast exception on (CompoundEdit) UndoableEditEvent.getEdit()
   - JDK-8195841: PNGImageReader.readNullTerminatedString() doesnt check for non-null terminated strings with length equal to maxLen
   - JDK-8199646: JShell tests: jdk/jshell/FailOverDirectExecutionControlTest.java failed with java.lang.UnsupportedOperationException
   - JDK-8206925: Support the certificate_authorities extension
+  - JDK-8207160: ClassReader::adjustMethodParams can potentially return null if the args list is empty
   - JDK-8207247: AARCH64: Enable Minimal and Client VM builds
   - JDK-8207404: MulticastSocket tests failing on AIX
   - JDK-8207779: Method::is_valid_method() compares 'this' with NULL
@@ -63,7 +65,9 @@ Live versions of these release notes can be found at:
   - JDK-8226374: Restrict TLS signature schemes and named groups
   - JDK-8226627: assert(t->singleton()) failed: must be a constant
   - JDK-8226721: Missing intrinsics for Math.ceil, floor, rint
+  - JDK-8227080: (fs) Files.newInputStream(...).skip(n) is slow
   - JDK-8227222: vmTestbase/jit/FloatingPoint/gen_math/Loops04/Loops04.java failed XMM register should be 0-15
+  - JDK-8227609: (fs) Files.newInputStream(...).skip(n) should allow skipping beyond file size
   - JDK-8230428: Cleanup dead CastIP node code in formssel.cpp
   - JDK-8231460: Performance issue (CodeHeap) with large free blocks
   - JDK-8231713: x86_32 build failures after JDK-8226721 (Missing intrinsics for Math.ceil, floor, rint)
@@ -87,6 +91,7 @@ Live versions of these release notes can be found at:
   - JDK-8240487: Cleanup whitespace in .cc, .hh, .m, and .mm files
   - JDK-8240848: ArrayIndexOutOfBoundsException buf for TextCallbackHandler
   - JDK-8241082: Upgrade IANA Language Subtag Registry data to 03-16-2020 version
+  - JDK-8241087: Build failure with VS 2019 (16.5.0) due to C2039 and C2873
   - JDK-8241101: [s390] jtreg test failure after JDK-8238696: not conformant features string
   - JDK-8241372: Several test failures due to javax.net.ssl.SSLException: Connection reset
   - JDK-8241475: AArch64: Add missing support for PopCountVI node
@@ -95,6 +100,7 @@ Live versions of these release notes can be found at:
   - JDK-8242010: Upgrade IANA Language Subtag Registry to Version 2020-04-01
   - JDK-8242429: Better implementation for sign extract
   - JDK-8242557: Add length limit for strings in PNGImageWriter
+  - JDK-8242919: Paste locks up jshell
   - JDK-8243155: AArch64: Add support for SqrtVF
   - JDK-8243240: AArch64: Add support for MulVB
   - JDK-8243452: JFR: Could not create chunk in repository with over 200 recordings
@@ -119,6 +125,7 @@ Live versions of these release notes can be found at:
   - JDK-8249719: MethodHandle performance suffers from bad ResolvedMethodTable hash function
   - JDK-8250635: MethodArityHistogram should use Compile_lock in favour of fancy checks
   - JDK-8250876: Fix issues with cross-compile on macos
+  - JDK-8251031: Some vmTestbase/nsk/monitoring/RuntimeMXBean tests fail with hostnames starting from digits
   - JDK-8251525: AARCH64: Faster Math.signum(fp)
   - JDK-8252259: AArch64: Adjust default value of FLOATPRESSURE
   - JDK-8252311: AArch64: save two words in itable lookup stub
@@ -145,19 +152,31 @@ Live versions of these release notes can be found at:
   - JDK-8257621: JFR StringPool misses cached items across consecutive recordings
   - JDK-8257796: [TESTBUG] TestUseSHA512IntrinsicsOptionOnSupportedCPU.java fails on x86_32
   - JDK-8257822: C2 crashes with SIGFPE due to a division that floats above its zero check
+  - JDK-8257828: SafeFetch may crash if invoked in non-JavaThreads
+  - JDK-8257853: Remove dependencies on JNF's JNI utility functions in AWT and 2D code
+  - JDK-8257858: [macOS]: Remove JNF dependency from libosxsecurity/KeystoreImpl.m
+  - JDK-8257860: [macOS]: Remove JNF dependency from libosxkrb5/SCDynamicStoreConfig.m
+  - JDK-8257988: Remove JNF dependency from libsaproc/MacosxDebuggerLocal.m
   - JDK-8258414: OldObjectSample events too expensive
   - JDK-8258505: [TESTBUG] TestDivZeroWithSplitIf.java fails due to missing UnlockDiagnosticVMOptions
   - JDK-8258753: StartTlsResponse.close() hangs due to synchronization issues
   - JDK-8259061: C2: assert(found) failed: memory-writing node is not placed in its original loop or an ancestor of it
   - JDK-8259227: C2 crashes with SIGFPE due to a division that floats above its zero check
+  - JDK-8259232: Bad JNI lookup during printing
   - JDK-8259276: C2: Empty expression stack when reexecuting tableswitch/lookupswitch instructions after deoptimization
+  - JDK-8259343: [macOS] Update JNI error handling in Cocoa code.
+  - JDK-8259585: Accessible actions do not work on mac os x
+  - JDK-8259651: [macOS] Replace JNF_COCOA_ENTER/EXIT macros
   - JDK-8259662: Don't wrap SocketExceptions into SSLExceptions in SSLSocketImpl
   - JDK-8259710: Inlining trace leaks memory
+  - JDK-8259729: Missed JNFInstanceOf -> IsInstanceOf conversion
   - JDK-8259777: Incorrect predication condition generated by ADLC
   - JDK-8259786: initialize last parameter of getpwuid_r
   - JDK-8259843: initialize dli_fname array before calling dll_address_to_library_name
+  - JDK-8259869: [macOS] Remove desktop module dependencies on JNF Reference APIs
   - JDK-8259886: Improve SSL session cache performance and scalability
   - JDK-8259983: do not use uninitialized expand_ms value in G1CollectedHeap::expand_heap_after_young_collection
+  - JDK-8260030: Improve stringStream buffer handling
   - JDK-8260236: better init AnnotationCollector _contended_group
   - JDK-8260255: C1: LoopInvariantCodeMotion constructor can leave some fields uninitialized
   - JDK-8260284: C2: assert(_base == Int) failed: Not an Int
@@ -165,6 +184,7 @@ Live versions of these release notes can be found at:
   - JDK-8260420: C2 compilation fails with assert(found_sfpt) failed: no node in loop that's not input to safepoint
   - JDK-8260426: awt debug_mem.c DMem_AllocateBlock might leak memory
   - JDK-8260432: allocateSpaceForGP in freetypeScaler.c might leak memory
+  - JDK-8260616: Removing remaining JNF dependencies in the java.desktop module
   - JDK-8260653: Unreachable nodes keep speculative types alive
   - JDK-8260707: java/lang/instrument/PremainClass/InheritAgent0100.java times out
   - JDK-8260925: HttpsURLConnection does not work  with other JSSE provider.
@@ -173,11 +193,14 @@ Live versions of these release notes can be found at:
   - JDK-8261027: AArch64: Support for LSE atomics C++ HotSpot code
   - JDK-8261167: print_process_memory_info add a close call after fopen
   - JDK-8261170: Upgrade to freetype 2.10.4
+  - JDK-8261198: [macOS] Incorrect JNI parameters in number conversion in A11Y code
   - JDK-8261235: C1 compilation fails with assert(res->vreg_number() == index) failed: conversion check
   - JDK-8261261: The version extra fields needs to be overridable in jib-profiles.js
   - JDK-8261262: Kitchensink24HStress.java crashed with EXCEPTION_ACCESS_VIOLATION
+  - JDK-8261354: SIGSEGV at MethodIteratorHost
   - JDK-8261355: No data buffering in SunPKCS11 Cipher encryption when the underlying mechanism has no padding
   - JDK-8261397: try catch Method failing to work when dividing an integer by 0
+  - JDK-8261422: Adjust problematic String.format calls in jdk/internal/util/Preconditions.java outOfBoundsMessage
   - JDK-8261447: MethodInvocationCounters frequently run into overflow
   - JDK-8261481: Cannot read Kerberos settings in dynamic store on macOS Big Sur
   - JDK-8261505: Test test/hotspot/jtreg/gc/parallel/TestDynShrinkHeap.java killed by Linux OOM Killer
@@ -213,6 +236,7 @@ Live versions of these release notes can be found at:
   - JDK-8263558: Possible NULL dereference in fast path arena free if ZapResourceArea is true
   - JDK-8263676: AArch64: one potential bug in C1 LIRGenerator::generate_address()
   - JDK-8263729: [test] divert spurious output away from stream under test in ProcessBuilder Basic test
+  - JDK-8263846: Bad JNI lookup getFocusOwner in accessibility code on Mac OS X
   - JDK-8264047: Duplicate global variable 'jvm' in libjavajpeg and libawt
   - JDK-8264096: slowdebug jvm crashes when StrInflatedCopy match rule is not supported
   - JDK-8264151: ciMethod::ensure_method_data() should return false is loading resulted in empty state
@@ -225,7 +249,7 @@ Live versions of these release notes can be found at:
   - JDK-8264640: CMS ParScanClosure misses a barrier
   - JDK-8264786: [macos] All Swing/AWT apps cause Allow Notifications prompt to appear when app is launched
   - JDK-8264821: DirectIOTest fails on a system with large block size
-  - JDK-8264846: [macos] libjvm.dylib linker warning due to macOS version mismatch
+  - JDK-8264848: [macos] libjvm.dylib linker warning due to macOS version mismatch
   - JDK-8264923: PNGImageWriter.write_zTXt throws Exception with a typo
   - JDK-8264958: C2 compilation fails with assert "n is later than its clone"
   - JDK-8265099: Revert backport to 11u of 8236859: WebSocket over authenticating proxy fails with NPE
@@ -234,14 +258,21 @@ Live versions of these release notes can be found at:
   - JDK-8265417: Backport of JDK-8249672 breaks Solaris x86 build
   - JDK-8265421: java/lang/String/StringRepeat.java test is missing a memory requirement
   - JDK-8265537: x86 version string truncated after JDK-8249672 11u backport
+  - JDK-8265666: Enable AIX build platform to make external debug symbols
   - JDK-8265677: CMS: CardTableBarrierSet::write_ref_array_work() lacks storestore barrier
   - JDK-8265690: Use the latest Ubuntu base image version in Docker testing
   - JDK-8265718: Build failure after JDK-8258414 11u backport
   - JDK-8265750: Fatal error in safepoint.cpp after backport of 8258414
   - JDK-8265784: [C2] Hoisting of DecodeN leaves MachTemp inputs behind
   - JDK-8265938: C2's conditional move optimization does not handle top Phi
+  - JDK-8266220: keytool still prompt for store password on a password-less pkcs12 file if -storetype pkcs12 is specified
+  - JDK-8266293: Key protection using PBEWithMD5AndDES fails with "java.security.InvalidAlgorithmParameterException: Salt must be 8 bytes long"
   - JDK-8266713: [AIX] Build failure after 11u backport of JDK-8247753
+  - JDK-8266802: Shenandoah: Round up region size to page size unconditionally
   - JDK-8266892: avoid maybe-uninitialized gcc warnings on linux s390x
+  - JDK-8266929: Unable to use algorithms from 3p providers
+  - JDK-8267235: [macos_aarch64] InterpreterRuntime::throw_pending_exception messing up LR results in crash
+  - JDK-8267641: [11u] 8227609 backport typo
 
 Notes on individual issues:
 ===========================
