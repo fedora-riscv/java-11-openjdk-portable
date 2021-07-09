@@ -21,6 +21,7 @@ Live versions of these release notes can be found at:
   - JDK-8187450: JNI local refs exceeds capacity warning in NetworkInterface::getAll
   - JDK-8190763: Class cast exception on (CompoundEdit) UndoableEditEvent.getEdit()
   - JDK-8195841: PNGImageReader.readNullTerminatedString() doesnt check for non-null terminated strings with length equal to maxLen
+  - JDK-8196100: javax/swing/text/JTextComponent/5074573/bug5074573.java fails
   - JDK-8199646: JShell tests: jdk/jshell/FailOverDirectExecutionControlTest.java failed with java.lang.UnsupportedOperationException
   - JDK-8206925: Support the certificate_authorities extension
   - JDK-8207160: ClassReader::adjustMethodParams can potentially return null if the args list is empty
@@ -82,6 +83,7 @@ Live versions of these release notes can be found at:
   - JDK-8236859: WebSocket over authenticating proxy fails with NPE
   - JDK-8236992: AArch64: remove redundant load_klass in itable stub
   - JDK-8237743: test/langtools/jdk/jshell/FailOverExecutionControlTest.java fails No ExecutionControlProvider with name 'nonExistent' and parameter keys: []
+  - JDK-8237804: sun/security/mscapi tests fail with "Key pair not generated, alias <nnnnnn> already exists"
   - JDK-8238175: CTW: Class.getDeclaredMethods fails with assert(k->is_subclass_of(SystemDictionary::Throwable_klass())) failed: invalid exception class
   - JDK-8238567: SoftMainMixer.processAudioBuffers(): Wrong handling of stoppedMixers
   - JDK-8238812: assert(false) failed: bad AD file
@@ -93,6 +95,7 @@ Live versions of these release notes can be found at:
   - JDK-8241082: Upgrade IANA Language Subtag Registry data to 03-16-2020 version
   - JDK-8241087: Build failure with VS 2019 (16.5.0) due to C2039 and C2873
   - JDK-8241101: [s390] jtreg test failure after JDK-8238696: not conformant features string
+  - JDK-8241248: NullPointerException in sun.security.ssl.HKDF.extract(HKDF.java:93)
   - JDK-8241372: Several test failures due to javax.net.ssl.SSLException: Connection reset
   - JDK-8241475: AArch64: Add missing support for PopCountVI node
   - JDK-8241829: Cleanup the code for PrinterJob on windows
@@ -123,6 +126,7 @@ Live versions of these release notes can be found at:
   - JDK-8249142: java/awt/FontClass/CreateFont/DeleteFont.sh is unstable
   - JDK-8249189: AARCH64: more L2I conversions can be skipped
   - JDK-8249719: MethodHandle performance suffers from bad ResolvedMethodTable hash function
+  - JDK-8249875: GCC 10 warnings -Wtype-limits with JFR code
   - JDK-8250635: MethodArityHistogram should use Compile_lock in favour of fancy checks
   - JDK-8250876: Fix issues with cross-compile on macos
   - JDK-8251031: Some vmTestbase/nsk/monitoring/RuntimeMXBean tests fail with hostnames starting from digits
@@ -140,6 +144,7 @@ Live versions of these release notes can be found at:
   - JDK-8255086: Update the root locale display names
   - JDK-8255625: AArch64: Implement Base64.encodeBlock accelerator/intrinsic
   - JDK-8255763: C2: OSR miscompilation caused by invalid memory instruction placement
+  - JDK-8255992: JFR EventWriter does not use first string from StringPool with id 0
   - JDK-8256037: [TESTBUG] com/sun/jndi/dns/ConfigTests/PortUnreachable.java fails due to the hard coded threshold is small
   - JDK-8256244: java/lang/ProcessHandle/PermissionTest.java fails with TestNG 7.1
   - JDK-8256287: [windows] add loop fuse to map_or_reserve_memory_aligned
@@ -257,6 +262,7 @@ Live versions of these release notes can be found at:
   - JDK-8265239: Shenandoah: Shenandoah heap region count could be off by 1
   - JDK-8265417: Backport of JDK-8249672 breaks Solaris x86 build
   - JDK-8265421: java/lang/String/StringRepeat.java test is missing a memory requirement
+  - JDK-8265462: Handle multiple slots in the NSS Internal Module from SunPKCS11's Secmod
   - JDK-8265537: x86 version string truncated after JDK-8249672 11u backport
   - JDK-8265666: Enable AIX build platform to make external debug symbols
   - JDK-8265677: CMS: CardTableBarrierSet::write_ref_array_work() lacks storestore barrier
@@ -272,7 +278,11 @@ Live versions of these release notes can be found at:
   - JDK-8266892: avoid maybe-uninitialized gcc warnings on linux s390x
   - JDK-8266929: Unable to use algorithms from 3p providers
   - JDK-8267235: [macos_aarch64] InterpreterRuntime::throw_pending_exception messing up LR results in crash
+  - JDK-8267561: Shenandoah: Reference processing not properly setup for outside of cycle degenerated GC
+  - JDK-8267599: Revert the change to the default PKCS12 macAlgorithm and macIterationCount props for 11u/8u/7u
   - JDK-8267641: [11u] 8227609 backport typo
+  - JDK-8267721: Enable sun/security/pkcs11 tests for Amazon Linux 2 AArch64
+  - JDK-8268678: LetsEncryptCA.java test fails as Let’s Encrypt Authority X3 is retired
 
 Notes on individual issues:
 ===========================

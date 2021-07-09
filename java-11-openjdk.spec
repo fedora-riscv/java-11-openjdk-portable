@@ -342,7 +342,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        4
+%global buildver        6
 %global rpmrelease      0
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
@@ -2314,6 +2314,11 @@ cjc.mainProgram(args)
 %endif
 
 %changelog
+* Thu Jul 08 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.12.0.6-0.0.ea
+- Update to jdk-11.0.12.0+6
+- Update release notes to 11.0.12.0+6
+- Skip 11.0.12.0+5 as 11.0.12.0+6 only adds a test change
+
 * Thu Jul 08 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.12.0.4-0.0.ea
 - Update to jdk-11.0.12.0+4
 - Update release notes to 11.0.12.0+4
