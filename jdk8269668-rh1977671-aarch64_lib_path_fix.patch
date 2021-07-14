@@ -1,0 +1,32 @@
+From ec03fdb752f2dc0833784a6877a4c232a8cdd9d2 Mon Sep 17 00:00:00 2001
+From: Severin Gehwolf <sgehwolf@redhat.com>
+Date: Wed, 14 Jul 2021 12:06:39 +0200
+Subject: [PATCH] Backport e14801cdd9b108aa4ca47d0bc1dc67fca575764c
+
+---
+ src/hotspot/os/linux/os_linux.cpp | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/src/hotspot/os/linux/os_linux.cpp b/src/hotspot/os/linux/os_linux.cpp
+index e8baf704e3a..12b75b733b5 100644
+--- a/src/hotspot/os/linux/os_linux.cpp
++++ b/src/hotspot/os/linux/os_linux.cpp
+@@ -413,8 +413,15 @@ void os::init_system_properties_values() {
+   //        7: The default directories, normally /lib and /usr/lib.
+ #if defined(AMD64) || (defined(_LP64) && defined(SPARC)) || defined(PPC64) || defined(S390)
+   #define DEFAULT_LIBPATH "/usr/lib64:/lib64:/lib:/usr/lib"
++#else
++#if defined(AARCH64)
++  // Use 32-bit locations first for AARCH64 (a 64-bit architecture), since some systems
++  // might not adhere to the FHS and it would be a change in behaviour if we used
++  // DEFAULT_LIBPATH of other 64-bit architectures which prefer the 64-bit paths.
++  #define DEFAULT_LIBPATH "/lib:/usr/lib:/usr/lib64:/lib64"
+ #else
+   #define DEFAULT_LIBPATH "/lib:/usr/lib"
++#endif // AARCH64
+ #endif
+ 
+ // Base path of extensions installed on the system.
+-- 
+2.31.1
+

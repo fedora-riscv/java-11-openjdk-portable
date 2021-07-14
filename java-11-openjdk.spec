@@ -343,7 +343,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      0
+%global rpmrelease      1
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1124,7 +1124,7 @@ Provides: java-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}.1
+Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1246,13 +1246,15 @@ Patch7: pr3695-toggle_system_crypto_policy.patch
 
 #############################################
 #
-# Patches appearing in 11.0.10
+# Patches appearing in 11.0.13
 #
 # This section includes patches which are present
 # in the listed OpenJDK 11u release and should be
 # able to be removed once that release is out
 # and used by this RPM.
 #############################################
+# JDK-8269668, RH1977671: [aarch64] java.library.path not including /usr/lib64
+Patch8: jdk8269668-rh1977671-aarch64_lib_path_fix.patch
 
 BuildRequires: autoconf
 BuildRequires: automake
@@ -1606,6 +1608,7 @@ pushd %{top_level_dir_name}
 %patch3 -p1
 %patch4 -p1
 %patch7 -p1
+%patch8 -p1
 popd # openjdk
 
 %patch1000
@@ -2314,6 +2317,10 @@ cjc.mainProgram(args)
 %endif
 
 %changelog
+* Wed Jul 28 2021 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.12.0.7-1
+- Add patch in order to fix java.library.path issue on aarch64 (JDK-8269668)
+- Resolves: rhbz#1977671
+
 * Thu Jul 22 2021 Fedora Release Engineering <releng@fedoraproject.org> - 1:11.0.12.0.7-0.1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
 
