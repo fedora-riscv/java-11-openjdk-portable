@@ -94,11 +94,21 @@ if [ "x$REPO_ROOT" = "x" ] ; then
     REPO_ROOT="${OPENJDK_URL}/${PROJECT_NAME}/${REPO_NAME}"
     echo "No repository root specified; default to ${REPO_ROOT}"
 fi;
-
 if [ "x$TO_COMPRESS" = "x" ] ; then
     TO_COMPRESS="openjdk"
     echo "No to be compressed targets specified, ; default to ${TO_COMPRESS}"
 fi;
+
+echo -e "Settings:"
+echo -e "\tVERSION: ${VERSION}"
+echo -e "\tPROJECT_NAME: ${PROJECT_NAME}"
+echo -e "\tREPO_NAME: ${REPO_NAME}"
+echo -e "\tOPENJDK_URL: ${OPENJDK_URL}"
+echo -e "\tCOMPRESSION: ${COMPRESSION}"
+echo -e "\tFILE_NAME_ROOT: ${FILE_NAME_ROOT}"
+echo -e "\tREPO_ROOT: ${REPO_ROOT}"
+echo -e "\tTO_COMPRESS: ${TO_COMPRESS}"
+echo -e "\tPRTBC01: ${PRTBC01}"
 
 if [ -d ${FILE_NAME_ROOT} ] ; then
   echo "exists exists exists exists exists exists exists "
@@ -112,6 +122,11 @@ else
   popd
 fi
 pushd "${FILE_NAME_ROOT}"
+# UnderlineTaglet.java has a BSD license with a field-of-use restriction, making it non-Free
+    if [ -d openjdk/test ] ; then
+	echo "Removing langtools test case with non-Free license"
+	rm -vf openjdk/test/langtools/tools/javadoc/api/basic/taglets/UnderlineTaglet.java
+    fi
     if [ -d openjdk/src ]; then 
         pushd openjdk
             echo "Removing EC source code we don't build"
@@ -148,7 +163,7 @@ pushd "${FILE_NAME_ROOT}"
     else
         SWITCH=czf
     fi
-    TARBALL_NAME=${FILE_NAME_ROOT}-4curve.tar.${COMPRESSION}
+    TARBALL_NAME=${FILE_NAME_ROOT}-4curve-clean.tar.${COMPRESSION}
     tar --exclude-vcs -$SWITCH ${TARBALL_NAME} $TO_COMPRESS
     mv ${TARBALL_NAME} ..
 popd

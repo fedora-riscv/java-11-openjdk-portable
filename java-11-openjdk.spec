@@ -343,7 +343,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix      ""
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1158,7 +1158,7 @@ URL:      http://openjdk.java.net/
 
 # to regenerate source0 (jdk) run update_package.sh
 # update_package.sh contains hard-coded repos, revisions, tags, and projects to regenerate the source archives
-Source0: jdk-updates-jdk%{featurever}u-jdk-%{filever}+%{buildver}%{?tagsuffix:-%{tagsuffix}}-4curve.tar.xz
+Source0: jdk-updates-jdk%{featurever}u-jdk-%{filever}+%{buildver}%{?tagsuffix:-%{tagsuffix}}-4curve-clean.tar.xz
 
 # Use 'icedtea_sync.sh' to update the following
 # They are based on code contained in the IcedTea project (6.x).
@@ -2317,6 +2317,9 @@ cjc.mainProgram(args)
 %endif
 
 %changelog
+* Mon Aug 09 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.12.0.7-2
+- Remove non-Free test from source tarball.
+
 * Wed Jul 28 2021 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.12.0.7-1
 - Add patch in order to fix java.library.path issue on aarch64 (JDK-8269668)
 - Resolves: rhbz#1977671
