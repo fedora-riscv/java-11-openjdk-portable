@@ -2327,7 +2327,7 @@ cjc.mainProgram(args)
 %endif
 
 %changelog
-* Fri May 07 2021 Jiri Vanek <jvanek@redhat.com> - 1:11.0.12.0.7-3
+* Tue Aug 31 2021 Jiri Vanek <jvanek@redhat.com> - 1:11.0.12.0.7-3
 - alternatives creation moved to posttrans
 - Thus fixing the old reisntall issue:
 - https://bugzilla.redhat.com/show_bug.cgi?id=1200302
