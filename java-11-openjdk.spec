@@ -12,10 +12,7 @@
 #
 # Only produce a release build on x86_64:
 # $ fedpkg mockbuild --without slowdebug --without fastdebug
-#
-# Only produce a debug build on x86_64:
-# $ fedpkg local --without release
-#
+
 # Enable fastdebug builds by default on relevant arches.
 %bcond_without fastdebug
 # Enable slowdebug builds by default on relevant arches.
@@ -55,11 +52,11 @@
 %global staticlibs_suffix "%{staticlibs_suffix_unquoted}"
 
 %global debug_warning This package is unoptimised with full debugging. Install only as needed and remove ASAP.
-%global debug_on with full debugging on
-%global fastdebug_on with minimal debugging on
 %global fastdebug_warning This package is optimised with full debugging. Install only as needed and remove ASAP.
-%global for_fastdebug for packages with minimal debugging on
-%global for_debug for packages with debugging on
+%global debug_on unoptimised with full debugging on
+%global fastdebug_on optimised with full debugging on
+%global for_fastdebug for packages with debugging on and optimisation
+%global for_debug for packages with debugging on and no optimisation
 
 %if %{with release}
 %global include_normal_build 1
@@ -177,7 +174,7 @@
 
 # If you disable both builds, then the build fails
 # Build and test slowdebug first as it provides the best diagnostics
-%global build_loop  %{slowdebug_build} %{fastdebug_build} %{normal_build}
+%global build_loop %{slowdebug_build} %{fastdebug_build} %{normal_build}
 
 %if %{include_staticlibs}
 %global staticlibs_loop %{staticlibs_suffix}
@@ -191,6 +188,17 @@
 %global bootstrap_build 1
 %endif
 
+%if %{include_staticlibs}
+# Extra target for producing the static-libraries. Separate from
+# other targets since this target is configured to use in-tree
+# AWT dependencies: lcms, libjpeg, libpng, libharfbuzz, giflib
+# and possibly others
+%global static_libs_target static-libs-image
+%else
+%global static_libs_target %{nil}
+%endif
+
+# unlike portables,the rpms have to use static_libs_target very dynamically
 %if %{bootstrap_build}
 %global release_targets bootcycle-images docs-zip
 %else
@@ -198,14 +206,6 @@
 %endif
 # No docs nor bootcycle for debug builds
 %global debug_targets images
-
-%if %{include_staticlibs}
-# Extra target for producing the static-libraries. Separate from
-# other targets since this target is configured to use in-tree
-# AWT dependencies: lcms, libjpeg, libpng, libharfbuzz, giflib
-# and possibly others
-%global static_libs_target static-libs-image
-%endif
 
 # Disable LTO as this causes build failures at the moment.
 # See RHBZ#1861401
@@ -343,8 +343,8 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      4
-#%%global tagsuffix      ""
+%global rpmrelease      5
+#%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
 # Using 10 digits may overflow the int used for priority, so we combine the patch and build versions
@@ -357,7 +357,7 @@
 # for techpreview, using 1, so slowdebugs can have 0
 %global priority %( printf '%08d' 1 )
 %endif
-%global newjavaver      %{featurever}.%{interimver}.%{updatever}.%{patchver}
+%global newjavaver %{featurever}.%{interimver}.%{updatever}.%{patchver}
 
 # Omit trailing 0 in filenames when the patch version is 0
 %if 0%{?patchver} > 0
@@ -620,7 +620,7 @@ alternatives \\
   --slave %{_mandir}/man1/rmic.1$ext rmic.1$ext \\
   %{_mandir}/man1/rmic-%{uniquesuffix -- %{?1}}.1$ext \\
   --slave %{_mandir}/man1/serialver.1$ext serialver.1$ext \\
-  %{_mandir}/man1/serialver-%{uniquesuffix -- %{?1}}.1$ext
+  %{_mandir}/man1/serialver-%{uniquesuffix -- %{?1}}.1$ext \\
 
 for X in %{origin} %{javaver} ; do
   alternatives \\
@@ -807,7 +807,7 @@ exit 0
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/security/nss.cfg
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/security/nss.fips.cfg
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/management/jmxremote.access
-# these are config templates, thus not config-noreplace
+# this is conifg template, thus not config-noreplace
 %config  %{etcjavadir -- %{?1}}/conf/management/jmxremote.password.template
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/management/management.properties
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/net.properties
@@ -831,6 +831,10 @@ exit 0
 %ghost %{_jvmdir}/jre-%{javaver}-%{origin}
 %endif
 %endif
+# https://bugzilla.redhat.com/show_bug.cgi?id=1820172
+# https://docs.fedoraproject.org/en-US/packaging-guidelines/Directory_Replacement/
+%ghost %{_jvmdir}/%{sdkdir -- %{?1}}/conf.rpmmoved
+%ghost %{_jvmdir}/%{sdkdir -- %{?1}}/lib/security.rpmmoved
 }
 
 %define files_devel() %{expand:
@@ -985,7 +989,9 @@ Requires: libXcomposite%{?_isa}
 Requires: %{name}-headless%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
 OrderWithRequires: %{name}-headless%{?1}%{?_isa} = %{epoch}:%{version}-%{release}
 # for java-X-openjdk package's desktop binding
+%if 0%{?rhel} >= 8
 Recommends: gtk3%{?_isa}
+%endif
 
 Provides: java-%{javaver}-%{origin}%{?1} = %{epoch}:%{version}-%{release}
 
@@ -1026,7 +1032,9 @@ Requires(post):   %{alternatives_requires}
 # Postun requires alternatives to uninstall tool alternatives
 Requires(postun): %{alternatives_requires}
 # for optional support of kernel stream control, card reader and printing bindings
+%if 0%{?rhel} >= 8
 Suggests: lksctp-tools%{?_isa}, pcsc-lite-devel%{?_isa}
+%endif
 
 # Standard JPackage base provides
 Provides: jre-%{javaver}-%{origin}-headless%{?1} = %{epoch}:%{version}-%{release}
@@ -1056,9 +1064,9 @@ Provides: java-sdk-%{javaver}%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-devel%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-%{javaver}-%{origin}-devel%{?1} = %{epoch}:%{version}-%{release}
 %if %is_system_jdk
+Provides: java-devel-%{origin}%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-sdk-%{origin}%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-devel%{?1} = %{epoch}:%{version}-%{release}
-Provides: java-%{origin}-devel%{?1} = %{epoch}:%{version}-%{release}
 Provides: java-sdk%{?1} = %{epoch}:%{version}-%{release}
 %endif
 }
@@ -1138,6 +1146,9 @@ Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}
 
 Epoch:   1
 Summary: %{origin_nice} %{featurever} Runtime Environment
+%if 0%{?rhel} <= 8
+Group:   Development/Languages
+%endif
 
 # HotSpot code is licensed under GPLv2
 # JDK library code is licensed under GPLv2 with the Classpath exception
@@ -1205,7 +1216,7 @@ Patch1:    rh1648242-accessible_toolkit_crash_do_not_break_jvm.patch
 Patch2:    rh1648644-java_access_bridge_privileged_security.patch
 # NSS via SunPKCS11 Provider (disabled due to memory leak).
 Patch1000: rh1648249-add_commented_out_nss_cfg_provider_to_java_security.patch
-# enable build of speculative store bypass hardened alt-java
+# RH1750419: enable build of speculative store bypass hardened alt-java (CVE-2018-3639)
 Patch600: rh1750419-redhat_alt_java.patch
 # RH1582504: Use RSA as default for keytool, as DSA is disabled in all crypto policies except LEGACY
 Patch1003: rh1842572-rsa_default_for_keytool.patch
@@ -1314,6 +1325,9 @@ The %{origin_nice} %{featurever} runtime environment.
 %if %{include_debug_build}
 %package slowdebug
 Summary: %{origin_nice} %{featurever} Runtime Environment %{debug_on}
+%if 0%{?rhel} <= 8
+Group:   Development/Languages
+%endif
 
 %{java_rpo -- %{debug_suffix_unquoted}}
 %description slowdebug
@@ -1324,7 +1338,9 @@ The %{origin_nice} %{featurever} runtime environment.
 %if %{include_fastdebug_build}
 %package fastdebug
 Summary: %{origin_nice} %{featurever} Runtime Environment %{fastdebug_on}
+%if 0%{?rhel} <= 8
 Group:   Development/Languages
+%endif
 
 %{java_rpo -- %{fastdebug_suffix_unquoted}}
 %description fastdebug
@@ -1335,6 +1351,9 @@ The %{origin_nice} %{featurever} runtime environment.
 %if %{include_normal_build}
 %package headless
 Summary: %{origin_nice} %{featurever} Headless Runtime Environment
+%if 0%{?rhel} <= 8
+Group:   Development/Languages
+%endif
 
 %{java_headless_rpo %{nil}}
 
@@ -1345,6 +1364,7 @@ The %{origin_nice} %{featurever} runtime environment without audio and video sup
 %if %{include_debug_build}
 %package headless-slowdebug
 Summary: %{origin_nice} %{featurever} Runtime Environment %{debug_on}
+Group:   Development/Languages
 
 %{java_headless_rpo -- %{debug_suffix_unquoted}}
 
@@ -1368,6 +1388,9 @@ The %{origin_nice} %{featurever} runtime environment without audio and video sup
 %if %{include_normal_build}
 %package devel
 Summary: %{origin_nice} %{featurever} Development Environment
+%if 0%{?rhel} <= 8
+Group:   Development/Languages
+%endif
 
 %{java_devel_rpo %{nil}}
 
@@ -1378,6 +1401,9 @@ The %{origin_nice} %{featurever} development tools.
 %if %{include_debug_build}
 %package devel-slowdebug
 Summary: %{origin_nice} %{featurever} Development Environment %{debug_on}
+%if 0%{?rhel} <= 8
+Group:   Development/Languages
+%endif
 
 %{java_devel_rpo -- %{debug_suffix_unquoted}}
 
@@ -1438,6 +1464,9 @@ The %{origin_nice} %{featurever} libraries for static linking.
 %if %{include_normal_build}
 %package jmods
 Summary: JMods for %{origin_nice} %{featurever}
+%if 0%{?rhel} <= 8
+Group:   Development/Languages
+%endif
 
 %{java_jmods_rpo %{nil}}
 
@@ -1448,6 +1477,9 @@ The JMods for %{origin_nice} %{featurever}.
 %if %{include_debug_build}
 %package jmods-slowdebug
 Summary: JMods for %{origin_nice} %{featurever} %{debug_on}
+%if 0%{?rhel} <= 8
+Group:   Development/Languages
+%endif
 
 %{java_jmods_rpo -- %{debug_suffix_unquoted}}
 
@@ -1468,10 +1500,12 @@ The JMods for %{origin_nice} %{featurever}.
 %{fastdebug_warning}
 %endif
 
-
 %if %{include_normal_build}
 %package demo
 Summary: %{origin_nice} %{featurever} Demos
+%if 0%{?rhel} <= 8
+Group:   Development/Languages
+%endif
 
 %{java_demo_rpo %{nil}}
 
@@ -1482,6 +1516,9 @@ The %{origin_nice} %{featurever} demos.
 %if %{include_debug_build}
 %package demo-slowdebug
 Summary: %{origin_nice} %{featurever} Demos %{debug_on}
+%if 0%{?rhel} <= 8
+Group:   Development/Languages
+%endif
 
 %{java_demo_rpo -- %{debug_suffix_unquoted}}
 
@@ -1505,6 +1542,9 @@ The %{origin_nice} %{featurever} demos.
 %if %{include_normal_build}
 %package src
 Summary: %{origin_nice} %{featurever} Source Bundle
+%if 0%{?rhel} <= 8
+Group:   Development/Languages
+%endif
 
 %{java_src_rpo %{nil}}
 
@@ -1516,6 +1556,9 @@ class library source code for use by IDE indexers and debuggers.
 %if %{include_debug_build}
 %package src-slowdebug
 Summary: %{origin_nice} %{featurever} Source Bundle %{for_debug}
+%if 0%{?rhel} <= 8
+Group:   Development/Languages
+%endif
 
 %{java_src_rpo -- %{debug_suffix_unquoted}}
 
@@ -1536,10 +1579,12 @@ The %{compatiblename}-src-fastdebug sub-package contains the complete %{origin_n
  class library source code for use by IDE indexers and debuggers, %{for_fastdebug}.
 %endif
 
-
 %if %{include_normal_build}
 %package javadoc
 Summary: %{origin_nice} %{featurever} API documentation
+%if 0%{?rhel} <= 8
+Group:   Documentation
+%endif
 Requires: javapackages-filesystem
 Obsoletes: javadoc-slowdebug < 1:11.0.3.7-4
 
@@ -1550,6 +1595,9 @@ The %{origin_nice} %{featurever} API documentation.
 
 %package javadoc-zip
 Summary: %{origin_nice} %{featurever} API documentation compressed in a single archive
+%if 0%{?rhel} <= 8
+Group:   Documentation
+%endif
 Requires: javapackages-filesystem
 Obsoletes: javadoc-zip-slowdebug < 1:11.0.3.7-4
 
@@ -1631,7 +1679,6 @@ cp -r tapset tapset%{debug_suffix}
 cp -r tapset tapset%{fastdebug_suffix}
 %endif
 
-
 for suffix in %{build_loop} ; do
   for file in "tapset"$suffix/*.in; do
     OUTPUT_FILE=`echo $file | sed -e "s:\.stp\.in$:-%{version}-%{release}.%{_arch}.stp:g"`
@@ -1707,9 +1754,11 @@ export EXTRA_CFLAGS EXTRA_ASFLAGS
 for suffix in %{build_loop} ; do
 if [ "x$suffix" = "x" ] ; then
   debugbuild=release
+  debug_symbols=internal
 else
   # change --something to something
   debugbuild=`echo $suffix  | sed "s/-//g"`
+  debug_symbols=internal
 fi
 
 for loop in %{main_suffix} %{staticlibs_loop} ; do
@@ -1756,7 +1805,7 @@ bash ${top_dir_abs_src_path}/configure \
     --with-vendor-vm-bug-url="%{oj_vendor_bug_url}" \
     --with-boot-jdk=/usr/lib/jvm/java-%{buildjdkver}-openjdk \
     --with-debug-level=$debugbuild \
-    --with-native-debug-symbols=internal \
+    --with-native-debug-symbols=$debug_symbols \
     --enable-sysconf-nss \
     --enable-unlimited-crypto \
     --with-zlib=system \
@@ -1782,7 +1831,7 @@ make \
     CFLAGS_WARNINGS_ARE_ERRORS="-Wno-error" \
     $maketargets || ( pwd; find ${top_dir_abs_src_path} ${top_dir_abs_build_path} -name "hs_err_pid*.log" | xargs cat && false )
 
-popd >& /dev/null
+popd
 
 # Restore original source tree if we modified it by removing full in-tree sources
 if [ -d %{top_level_dir_name_backup} ] ; then
@@ -1877,8 +1926,9 @@ readelf --debug-dump $STATIC_LIBS_HOME/lib/libfdlibm.a | grep w_remainder.c
 readelf --debug-dump $STATIC_LIBS_HOME/lib/libfdlibm.a | grep e_remainder.c
 %endif
 
+so_suffix="so"
 # Check debug symbols are present and can identify code
-find "$JAVA_HOME" -iname '*.so' -print0 | while read -d $'\0' lib
+find "$JAVA_HOME" -iname "*.$so_suffix" -print0 | while read -d $'\0' lib
 do
   if [ -f "$lib" ] ; then
     echo "Testing $lib for debug symbols"
@@ -1938,15 +1988,16 @@ quit
 end
 run -version
 EOF
-
+%if 0%{?fedora} > 0
 # This fails on s390x for some reason. Disable for now. See:
 # https://koji.fedoraproject.org/koji/taskinfo?taskID=41499227
 %ifnarch s390x
 grep 'JavaCallWrapper::JavaCallWrapper' gdb.out
 %endif
+%endif
 
 # Check src.zip has all sources. See RHBZ#1130490
-jar -tf $JAVA_HOME/lib/src.zip | grep 'sun.misc.Unsafe'
+$JAVA_HOME/bin/jar -tf $JAVA_HOME/lib/src.zip | grep 'sun.misc.Unsafe'
 
 # Check class files include useful debugging information
 $JAVA_HOME/bin/javap -l java.lang.Object | grep "Compiled from"
@@ -2327,6 +2378,9 @@ cjc.mainProgram(args)
 %endif
 
 %changelog
+* Thu Sep 02 2021 Jiri Vanek <jvanek@redhat.com> - 1:11.0.12.0.7-5
+- minor cosmetic improvements to make spec more comparable between variants
+
 * Tue Aug 31 2021 Jiri Vanek <jvanek@redhat.com> - 1:11.0.12.0.7-3
 - alternatives creation moved to posttrans
 - Thus fixing the old reisntall issue:
