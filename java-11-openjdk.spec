@@ -343,7 +343,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      5
+%global rpmrelease      6
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -2183,6 +2183,28 @@ arg = nil ;  -- it is better to null the arg up, no meter if they exists or not,
 cjc = require "copy_jdk_configs.lua"
 args = {"--currentjvm", "%{uniquesuffix %{nil}}", "--jvmdir", "%{_jvmdir %{nil}}", "--origname", "%{name}", "--origjavaver", "%{javaver}", "--arch", "%{_arch}", "--temp", "%{rpm_state_dir}/%{name}.%{_arch}"}
 cjc.mainProgram(args)
+-- the returns from copy_jdk_configs.lua should not affect this 'main', so it shodl run under all circumstances, except fatal error
+-- https://bugzilla.redhat.com/show_bug.cgi?id=1820172
+-- https://docs.fedoraproject.org/en-US/packaging-guidelines/Directory_Replacement/
+-- Define the path to directory being replaced below.
+-- DO NOT add a trailing slash at the end.
+path1 = "%{_jvmdir}/%{sdkdir -- %{nil}}/conf"
+path2 = "%{_jvmdir}/%{sdkdir -- %{nil}}/lib/security"
+array = {path1, path2}
+for index, path in pairs(array) do
+  st = posix.stat(path)
+  if st and st.type == "directory" then
+    status = os.rename(path, path .. ".rpmmoved")
+    if not status then
+      suffix = 0
+      while not status do
+        suffix = suffix + 1
+        status = os.rename(path .. ".rpmmoved", path .. ".rpmmoved." .. suffix)
+      end
+      os.rename(path, path .. ".rpmmoved")
+    end
+  end
+end
 
 %post
 %{post_script %{nil}}
@@ -2378,6 +2400,9 @@ cjc.mainProgram(args)
 %endif
 
 %changelog
+* Thu Sep 02 2021 Jiri Vanek <jvanek@redhat.com> - 1:11.0.12.0.7-6
+- added posttrans hook which persist sanity of dir->symlink change in case of udpate from ancient versions
+
 * Thu Sep 02 2021 Jiri Vanek <jvanek@redhat.com> - 1:11.0.12.0.7-5
 - minor cosmetic improvements to make spec more comparable between variants
 
