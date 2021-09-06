@@ -1,0 +1,66 @@
+commit 53bda6adfacc02b8dddd8f10350c9569bca4eb1e
+Author: Martin Balao <mbalao@redhat.com>
+Date:   Fri Aug 27 19:42:07 2021 +0100
+
+    RH1996182: Login to the NSS Software Token in FIPS Mode
+
+diff --git openjdk.orig/src/java.base/share/classes/module-info.java openjdk/src/java.base/share/classes/module-info.java
+index 0cf61732d7..2cd851587c 100644
+--- openjdk.orig/src/java.base/share/classes/module-info.java
++++ openjdk/src/java.base/share/classes/module-info.java
+@@ -182,6 +182,7 @@ module java.base {
+         java.security.jgss,
+         java.sql,
+         java.xml,
++        jdk.crypto.cryptoki,
+         jdk.jartool,
+         jdk.attach,
+         jdk.charsets,
+diff --git openjdk.orig/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java openjdk/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
+index b00b738b85..1eca1f8f0a 100644
+--- openjdk.orig/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
++++ openjdk/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
+@@ -42,6 +42,8 @@ import javax.security.auth.callback.ConfirmationCallback;
+ import javax.security.auth.callback.PasswordCallback;
+ import javax.security.auth.callback.TextOutputCallback;
+ 
++import jdk.internal.misc.SharedSecrets;
++
+ import sun.security.util.Debug;
+ import sun.security.util.ResourcesMgr;
+ import static sun.security.util.SecurityConstants.PROVIDER_VER;
+@@ -59,6 +61,9 @@ import static sun.security.pkcs11.wrapper.PKCS11Constants.*;
+  */
+ public final class SunPKCS11 extends AuthProvider {
+ 
++    private static final boolean systemFipsEnabled = SharedSecrets
++            .getJavaSecuritySystemConfiguratorAccess().isSystemFipsEnabled();
++
+     private static final long serialVersionUID = -1354835039035306505L;
+ 
+     static final Debug debug = Debug.getInstance("sunpkcs11");
+@@ -373,6 +378,24 @@ public final class SunPKCS11 extends AuthProvider {
+             if (nssModule != null) {
+                 nssModule.setProvider(this);
+             }
++            if (systemFipsEnabled) {
++                // The NSS Software Token in FIPS 140-2 mode requires a user
++                // login for most operations. See sftk_fipsCheck. The NSS DB
++                // (/etc/pki/nssdb) PIN is empty.
++                Session session = null;
++                try {
++                    session = token.getOpSession();
++                    p11.C_Login(session.id(), CKU_USER, new char[] {});
++                } catch (PKCS11Exception p11e) {
++                    if (debug != null) {
++                        debug.println("Error during token login: " +
++                                p11e.getMessage());
++                    }
++                    throw p11e;
++                } finally {
++                    token.releaseSession(session);
++                }
++            }
+         } catch (Exception e) {
+             if (config.getHandleStartupErrors() == Config.ERR_IGNORE_ALL) {
+                 throw new UnsupportedOperationException

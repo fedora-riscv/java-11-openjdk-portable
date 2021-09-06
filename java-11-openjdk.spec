@@ -343,7 +343,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      6
+%global rpmrelease      7
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1232,6 +1232,9 @@ Patch1004: rh1860986-disable_tlsv1.3_in_fips_mode.patch
 Patch1007: rh1915071-always_initialise_configurator_access.patch
 # RH1929465: Improve system FIPS detection
 Patch1008: rh1929465-improve_system_FIPS_detection.patch
+# RH1996182: Login to the NSS software token in FIPS mode
+Patch1009: rh1996182-login_to_nss_software_token.patch
+Patch1010: rh1996182-extend_security_policy.patch
 
 #############################################
 #
@@ -1668,6 +1671,8 @@ popd # openjdk
 %patch1004
 %patch1007
 %patch1008
+%patch1009
+%patch1010
 
 # Extract systemtap tapsets
 %if %{with_systemtap}
@@ -2400,6 +2405,10 @@ end
 %endif
 
 %changelog
+* Sun Sep 05 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.12.0.7-7
+- Add patch to login to the NSS software token when in FIPS mode.
+- Extend the default security policy to accomodate PKCS11 accessing jdk.internal.misc.
+
 * Thu Sep 02 2021 Jiri Vanek <jvanek@redhat.com> - 1:11.0.12.0.7-6
 - added posttrans hook which persist sanity of dir->symlink change in case of udpate from ancient versions
 

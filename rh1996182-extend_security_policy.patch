@@ -1,0 +1,18 @@
+commit 598fe421216b0a437fa36ee91a29966599867aa3
+Author: Andrew Hughes <gnu.andrew@redhat.com>
+Date:   Mon Aug 30 16:12:52 2021 +0100
+
+    RH1996182: Extend default security policy to allow SunPKCS11 access to jdk.internal.misc
+
+diff --git openjdk.orig/src/java.base/share/lib/security/default.policy openjdk/src/java.base/share/lib/security/default.policy
+index ab59a334cd..5db744ff17 100644
+--- openjdk.orig/src/java.base/share/lib/security/default.policy
++++ openjdk/src/java.base/share/lib/security/default.policy
+@@ -124,6 +124,7 @@ grant codeBase "jrt:/jdk.crypto.ec" {
+ grant codeBase "jrt:/jdk.crypto.cryptoki" {
+     permission java.lang.RuntimePermission
+                    "accessClassInPackage.com.sun.crypto.provider";
++    permission java.lang.RuntimePermission "accessClassInPackage.jdk.internal.misc";
+     permission java.lang.RuntimePermission
+                    "accessClassInPackage.sun.security.*";
+     permission java.lang.RuntimePermission "accessClassInPackage.sun.nio.ch";
