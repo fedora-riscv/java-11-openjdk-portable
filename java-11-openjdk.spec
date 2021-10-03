@@ -198,12 +198,12 @@
 %global static_libs_target %{nil}
 %endif
 
+# RPM JDK builds keep the debug symbols internal, to be later stripped by RPM
+%global debug_symbols internal
+
 # unlike portables,the rpms have to use static_libs_target very dynamically
-%if %{bootstrap_build}
-%global release_targets bootcycle-images docs-zip
-%else
+%global bootstrap_targets images
 %global release_targets images docs-zip
-%endif
 # No docs nor bootcycle for debug builds
 %global debug_targets images
 
@@ -343,7 +343,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      7
+%global rpmrelease      8
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1756,44 +1756,28 @@ EXTRA_CFLAGS="$EXTRA_CFLAGS -fno-strict-aliasing"
 EXTRA_ASFLAGS="${EXTRA_CFLAGS} -Wa,--generate-missing-build-notes=yes"
 export EXTRA_CFLAGS EXTRA_ASFLAGS
 
-for suffix in %{build_loop} ; do
-if [ "x$suffix" = "x" ] ; then
-  debugbuild=release
-  debug_symbols=internal
-else
-  # change --something to something
-  debugbuild=`echo $suffix  | sed "s/-//g"`
-  debug_symbols=internal
-fi
+function buildjdk() {
+    local outputdir=${1}
+    local buildjdk=${2}
+    local maketargets="${3}"
+    local debuglevel=${4}
+    local link_opt=${5}
 
-for loop in %{main_suffix} %{staticlibs_loop} ; do
+    local top_dir_abs_src_path=$(pwd)/%{top_level_dir_name}
+    local top_dir_abs_build_path=$(pwd)/${outputdir}
 
-if test "x${loop}" = "x%{main_suffix}" ; then
-    # Copy the source tree so we can remove all in-tree libraries
-    cp -a %{top_level_dir_name} %{top_level_dir_name_backup}
-    # Remove all libraries that are linked
-    sh %{SOURCE12} %{top_level_dir_name} full
-    # Variable used by configure and hs_err hook on build failures
-    link_opt="system"
-    # Debug builds don't need same targets as release for
-    # build speed-up
-    maketargets="%{release_targets}"
-    if echo $debugbuild | grep -q "debug" ; then
-	maketargets="%{debug_targets}"
-    fi
-else
-    # Variable used by configure and hs_err hook on build failures
-    link_opt="bundled"
-    # Static library cycle only builds the static libraries
-    maketargets="%{static_libs_target}"
-fi
+    echo "Using output directory: ${outputdir}";
+    echo "Checking build JDK ${buildjdk} is operational..."
+    ${buildjdk}/bin/java -version
+    echo "Using make targets: ${maketargets}"
+    echo "Using debuglevel: ${debuglevel}"
+    echo "Using link_opt: ${link_opt}"
+    echo "Building %{newjavaver}-%{buildver}, pre=%{ea_designator}, opt=%{lts_designator}"
 
-top_dir_abs_src_path=$(pwd)/%{top_level_dir_name}
-top_dir_abs_build_path=$(pwd)/%{buildoutputdir -- ${suffix}${loop}}
-mkdir -p ${top_dir_abs_build_path}
-pushd ${top_dir_abs_build_path}
+    mkdir -p ${outputdir}
+    pushd ${outputdir}
 
-bash ${top_dir_abs_src_path}/configure \
+    bash ${top_dir_abs_src_path}/configure \
 %ifnarch %{jit_arches}
     --with-jvm-variants=zero \
 %endif
@@ -1808,9 +1792,9 @@ bash ${top_dir_abs_src_path}/configure \
     --with-vendor-url="%{oj_vendor_url}" \
     --with-vendor-bug-url="%{oj_vendor_bug_url}" \
     --with-vendor-vm-bug-url="%{oj_vendor_bug_url}" \
-    --with-boot-jdk=/usr/lib/jvm/java-%{buildjdkver}-openjdk \
-    --with-debug-level=$debugbuild \
-    --with-native-debug-symbols=$debug_symbols \
+    --with-boot-jdk=${buildjdk} \
+    --with-debug-level=${debuglevel} \
+    --with-native-debug-symbols="%{debug_symbols}" \
     --enable-sysconf-nss \
     --enable-unlimited-crypto \
     --with-zlib=system \
@@ -1829,54 +1813,102 @@ bash ${top_dir_abs_src_path}/configure \
     --with-jvm-features="%{shenandoah_feature},%{zgc_feature}" \
     --disable-warnings-as-errors
 
-make \
-    JAVAC_FLAGS=-g \
-    LOG=trace \
-    WARNINGS_ARE_ERRORS="-Wno-error" \
-    CFLAGS_WARNINGS_ARE_ERRORS="-Wno-error" \
-    $maketargets || ( pwd; find ${top_dir_abs_src_path} ${top_dir_abs_build_path} -name "hs_err_pid*.log" | xargs cat && false )
+    cat spec.gmk
 
-popd
+    make \
+      JAVAC_FLAGS=-g \
+      LOG=trace \
+      WARNINGS_ARE_ERRORS="-Wno-error" \
+      CFLAGS_WARNINGS_ARE_ERRORS="-Wno-error" \
+      $maketargets || ( pwd; find ${top_dir_abs_src_path} ${top_dir_abs_build_path} -name "hs_err_pid*.log" | xargs cat && false )
 
-# Restore original source tree if we modified it by removing full in-tree sources
-if [ -d %{top_level_dir_name_backup} ] ; then
-    rm -rf %{top_level_dir_name}
-    mv %{top_level_dir_name_backup} %{top_level_dir_name}
-fi
+    popd
+}
 
-done # end of main / staticlibs loop
+function installjdk() {
+    local imagepath=${1}
 
-top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
+    # the build (erroneously) removes read permissions from some jars
+    # this is a regression in OpenJDK 7 (our compiler):
+    # http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1437
+    find ${imagepath} -iname '*.jar' -exec chmod ugo+r {} \;
 
-# the build (erroneously) removes read permissions from some jars
-# this is a regression in OpenJDK 7 (our compiler):
-# http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1437
-find ${top_dir_abs_main_build_path}/images/%{jdkimage} -iname '*.jar' -exec chmod ugo+r {} \;
+    # Build screws up permissions on binaries
+    # https://bugs.openjdk.java.net/browse/JDK-8173610
+    find ${imagepath} -iname '*.so' -exec chmod +x {} \;
+    find ${imagepath}/bin/ -exec chmod +x {} \;
 
-# Build screws up permissions on binaries
-# https://bugs.openjdk.java.net/browse/JDK-8173610
-find ${top_dir_abs_main_build_path}/images/%{jdkimage} -iname '*.so' -exec chmod +x {} \;
-find ${top_dir_abs_main_build_path}/images/%{jdkimage}/bin/ -exec chmod +x {} \;
+    # Install nss.cfg right away as we will be using the JRE above
+    install -m 644 nss.cfg ${imagepath}/conf/security/
 
-# Install nss.cfg right away as we will be using the JRE above
-export JAVA_HOME=${top_dir_abs_main_build_path}/images/%{jdkimage}
+    # Install nss.fips.cfg: NSS configuration for global FIPS mode (crypto-policies)
+    install -m 644 nss.fips.cfg ${imagepath}/conf/security/
 
-# Install nss.cfg right away as we will be using the JRE above
-install -m 644 nss.cfg $JAVA_HOME/conf/security/
+    # Use system-wide tzdata
+    rm ${imagepath}/lib/tzdb.dat
+    ln -s %{_datadir}/javazi-1.8/tzdb.dat ${imagepath}/lib/tzdb.dat
 
-# Install nss.fips.cfg: NSS configuration for global FIPS mode (crypto-policies)
-install -m 644 nss.fips.cfg $JAVA_HOME/conf/security/
+    # Create fake alt-java as a placeholder for future alt-java
+    pushd ${imagepath}
+    # add alt-java man page
+    echo "Hardened java binary recommended for launching untrusted code from the Web e.g. javaws" > man/man1/%{alt_java_name}.1
+    cat man/man1/java.1 >> man/man1/%{alt_java_name}.1
+    popd
+}
 
-# Use system-wide tzdata
-rm $JAVA_HOME/lib/tzdb.dat
-ln -s %{_datadir}/javazi-1.8/tzdb.dat $JAVA_HOME/lib/tzdb.dat
+for suffix in %{build_loop} ; do
 
-# Create fake alt-java as a placeholder for future alt-java
-pushd ${JAVA_HOME}
-# add alt-java man page
-echo "Hardened java binary recommended for launching untrusted code from the Web e.g. javaws" > man/man1/%{alt_java_name}.1
-cat man/man1/java.1 >> man/man1/%{alt_java_name}.1
-popd
+  if [ "x$suffix" = "x" ] ; then
+      debugbuild=release
+  else
+      # change --something to something
+      debugbuild=`echo $suffix  | sed "s/-//g"`
+  fi
+
+  systemjdk=/usr/lib/jvm/java-%{buildjdkver}-openjdk
+
+  for loop in %{main_suffix} %{staticlibs_loop} ; do
+
+    builddir=%{buildoutputdir -- ${suffix}${loop}}
+    bootbuilddir=boot${builddir}
+
+    if test "x${loop}" = "x%{main_suffix}" ; then
+      # Copy the source tree so we can remove all in-tree libraries
+      cp -a %{top_level_dir_name} %{top_level_dir_name_backup}
+      # Remove all libraries that are linked
+      sh %{SOURCE12} %{top_level_dir_name} full
+      # Use system libraries
+      link_opt="system"
+      # Debug builds don't need same targets as release for
+      # build speed-up
+      maketargets="%{release_targets}"
+      if echo $debugbuild | grep -q "debug" ; then
+	maketargets="%{debug_targets}"
+      fi
+%if %{bootstrap_build}
+      buildjdk ${bootbuilddir} ${systemjdk} "%{bootstrap_targets}" ${debugbuild} ${link_opt}
+      buildjdk ${builddir} $(pwd)/${bootbuilddir}/images/%{jdkimage} "${maketargets}" ${debugbuild} ${link_opt}
+      rm -rf ${bootbuilddir}
+%else
+      buildjdk ${builddir} ${systemjdk} "${maketargets}" ${debugbuild} ${link_opt}
+%endif
+      # Restore original source tree we modified by removing full in-tree sources
+      rm -rf %{top_level_dir_name}
+      mv %{top_level_dir_name_backup} %{top_level_dir_name}
+    else
+      # Use bundled libraries for building statically
+      link_opt="bundled"
+      # Static library cycle only builds the static libraries
+      maketargets="%{static_libs_target}"
+      # Always just do the one build for the static libraries
+      buildjdk ${builddir} ${systemjdk} "${maketargets}" ${debugbuild} ${link_opt}
+    fi
+
+  done # end of main / staticlibs loop
+
+  # Final setup on the main image
+  top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
+  installjdk ${top_dir_abs_main_build_path}/images/%{jdkimage}
 
 # build cycles
 done # end of release / debug cycle loop
@@ -2405,6 +2437,10 @@ end
 %endif
 
 %changelog
+* Sun Oct 03 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.12.0.7-8
+- Restructure the build so a minimal initial build is then used for the final build (with docs)
+- This reduces pressure on the system JDK and ensures the JDK being built can do a full build
+
 * Sun Sep 05 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.12.0.7-7
 - Add patch to login to the NSS software token when in FIPS mode.
 - Extend the default security policy to accomodate PKCS11 accessing jdk.internal.misc.
