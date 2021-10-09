@@ -343,7 +343,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      8
+%global rpmrelease      9
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1235,6 +1235,8 @@ Patch1008: rh1929465-improve_system_FIPS_detection.patch
 # RH1996182: Login to the NSS software token in FIPS mode
 Patch1009: rh1996182-login_to_nss_software_token.patch
 Patch1010: rh1996182-extend_security_policy.patch
+# RH1991003: Allow plain key import unless com.redhat.fips.plainKeySupport is set to false
+Patch1011: rh1991003-enable_fips_keys_import.patch
 
 #############################################
 #
@@ -1673,6 +1675,7 @@ popd # openjdk
 %patch1008
 %patch1009
 %patch1010
+%patch1011
 
 # Extract systemtap tapsets
 %if %{with_systemtap}
@@ -2437,6 +2440,12 @@ end
 %endif
 
 %changelog
+* Tue Oct 05 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.12.0.7-9
+- Allow plain key import to be disabled with -Dcom.redhat.fips.plainKeySupport=false
+
+* Tue Oct 05 2021 Martin Balao <mbalao@redhat.com> - 1:11.0.12.0.7-9
+- Add patch to allow plain key import.
+
 * Sun Oct 03 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.12.0.7-8
 - Restructure the build so a minimal initial build is then used for the final build (with docs)
 - This reduces pressure on the system JDK and ensures the JDK being built can do a full build
