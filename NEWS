@@ -3,6 +3,181 @@ Key:
 JDK-X  - https://bugs.openjdk.java.net/browse/JDK-X
 CVE-XXXX-YYYY: https://cve.mitre.org/cgi-bin/cvename.cgi?name=XXXX-YYYY
 
+New in release OpenJDK 11.0.13 (2021-10-19):
+=============================================
+Live versions of these release notes can be found at:
+  * https://bitly.com/openjdk11013
+  * https://builds.shipilev.net/backports-monitor/release-notes-11.0.13.txt
+
+* Other changes
+  - JDK-8024368: private methods are allocated vtable indices
+  - JDK-8042902: Test java/net/Inet6Address/serialize/Inet6AddressSerializationTest.java fails intermittently
+  - JDK-8140466: ChaCha20 and Poly1305 TLS Cipher Suites
+  - JDK-8163326: Update the default enabled cipher suites preference
+  - JDK-8181313: SA: Remove libthread_db dependency on Linux
+  - JDK-8193214: Incorrect annotations.without.processors warnings with JDK 9
+  - JDK-8194230: jdk/internal/jrtfs/remote/RemoteRuntimeImageTest.java fails with java.lang.NullPointerException
+  - JDK-8196092: javax/swing/JComboBox/8032878/bug8032878.java fails
+  - JDK-8206083: Make tools/javac/api/T6265137.java robust to JDK version changes
+  - JDK-8206350: java/util/Locale/bcp47u/SystemPropertyTests.java failed on Mac 10.13 with zh_CN and zh_TW locales.
+  - JDK-8207316: java/nio/channels/spi/SelectorProvider/inheritedChannel/InheritedChannelTest.java failed
+  - JDK-8208227: tools/jdeps/DotFileTest.java fails on Win-X64
+  - JDK-8208363: test/jdk/java/lang/Package/PackageFromManifest.java missing module dependencies declaration
+  - JDK-8209773: Refactor shell test javax/naming/module/basic.sh to java
+  - JDK-8209832: Refactor jdk/internal/reflect/Reflection/GetCallerClassTest.sh to plain java test
+  - JDK-8209930: Refactor java/util/zip/ZipFile/deletetempjar.sh to plain java test
+  - JDK-8210495: compiler crashes because of illegal signature in otherwise legal code
+  - JDK-8210959: JShell fails and exits when statement throws an exception whose message contains a '%'.
+  - JDK-8211296: Remove HotSpot deprecation warning suppression for Mac/clang
+  - JDK-8213137: Remove static initialization of monitor/mutex instances
+  - JDK-8213922: fix ctw stand-alone build
+  - JDK-8217825: Verify @AfterTest is used correctly in WebSocket tests
+  - JDK-8218145: block_if_requested is not proper inlined due to size
+  - JDK-8223050: JVMCI: findUniqueConcreteMethod() should not use Dependencies::find_unique_concrete_method() for non-virtual methods
+  - JDK-8224853: CDS address sanitizer errors
+  - JDK-8225583: Examine the HttpResponse.BodySubscribers for null handling and multiple subscriptions
+  - JDK-8225690: Multiple AttachListener threads can be created
+  - JDK-8226533: JVMCI: findUniqueConcreteMethod should handle statically bindable methods directly
+  - JDK-8227738: jvmti/DataDumpRequest/datadumpreq001 failed due to "exit code is 134"
+  - JDK-8227766: CheckUnhandledOops is broken in MemAllocator
+  - JDK-8227815: Minimal VM: set_state is not a member of AttachListener
+  - JDK-8231717: Improve performance of charset decoding when charset is always compactable
+  - JDK-8232243: Wrong caret position in JTextPane on Windows with a screen resolution > 100%
+  - JDK-8233989: Create an IPv4 version of java/net/MulticastSocket/SetLoopbackMode.java
+  - JDK-8235211: serviceability/attach/RemovingUnixDomainSocketTest.java fails with AttachNotSupportedException: Unable to open socket file
+  - JDK-8236671: NullPointerException in JKS keystore
+  - JDK-8240555: Using env of JAVA_TOOL_OPTIONS and _JAVA_OPTIONS breaks QuietOption.java test
+  - JDK-8240983: Incorrect copyright header in Apache Santuario 2.1.3 files
+  - JDK-8241353: NPE in ToolProvider.getSystemJavaCompiler
+  - JDK-8241768: git needs .gitattributes
+  - JDK-8244973: serviceability/attach/RemovingUnixDomainSocketTest.java fails "stderr was not empty"
+  - JDK-8245134: test/lib/jdk/test/lib/security/KeyStoreUtils.java should allow to specify aliases
+  - JDK-8247421: [TESTBUG] ReturnBlobToWrongHeapTest.java failed allocating blob
+  - JDK-8247469: getSystemCpuLoad() returns -1 on linux when some offline cpus are present and cpusets.effective_cpus is not available
+  - JDK-8249773: Upgrade ReceiveISA.java test to be resilient to failure due to stray packets and interference
+  - JDK-8249897: jdk/javadoc/tool/LangVers.java uses @ignore w/o bug-id
+  - JDK-8249898: jdk/javadoc/tool/6176978/T6176978.java uses @ignore w/o bug-id
+  - JDK-8249899: jdk/javadoc/tool/InlineTagsWithBraces.java uses @ignore w/o bug-id
+  - JDK-8250588: Shenandoah: LRB needs to save/restore fp registers for runtime call
+  - JDK-8251945: SIGSEGV in PackageEntry::purge_qualified_exports()
+  - JDK-8252648: Shenandoah: name gang tasks consistently
+  - JDK-8253048: AArch64: When CallLeaf, no need to preserve callee-saved registers in caller
+  - JDK-8253631: Remove unimplemented CompileBroker methods after JEP-165
+  - JDK-8253899: Make IsClassUnloadingEnabled signature match specification
+  - JDK-8254024: Enhance native libs for AWT and Swing to work with GraalVM Native Image
+  - JDK-8254244: Some code emitted by TemplateTable::branch is unused when running TieredCompilation
+  - JDK-8254967: com.sun.net.HttpsServer spins on TLS session close
+  - JDK-8255255: Update Apache Santuario (XML Signature) to version 2.2.1
+  - JDK-8255452: Doing GC during JVMTI MethodExit event posting breaks return oop
+  - JDK-8255718: Zero: VM should know it runs in interpreter-only mode
+  - JDK-8255810: Zero: build fails without JVMTI
+  - JDK-8256215: Shenandoah: re-organize saving/restoring machine state in assembler code
+  - JDK-8256267: Relax compiler/floatingpoint/NaNTest.java for x86_32 and lower -XX:+UseSSE
+  - JDK-8257148: Remove obsolete code in AWTView.m
+  - JDK-8257620: Do not use objc_msgSend_stret to get macOS version
+  - JDK-8259338: Add expiry exception for identrustdstx3 alias to VerifyCACerts.java test
+  - JDK-8259535: ECDSA SignatureValue do not always have the specified length
+  - JDK-8260589: Crash in JfrTraceIdLoadBarrier::load(_jclass*)
+  - JDK-8260923: Add more tests for SSLSocket input/output shutdown
+  - JDK-8261147: C2: Node is wrongly marked as reduction resulting in a wrong execution due to wrong vector instructions
+  - JDK-8261238: NMT should not limit baselining by size threshold
+  - JDK-8261496: Shenandoah: reconsider pacing updates memory ordering
+  - JDK-8261652: Remove some dead comments from os_bsd_x86
+  - JDK-8262000: jdk/jfr/event/gc/detailed/TestPromotionFailedEventWithParallelScavenge.java failed with "OutOfMemoryError: Java heap space"
+  - JDK-8262017: C2: assert(n != __null) failed: Bad immediate dominator info.
+  - JDK-8262392: Update Mesa 3-D Headers to version 21.0.3
+  - JDK-8262409: sun/security/ssl/SSLSocketImpl/SSLSocketImplThrowsWrongExceptions. SSL test failures caused by java failed with "Server reported the wrong exception"
+  - JDK-8262470: Printed GlyphVector outline with low DPI has bad quality on Windows
+  - JDK-8263227: C2: inconsistent spilling due to dead nodes in exception block
+  - JDK-8263382: java/util/logging/ParentLoggersTest.java failed with "checkLoggers: getLoggerNames() returned unexpected loggers"
+  - JDK-8263407: SPARC64 detection fails on Athena (SPARC64-X)
+  - JDK-8263531: Remove unused buffer int
+  - JDK-8264752: SIGFPE crash with option FlightRecorderOptions:threadbuffersize=30M
+  - JDK-8265132: C2 compilation fails with assert "missing precedence edge"
+  - JDK-8265231: (fc) ReadDirect and WriteDirect tests fail after fix for JDK-8264821
+  - JDK-8265335: Epsilon: Minor typo in EpsilonElasticTLABDecay description
+  - JDK-8265761: Font with missed font family name is not properly printed on Windows
+  - JDK-8265773: incorrect jdeps message "jdk8internals" to describe a removed JDK internal API
+  - JDK-8265836: OperatingSystemImpl.getCpuLoad() returns incorrect CPU load inside a container
+  - JDK-8266018: Shenandoah: fix an incorrect assert
+  - JDK-8266206: Build failure after JDK-8264752 with older GCCs
+  - JDK-8266248: Compilation failure in PLATFORM_API_MacOSX_MidiUtils.c with Xcode 12.5
+  - JDK-8266288: assert root method not found in witnessed_reabstraction_in_supers is too strong
+  - JDK-8266404: Fatal error report generated with -XX:+CrashOnOutOfMemoryError should not contain suggestion to submit a bug report
+  - JDK-8266480: Implicit null check optimization does not update control of hoisted memory operation
+  - JDK-8266615: C2 incorrectly folds subtype checks involving an interface array
+  - JDK-8266642: Improve ResolvedMethodTable hash function
+  - JDK-8266749: AArch64: Backtracing broken on PAC enabled systems
+  - JDK-8266813: Shenandoah: Use shorter instruction sequence for checking if marking in progress
+  - JDK-8267042: bug in monitor locking/unlocking on ARM32 C1 due to uninitialized BasicObjectLock::_displaced_header
+  - JDK-8267348: Rewrite gc/epsilon/TestClasses.java to use Metaspace with less classes
+  - JDK-8267396: Avoid recording "pc" in unhandled oops detector for better performance
+  - JDK-8267399: C2: java/text/Normalizer/ConformanceTest.java test failed with assertion
+  - JDK-8267424: CTW: C1 fails with "State must not be null"
+  - JDK-8267459: Pasting Unicode characters into JShell does not work.
+  - JDK-8267625: AARCH64: typo in LIR_Assembler::emit_profile_type
+  - JDK-8267666: Add option to jcmd GC.heap_dump to use existing file
+  - JDK-8267695: Bump update version for OpenJDK: jdk-11.0.13
+  - JDK-8267751: (test) jtreg.SkippedException has no serial VersionUID
+  - JDK-8267773: PhaseStringOpts::int_stringSize doesn't handle min_jint correctly
+  - JDK-8268103: JNI functions incorrectly return a double after JDK-8265836
+  - JDK-8268127: Shenandoah: Heap size may be too small for region to align to large page size
+  - JDK-8268261: C2: assert(n != __null) failed: Bad immediate dominator info.
+  - JDK-8268347: C2: nested locks optimization may create unbalanced monitor enter/exit code
+  - JDK-8268360: Missing check for infinite loop during node placement
+  - JDK-8268362: [REDO] C2 crash when compile negative Arrays.copyOf length after loop
+  - JDK-8268366: Incorrect calculation of has_fpu_registers in C1 linear scan
+  - JDK-8268369: SIGSEGV in PhaseCFG::implicit_null_check due to missing null check
+  - JDK-8268417: Add test from JDK-8268360
+  - JDK-8268617: [11u REDO] - WebSocket over authenticating proxy fails with NPE
+  - JDK-8268620: InfiniteLoopException test may fail on x86 platforms
+  - JDK-8268635: Corrupt oop in ClassLoaderData
+  - JDK-8268699: Shenandoah: Add test for JDK-8268127
+  - JDK-8268771: javadoc -notimestamp option does not work on index.html
+  - JDK-8268775: Password is being converted to String in AccessibleJPasswordField
+  - JDK-8268965: TCP Connection Reset when connecting simple socket to SSL server
+  - JDK-8269304: Regression ~5% in 2005 in b27
+  - JDK-8269415: [11u] Remove ea from DEFAULT_PROMOTED_VERSION_PRE in OpenJDK 11u
+  - JDK-8269529: javax/swing/reliability/HangDuringStaticInitialization.java fails in Windows debug build
+  - JDK-8269594: assert(_handle_mark_nesting > 1) failed: memory leak: allocating handle outside HandleMark
+  - JDK-8269614: [s390] Interpreter checks wrong bit for slow path instance allocation
+  - JDK-8269650: Optimize gc-locker in [Get|Release]StringCritical for latin string
+  - JDK-8269661: JNI_GetStringCritical does not lock char array
+  - JDK-8269668: [aarch64] java.library.path not including /usr/lib64
+  - JDK-8269795: C2: Out of bounds array load floats above its range check in loop peeling resulting in SEGV
+  - JDK-8269847: JDK-8269594 backport breaks 11u builds
+  - JDK-8269882: stack-use-after-scope in NewObjectA
+  - JDK-8270184: [TESTBUG] Add coverage for jvmci ResolvedJavaType.toJavaName() for lambdas
+  - JDK-8270196: [11u] [JVMCI] JavaType.toJavaName() returns incorrect type name for lambdas
+  - JDK-8270556: Exclude security/infra/java/security/cert/CertPathValidator/certification/LetsEncryptCA
+
+Notes on individual issues:
+===========================
+
+security-libs/javax.net.ssl:
+
+JDK-8210799: ChaCha20 and Poly1305 TLS Cipher Suites
+====================================================
+New TLS cipher suites using the `ChaCha20-Poly1305` algorithm have
+been added to JSSE.  These cipher suites are enabled by default.  The
+TLS_CHACHA20_POLY1305_SHA256 cipher suite is available for TLS 1.3.
+The following cipher suites are available for TLS 1.2:
+
+* TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+* TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+* TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+
+Refer to the "Java Secure Socket Extension (JSSE) Reference Guide" for
+details on these new TLS cipher suites.
+
+JDK-8219551: Updated the Default Enabled Cipher Suites Preference
+=================================================================
+The preference of the default enabled cipher suites has been
+changed. The compatibility impact should be minimal. If needed,
+applications can customize the enabled cipher suites and the
+preference. For more details, refer to the SunJSSE provider
+documentation and the JSSE Reference Guide documentation.
+
 New in release OpenJDK 11.0.12 (2021-07-20):
 =============================================
 Live versions of these release notes can be found at:

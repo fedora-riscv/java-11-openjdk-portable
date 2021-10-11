@@ -295,7 +295,7 @@
 # New Version-String scheme-style defines
 %global featurever 11
 %global interimver 0
-%global updatever 12
+%global updatever 13
 %global patchver 0
 # If you bump featurever, you must bump also vendor_version_string
 # Used via new version scheme. JDK 11 was
@@ -342,8 +342,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        7
-%global rpmrelease      9
+%global buildver        1
+%global rpmrelease      1
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -372,7 +372,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           1
+%global is_ga           0
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -1170,7 +1170,7 @@ URL:      http://openjdk.java.net/
 
 # to regenerate source0 (jdk) run update_package.sh
 # update_package.sh contains hard-coded repos, revisions, tags, and projects to regenerate the source archives
-Source0: jdk-updates-jdk%{featurever}u-jdk-%{filever}+%{buildver}%{?tagsuffix:-%{tagsuffix}}-4curve-clean.tar.xz
+Source0: jdk-updates-jdk%{featurever}u-jdk-%{filever}+%{buildver}%{?tagsuffix:-%{tagsuffix}}-4curve.tar.xz
 
 # Use 'icedtea_sync.sh' to update the following
 # They are based on code contained in the IcedTea project (6.x).
@@ -1270,8 +1270,6 @@ Patch7: pr3695-toggle_system_crypto_policy.patch
 # able to be removed once that release is out
 # and used by this RPM.
 #############################################
-# JDK-8269668, RH1977671: [aarch64] java.library.path not including /usr/lib64
-Patch8: jdk8269668-rh1977671-aarch64_lib_path_fix.patch
 
 BuildRequires: autoconf
 BuildRequires: automake
@@ -1662,7 +1660,6 @@ pushd %{top_level_dir_name}
 %patch3 -p1
 %patch4 -p1
 %patch7 -p1
-%patch8 -p1
 popd # openjdk
 
 %patch1000
@@ -2440,6 +2437,14 @@ end
 %endif
 
 %changelog
+* Mon Oct 11 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.13.0.1-0.1.ea
+- Update to jdk-11.0.13.0+1
+- Update release notes to 11.0.13.0+1
+- Update tarball generation script to use git following OpenJDK 11u's move to github
+- Switch to EA mode for 11.0.13 pre-release builds.
+- Remove "-clean" suffix as no 11.0.13 builds are unclean.
+- Drop JDK-8269668 patch which is now applied upstream.
+
 * Tue Oct 05 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.12.0.7-9
 - Allow plain key import to be disabled with -Dcom.redhat.fips.plainKeySupport=false
 

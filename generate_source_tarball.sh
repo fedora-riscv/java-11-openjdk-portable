@@ -7,9 +7,9 @@
 # If you want to use a local copy of patch PRTBC01, set the path to it in the PRTBC01 variable
 #
 # In any case you have to set PROJECT_NAME REPO_NAME and VERSION. eg:
-# PROJECT_NAME=jdk
-# REPO_NAME=jdk
-# VERSION=tip
+# PROJECT_NAME=openjdk
+# REPO_NAME=jdk11u
+# VERSION=HEAD
 # or to eg prepare systemtap:
 # icedtea7's jstack and other tapsets
 # VERSION=6327cf1cea9e
@@ -35,7 +35,7 @@ fi
 
 set -e
 
-OPENJDK_URL_DEFAULT=http://hg.openjdk.java.net
+OPENJDK_URL_DEFAULT=https://github.com
 COMPRESSION_DEFAULT=xz
 
 if [ "x$1" = "xhelp" ] ; then
@@ -91,7 +91,7 @@ if [ "x$FILE_NAME_ROOT" = "x" ] ; then
     echo "No file name root specified; default to ${FILE_NAME_ROOT}"
 fi
 if [ "x$REPO_ROOT" = "x" ] ; then
-    REPO_ROOT="${OPENJDK_URL}/${PROJECT_NAME}/${REPO_NAME}"
+    REPO_ROOT="${OPENJDK_URL}/${PROJECT_NAME}/${REPO_NAME}.git"
     echo "No repository root specified; default to ${REPO_ROOT}"
 fi;
 if [ "x$TO_COMPRESS" = "x" ] ; then
@@ -118,7 +118,7 @@ else
   mkdir "${FILE_NAME_ROOT}"
   pushd "${FILE_NAME_ROOT}"
     echo "Cloning ${VERSION} root repository from ${REPO_ROOT}"
-    hg clone ${REPO_ROOT} openjdk -r ${VERSION}
+    git clone -b ${VERSION} ${REPO_ROOT} openjdk
   popd
 fi
 pushd "${FILE_NAME_ROOT}"
@@ -163,7 +163,7 @@ pushd "${FILE_NAME_ROOT}"
     else
         SWITCH=czf
     fi
-    TARBALL_NAME=${FILE_NAME_ROOT}-4curve-clean.tar.${COMPRESSION}
+    TARBALL_NAME=${FILE_NAME_ROOT}-4curve.tar.${COMPRESSION}
     tar --exclude-vcs -$SWITCH ${TARBALL_NAME} $TO_COMPRESS
     mv ${TARBALL_NAME} ..
 popd
