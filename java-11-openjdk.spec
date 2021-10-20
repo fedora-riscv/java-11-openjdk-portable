@@ -342,7 +342,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        7
+%global buildver        8
 %global rpmrelease      1
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
@@ -372,7 +372,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           0
+%global is_ga           1
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -2437,6 +2437,11 @@ end
 %endif
 
 %changelog
+* Wed Oct 13 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.13.0.8-1
+- Update to jdk-11.0.12.0+8
+- Update release notes to 11.0.12.0+8
+- Switch to GA mode for final release.
+
 * Tue Oct 12 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.13.0.7-0.1.ea
 - Update to jdk-11.0.13.0+7
 - Update release notes to 11.0.13.0+7

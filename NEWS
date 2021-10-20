@@ -9,12 +9,38 @@ Live versions of these release notes can be found at:
   * https://bitly.com/openjdk11013
   * https://builds.shipilev.net/backports-monitor/release-notes-11.0.13.txt
 
+* Security fixes
+  - JDK-8163326, CVE-2021-35550: Update the default enabled cipher suites preference
+  - JDK-8254967, CVE-2021-35565: com.sun.net.HttpsServer spins on TLS session close
+  - JDK-8263314: Enhance XML Dsig modes
+  - JDK-8265167, CVE-2021-35556: Richer Text Editors
+  - JDK-8265574: Improve handling of sheets
+  - JDK-8265580, CVE-2021-35559: Enhanced style for RTF kit
+  - JDK-8265776: Improve Stream handling for SSL
+  - JDK-8266097, CVE-2021-35561: Better hashing support
+  - JDK-8266103: Better specified spec values
+  - JDK-8266109: More Resilient Classloading
+  - JDK-8266115: More Manifest Jar Loading
+  - JDK-8266137, CVE-2021-35564: Improve Keystore integrity
+  - JDK-8266689, CVE-2021-35567: More Constrained Delegation
+  - JDK-8267086: ArrayIndexOutOfBoundsException in java.security.KeyFactory.generatePublic
+  - JDK-8267712: Better LDAP reference processing
+  - JDK-8267729, CVE-2021-35578: Improve TLS client handshaking
+  - JDK-8267735, CVE-2021-35586: Better BMP support
+  - JDK-8268193: Improve requests of certificates
+  - JDK-8268199: Correct certificate requests
+  - JDK-8268205: Enhance DTLS client handshake
+  - JDK-8268506: More Manifest Digests
+  - JDK-8269618, CVE-2021-35603: Better session identification
+  - JDK-8269624: Enhance method selection support
+  - JDK-8270398: Enhance canonicalization
+  - JDK-8270404: Better canonicalization
 * Other changes
   - JDK-8024368: private methods are allocated vtable indices
   - JDK-8042902: Test java/net/Inet6Address/serialize/Inet6AddressSerializationTest.java fails intermittently
   - JDK-8140466: ChaCha20 and Poly1305 TLS Cipher Suites
+  - JDK-8157404: Unable to read certain PKCS12 keystores from SequenceInputStream
   - JDK-8158066: SourceDebugExtensionTest fails to rename file
-  - JDK-8163326: Update the default enabled cipher suites preference
   - JDK-8168304: Make all of DependencyContext_test available in product mode
   - JDK-8169246: java/net/DatagramSocket/ReportSocketClosed.java fails intermittently with BindException
   - JDK-8181313: SA: Remove libthread_db dependency on Linux
@@ -68,6 +94,7 @@ Live versions of these release notes can be found at:
   - JDK-8219804: java/net/MulticastSocket/Promiscuous.java fails intermittently due to NumberFormatException
   - JDK-8220445: Support for side by side MSVC Toolset versions
   - JDK-8221988: add possibility to build with Visual Studio 2019
+  - JDK-8222751: closed/test/jdk/sun/security/util/DerIndefLenConverter/IndefBerPkcs12.java fail
   - JDK-8223050: JVMCI: findUniqueConcreteMethod() should not use Dependencies::find_unique_concrete_method() for non-virtual methods
   - JDK-8224853: CDS address sanitizer errors
   - JDK-8225082: Remove IdenTrust certificate that is expiring in September 2021
@@ -151,7 +178,6 @@ Live versions of these release notes can be found at:
   - JDK-8254270: linux 32 bit build doesn't compile libjdwp/log_messages.c
   - JDK-8254282: Add Linux x86_32 builds to submit workflow
   - JDK-8254850: Update terminology in java.awt.GridBagLayout source code comments
-  - JDK-8254967: com.sun.net.HttpsServer spins on TLS session close
   - JDK-8255255: Update Apache Santuario (XML Signature) to version 2.2.1
   - JDK-8255305: Add Linux x86_32 tier1 to submit workflow
   - JDK-8255352: Archive important test outputs in submit workflow
@@ -261,6 +287,7 @@ Live versions of these release notes can be found at:
   - JDK-8269650: Optimize gc-locker in [Get|Release]StringCritical for latin string
   - JDK-8269661: JNI_GetStringCritical does not lock char array
   - JDK-8269668: [aarch64] java.library.path not including /usr/lib64
+  - JDK-8269763: The JEditorPane is blank after JDK-8265167
   - JDK-8269795: C2: Out of bounds array load floats above its range check in loop peeling resulting in SEGV
   - JDK-8269847: JDK-8269594 backport breaks 11u builds
   - JDK-8269850: Most JDK releases report macOS version 12 as 10.16 instead of 12.0
