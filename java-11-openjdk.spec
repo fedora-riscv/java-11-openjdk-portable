@@ -21,6 +21,8 @@
 %bcond_without release
 # Enable static library builds by default.
 %bcond_without staticlibs
+# Remove build artifacts by default
+%bcond_with artifacts
 
 # Workaround for stripping of debug symbols from static libraries
 %if %{with staticlibs}
@@ -343,7 +345,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        8
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -393,6 +395,7 @@
 %global static_libs_image       static-libs
 # output dir stub
 %define buildoutputdir() %{expand:build/jdk11.build%{?1}}
+%define installoutputdir() %{expand:install/jdk11.install%{?1}}
 # we can copy the javadoc to not arched dir, or make it not noarch
 %define uniquejavadocdir()    %{expand:%{fullversion}.%{_arch}%{?1}}
 # main id and dir of this jdk
@@ -1758,10 +1761,11 @@ export EXTRA_CFLAGS EXTRA_ASFLAGS
 
 function buildjdk() {
     local outputdir=${1}
-    local buildjdk=${2}
-    local maketargets="${3}"
-    local debuglevel=${4}
-    local link_opt=${5}
+    local installdir=${2}
+    local buildjdk=${3}
+    local maketargets="${4}"
+    local debuglevel=${5}
+    local link_opt=${6}
 
     local top_dir_abs_src_path=$(pwd)/%{top_level_dir_name}
     local top_dir_abs_build_path=$(pwd)/${outputdir}
@@ -1774,7 +1778,7 @@ function buildjdk() {
     echo "Using link_opt: ${link_opt}"
     echo "Building %{newjavaver}-%{buildver}, pre=%{ea_designator}, opt=%{lts_designator}"
 
-    mkdir -p ${outputdir}
+    mkdir -p ${outputdir} ${installdir}
     pushd ${outputdir}
 
     bash ${top_dir_abs_src_path}/configure \
@@ -1823,6 +1827,23 @@ function buildjdk() {
       $maketargets || ( pwd; find ${top_dir_abs_src_path} ${top_dir_abs_build_path} -name "hs_err_pid*.log" | xargs cat && false )
 
     popd
+
+    echo "Installing build from ${outputdir} to ${installdir}..."
+    echo "Installing images..."
+    mv ${outputdir}/images ${installdir}
+    if [ -d ${outputdir}/bundles ] ; then
+	echo "Installing bundles...";
+	mv ${outputdir}/bundles ${installdir} ;
+    fi
+    if [ -d ${outputdir}/docs ] ; then
+	echo "Installing docs...";
+	mv ${outputdir}/docs ${installdir} ;
+    fi
+
+%if !%{with artifacts}
+    echo "Removing output directory...";
+    rm -rf ${outputdir}
+%endif
 }
 
 function installjdk() {
@@ -1871,6 +1892,8 @@ for suffix in %{build_loop} ; do
 
     builddir=%{buildoutputdir -- ${suffix}${loop}}
     bootbuilddir=boot${builddir}
+    installdir=%{installoutputdir -- ${suffix}${loop}}
+    bootinstalldir=boot${installdir}
 
     if test "x${loop}" = "x%{main_suffix}" ; then
       # Copy the source tree so we can remove all in-tree libraries
@@ -1886,11 +1909,11 @@ for suffix in %{build_loop} ; do
 	maketargets="%{debug_targets}"
       fi
 %if %{bootstrap_build}
-      buildjdk ${bootbuilddir} ${systemjdk} "%{bootstrap_targets}" ${debugbuild} ${link_opt}
-      buildjdk ${builddir} $(pwd)/${bootbuilddir}/images/%{jdkimage} "${maketargets}" ${debugbuild} ${link_opt}
-      rm -rf ${bootbuilddir}
+      buildjdk ${bootbuilddir} ${bootinstalldir} ${systemjdk} "%{bootstrap_targets}" ${debugbuild} ${link_opt}
+      buildjdk ${builddir} ${installdir} $(pwd)/${bootinstalldir}/images/%{jdkimage} "${maketargets}" ${debugbuild} ${link_opt}
+      %{!?with_artifacts:rm -rf ${bootinstalldir}}
 %else
-      buildjdk ${builddir} ${systemjdk} "${maketargets}" ${debugbuild} ${link_opt}
+      buildjdk ${builddir} ${installdir} ${systemjdk} "${maketargets}" ${debugbuild} ${link_opt}
 %endif
       # Restore original source tree we modified by removing full in-tree sources
       rm -rf %{top_level_dir_name}
@@ -1901,13 +1924,13 @@ for suffix in %{build_loop} ; do
       # Static library cycle only builds the static libraries
       maketargets="%{static_libs_target}"
       # Always just do the one build for the static libraries
-      buildjdk ${builddir} ${systemjdk} "${maketargets}" ${debugbuild} ${link_opt}
+      buildjdk ${builddir} ${installdir} ${systemjdk} "${maketargets}" ${debugbuild} ${link_opt}
     fi
 
   done # end of main / staticlibs loop
 
   # Final setup on the main image
-  top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
+  top_dir_abs_main_build_path=$(pwd)/%{installoutputdir -- ${suffix}%{main_suffix}}
   installjdk ${top_dir_abs_main_build_path}/images/%{jdkimage}
 
 # build cycles
@@ -1918,9 +1941,9 @@ done # end of release / debug cycle loop
 # We test debug first as it will give better diagnostics on a crash
 for suffix in %{build_loop} ; do
 
-top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
+top_dir_abs_main_build_path=$(pwd)/%{installoutputdir -- ${suffix}%{main_suffix}}
 %if %{include_staticlibs}
-top_dir_abs_staticlibs_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{staticlibs_loop}}
+top_dir_abs_staticlibs_build_path=$(pwd)/%{installoutputdir -- ${suffix}%{staticlibs_loop}}
 %endif
 
 export JAVA_HOME=${top_dir_abs_main_build_path}/images/%{jdkimage}
@@ -2054,9 +2077,9 @@ STRIP_KEEP_SYMTAB=libjvm*
 
 for suffix in %{build_loop} ; do
 
-top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
+top_dir_abs_main_build_path=$(pwd)/%{installoutputdir -- ${suffix}%{main_suffix}}
 %if %{include_staticlibs}
-top_dir_abs_staticlibs_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{staticlibs_loop}}
+top_dir_abs_staticlibs_build_path=$(pwd)/%{installoutputdir -- ${suffix}%{staticlibs_loop}}
 %endif
 jdk_image=${top_dir_abs_main_build_path}/images/%{jdkimage}
 
@@ -2437,6 +2460,9 @@ end
 %endif
 
 %changelog
+* Wed Oct 13 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.13.0.8-2
+- Reduce disk footprint by removing build artifacts by default.
+
 * Wed Oct 13 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.13.0.8-1
 - Update to jdk-11.0.12.0+8
 - Update release notes to 11.0.12.0+8
