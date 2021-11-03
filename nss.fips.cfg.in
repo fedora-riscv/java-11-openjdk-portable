@@ -1,6 +1,6 @@
 name = NSS-FIPS
 nssLibraryDirectory = @NSS_LIBDIR@
-nssSecmodDirectory = @NSS_SECMOD@
+nssSecmodDirectory = sql:/etc/pki/nssdb
 nssDbMode = readOnly
 nssModule = fips
 

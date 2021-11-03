@@ -345,7 +345,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        8
-%global rpmrelease      2
+%global rpmrelease      3
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1730,7 +1730,6 @@ sed -e "s:@NSS_LIBDIR@:%{NSS_LIBDIR}:g" %{SOURCE11} > nss.cfg
 
 # Setup nss.fips.cfg
 sed -e "s:@NSS_LIBDIR@:%{NSS_LIBDIR}:g" %{SOURCE17} > nss.fips.cfg
-sed -i -e "s:@NSS_SECMOD@:/etc/pki/nssdb:g" nss.fips.cfg
 
 %build
 # How many CPU's do we have?
@@ -2462,6 +2461,10 @@ end
 %endif
 
 %changelog
+* Wed Nov 03 2021 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.13.0.8-3
+- Use 'sql:' prefix in nss.fips.cfg as F35+ no longer ship the legacy
+  secmod.db file as part of nss
+
 * Wed Oct 13 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.13.0.8-2
 - Reduce disk footprint by removing build artifacts by default.
 
