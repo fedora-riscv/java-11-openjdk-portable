@@ -1598,7 +1598,9 @@ Obsoletes: javadoc-slowdebug < 1:11.0.3.7-4
 
 %description javadoc
 The %{origin_nice} %{featurever} API documentation.
+%endif
 
+%if %{include_normal_build}
 %package javadoc-zip
 Summary: %{origin_nice} %{featurever} API documentation compressed in a single archive
 %if 0%{?rhel} <= 8
