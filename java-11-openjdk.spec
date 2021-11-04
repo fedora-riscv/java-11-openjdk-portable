@@ -394,8 +394,8 @@
 %global jdkimage                jdk
 %global static_libs_image       static-libs
 # output dir stub
-%define buildoutputdir() %{expand:build/jdk11.build%{?1}}
-%define installoutputdir() %{expand:install/jdk11.install%{?1}}
+%define buildoutputdir() %{expand:build/jdk%{featurever}.build%{?1}}
+%define installoutputdir() %{expand:install/jdk%{featurever}.install%{?1}}
 # we can copy the javadoc to not arched dir, or make it not noarch
 %define uniquejavadocdir()    %{expand:%{fullversion}.%{_arch}%{?1}}
 # main id and dir of this jdk
