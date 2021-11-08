@@ -185,9 +185,9 @@
 %endif
 
 %ifarch %{bootstrap_arches}
-%global bootstrap_build 1
+%global bootstrap_build true
 %else
-%global bootstrap_build 1
+%global bootstrap_build false
 %endif
 
 %if %{include_staticlibs}
@@ -345,7 +345,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        8
-%global rpmrelease      3
+%global rpmrelease      4
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1904,18 +1904,22 @@ for suffix in %{build_loop} ; do
       # Use system libraries
       link_opt="system"
       # Debug builds don't need same targets as release for
-      # build speed-up
-      maketargets="%{release_targets}"
+      # build speed-up. We also avoid bootstrapping these
+      # slower builds.
       if echo $debugbuild | grep -q "debug" ; then
-	maketargets="%{debug_targets}"
+        maketargets="%{debug_targets}"
+        run_bootstrap=false
+      else
+        maketargets="%{release_targets}"
+        run_bootstrap=%{bootstrap_build}
       fi
-%if %{bootstrap_build}
-      buildjdk ${bootbuilddir} ${bootinstalldir} ${systemjdk} "%{bootstrap_targets}" ${debugbuild} ${link_opt}
-      buildjdk ${builddir} ${installdir} $(pwd)/${bootinstalldir}/images/%{jdkimage} "${maketargets}" ${debugbuild} ${link_opt}
-      %{!?with_artifacts:rm -rf ${bootinstalldir}}
-%else
-      buildjdk ${builddir} ${installdir} ${systemjdk} "${maketargets}" ${debugbuild} ${link_opt}
-%endif
+      if ${run_bootstrap} ; then
+         buildjdk ${bootbuilddir} ${bootinstalldir} ${systemjdk} "%{bootstrap_targets}" ${debugbuild} ${link_opt}
+         buildjdk ${builddir} ${installdir} $(pwd)/${bootinstalldir}/images/%{jdkimage} "${maketargets}" ${debugbuild} ${link_opt}
+         %{!?with_artifacts:rm -rf ${bootinstalldir}}
+      else
+        buildjdk ${builddir} ${installdir} ${systemjdk} "${maketargets}" ${debugbuild} ${link_opt}
+      fi
       # Restore original source tree we modified by removing full in-tree sources
       rm -rf %{top_level_dir_name}
       mv %{top_level_dir_name_backup} %{top_level_dir_name}
@@ -2461,6 +2465,9 @@ end
 %endif
 
 %changelog
+* Mon Nov 08 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.13.0.8-4
+- Turn off bootstrapping for slow debug builds, which are particularly slow on ppc64le.
+
 * Wed Nov 03 2021 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.13.0.8-3
 - Use 'sql:' prefix in nss.fips.cfg as F35+ no longer ship the legacy
   secmod.db file as part of nss
