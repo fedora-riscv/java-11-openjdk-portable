@@ -5,7 +5,7 @@ Date:   Fri Aug 27 19:42:07 2021 +0100
     RH1996182: Login to the NSS Software Token in FIPS Mode
 
 diff --git openjdk.orig/src/java.base/share/classes/module-info.java openjdk/src/java.base/share/classes/module-info.java
-index 0cf61732d7..2cd851587c 100644
+index 5460efcf8c..f08dc2fafc 100644
 --- openjdk.orig/src/java.base/share/classes/module-info.java
 +++ openjdk/src/java.base/share/classes/module-info.java
 @@ -182,6 +182,7 @@ module java.base {
@@ -17,19 +17,19 @@ index 0cf61732d7..2cd851587c 100644
          jdk.attach,
          jdk.charsets,
 diff --git openjdk.orig/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java openjdk/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
-index b00b738b85..1eca1f8f0a 100644
+index 5e227f4531..164de8ff08 100644
 --- openjdk.orig/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
 +++ openjdk/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
-@@ -42,6 +42,8 @@ import javax.security.auth.callback.ConfirmationCallback;
+@@ -41,6 +41,8 @@ import javax.security.auth.callback.CallbackHandler;
  import javax.security.auth.callback.PasswordCallback;
- import javax.security.auth.callback.TextOutputCallback;
  
+ import jdk.internal.misc.InnocuousThread;
 +import jdk.internal.misc.SharedSecrets;
 +
  import sun.security.util.Debug;
  import sun.security.util.ResourcesMgr;
  import static sun.security.util.SecurityConstants.PROVIDER_VER;
-@@ -59,6 +61,9 @@ import static sun.security.pkcs11.wrapper.PKCS11Constants.*;
+@@ -58,6 +60,9 @@ import static sun.security.pkcs11.wrapper.PKCS11Constants.*;
   */
  public final class SunPKCS11 extends AuthProvider {
  
@@ -39,7 +39,7 @@ index b00b738b85..1eca1f8f0a 100644
      private static final long serialVersionUID = -1354835039035306505L;
  
      static final Debug debug = Debug.getInstance("sunpkcs11");
-@@ -373,6 +378,24 @@ public final class SunPKCS11 extends AuthProvider {
+@@ -374,6 +379,24 @@ public final class SunPKCS11 extends AuthProvider {
              if (nssModule != null) {
                  nssModule.setProvider(this);
              }
