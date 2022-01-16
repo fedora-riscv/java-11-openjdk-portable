@@ -344,7 +344,7 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        1
+%global buildver        8
 %global rpmrelease      1
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
@@ -2463,6 +2463,10 @@ end
 %endif
 
 %changelog
+* Fri Jan 14 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.8-0.1.ea
+- Update to jdk-11.0.14.0+8
+- Update release notes to 11.0.14.0+8
+
 * Mon Dec 13 2021 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.1-0.1.ea
 - Update to jdk-11.0.14.0+1
 - Update release notes to 11.0.14.0+1
