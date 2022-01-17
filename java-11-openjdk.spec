@@ -2044,18 +2044,24 @@ gdb -q "$JAVA_HOME/bin/java" <<EOF | tee gdb.out
 handle SIGSEGV pass nostop noprint
 handle SIGILL pass nostop noprint
 set breakpoint pending on
-break javaCalls.cpp:1
+break javaCalls.cpp:58
 commands 1
 backtrace
 quit
 end
 run -version
 EOF
+# Temporarily disable check as gdb crashes on x86, x86_64 & ppc64le:
+# ../../gdb/objfiles.h:510: internal-error: sect_index_data not initialized
+# A problem internal to GDB has been detected,
+# further debugging may prove unreliable.
+%if 0
 %if 0%{?fedora} > 0
 # This fails on s390x for some reason. Disable for now. See:
 # https://koji.fedoraproject.org/koji/taskinfo?taskID=41499227
 %ifnarch s390x
 grep 'JavaCallWrapper::JavaCallWrapper' gdb.out
+%endif
 %endif
 %endif
 
@@ -2463,6 +2469,9 @@ end
 %endif
 
 %changelog
+* Mon Jan 17 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.8-0.1.ea
+- Sync gdb test with java-1.8.0-openjdk and disable for now until gdb is fixed.
+
 * Fri Jan 14 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.8-0.1.ea
 - Update to jdk-11.0.14.0+8
 - Update release notes to 11.0.14.0+8
