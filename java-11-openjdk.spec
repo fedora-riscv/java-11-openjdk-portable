@@ -345,7 +345,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        8
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1239,6 +1239,9 @@ Patch1008: rh1929465-improve_system_FIPS_detection.patch
 Patch1009: rh1996182-login_to_nss_software_token.patch
 # RH1991003: Allow plain key import unless com.redhat.fips.plainKeySupport is set to false
 Patch1011: rh1991003-enable_fips_keys_import.patch
+# RH2021263: Resolve outstanding FIPS issues
+Patch1014: rh2021263-fips_ensure_security_initialised.patch
+Patch1015: rh2021263-fips_missing_native_returns.patch
 
 #############################################
 #
@@ -1676,6 +1679,8 @@ popd # openjdk
 %patch1008
 %patch1009
 %patch1011
+%patch1014
+%patch1015
 
 # Extract systemtap tapsets
 %if %{with_systemtap}
@@ -2469,6 +2474,9 @@ end
 %endif
 
 %changelog
+* Tue Jan 18 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.8-0.2.ea
+- Fix FIPS issues in native code and with initialisation of java.security.Security
+
 * Mon Jan 17 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.8-0.1.ea
 - Sync gdb test with java-1.8.0-openjdk and disable for now until gdb is fixed.
 

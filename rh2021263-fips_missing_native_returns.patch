@@ -1,0 +1,24 @@
+commit 1b5bd349bdfa7b9627ea58d819bc250a55112de2
+Author: Fridrich Strba <fstrba@suse.com>
+Date:   Mon Jan 17 19:44:03 2022 +0000
+
+    RH2021263: Return in C code after having generated Java exception
+
+diff --git openjdk.orig/src/java.base/linux/native/libsystemconf/systemconf.c openjdk/src/java.base/linux/native/libsystemconf/systemconf.c
+index 6f4656bfcb6..34d0ff0ce91 100644
+--- openjdk.orig/src/java.base/linux/native/libsystemconf/systemconf.c
++++ openjdk/src/java.base/linux/native/libsystemconf/systemconf.c
+@@ -131,11 +131,13 @@ JNIEXPORT jboolean JNICALL Java_java_security_SystemConfigurator_getSystemFIPSEn
+     dbgPrint(env, "getSystemFIPSEnabled: reading " FIPS_ENABLED_PATH);
+     if ((fe = fopen(FIPS_ENABLED_PATH, "r")) == NULL) {
+         throwIOException(env, "Cannot open " FIPS_ENABLED_PATH);
++        return JNI_FALSE;
+     }
+     fips_enabled = fgetc(fe);
+     fclose(fe);
+     if (fips_enabled == EOF) {
+         throwIOException(env, "Cannot read " FIPS_ENABLED_PATH);
++        return JNI_FALSE;
+     }
+     msg_bytes = snprintf(msg, MSG_MAX_SIZE, "getSystemFIPSEnabled:" \
+             " read character is '%c'", fips_enabled);
