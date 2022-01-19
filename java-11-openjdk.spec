@@ -103,6 +103,8 @@
 %global fastdebug_arches x86_64 ppc64le aarch64
 # Set of architectures with a Just-In-Time (JIT) compiler
 %global jit_arches      %{debug_arches} %{arm}
+# Set of architectures which use the Zero assembler port (!jit_arches)
+%global zero_arches ppc s390
 # Set of architectures which run a full bootstrap cycle
 %global bootstrap_arches %{jit_arches}
 # Set of architectures which support SystemTap tapsets
@@ -121,6 +123,13 @@
 %global zgc_arches x86_64
 # Set of architectures for which alt-java has SSB mitigation
 %global ssbd_arches x86_64
+# Set of architectures where we verify backtraces with gdb (ideally all)
+# Temporarily disable check on x86, x86_64, ppc64le and s390x as gdb crashes
+# ../../gdb/objfiles.h:510: internal-error: sect_index_data not initialized
+# A problem internal to GDB has been detected,
+# further debugging may prove unreliable.
+# See https://bugzilla.redhat.com/show_bug.cgi?id=2041970
+%global gdb_arches sparcv9 sparc64 %{aarch64} %{arm} %{zero_arches}
 
 # By default, we build a slowdebug build during main build on JIT architectures
 %if %{with slowdebug}
@@ -345,7 +354,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        8
-%global rpmrelease      2
+%global rpmrelease      3
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -2060,14 +2069,8 @@ EOF
 # ../../gdb/objfiles.h:510: internal-error: sect_index_data not initialized
 # A problem internal to GDB has been detected,
 # further debugging may prove unreliable.
-%if 0
-%if 0%{?fedora} > 0
-# This fails on s390x for some reason. Disable for now. See:
-# https://koji.fedoraproject.org/koji/taskinfo?taskID=41499227
-%ifnarch s390x
+%ifarch %{gdb_arches}
 grep 'JavaCallWrapper::JavaCallWrapper' gdb.out
-%endif
-%endif
 %endif
 
 # Check src.zip has all sources. See RHBZ#1130490
@@ -2474,6 +2477,10 @@ end
 %endif
 
 %changelog
+* Wed Jan 19 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.8-0.3.ea
+- Improve architecture restrictions for the gdb test.
+- Disable only on x86, x86_64, ppc64le & s390x while these are broken in rawhide.
+
 * Tue Jan 18 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.8-0.2.ea
 - Fix FIPS issues in native code and with initialisation of java.security.Security
 
