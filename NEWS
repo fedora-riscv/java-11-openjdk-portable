@@ -11,6 +11,38 @@ Live versions of these release notes can be found at:
 
 * New features
   - JDK-8248238: Implementation: JEP 388: Windows AArch64 Support
+* Security fixes
+  - JDK-8217375: jarsigner breaks old signature with long lines in manifest
+  - JDK-8251329: (zipfs) Files.walkFileTree walks infinitely if zip has dir named "." inside
+  - JDK-8264934, CVE-2022-21248: Enhance cross VM serialization
+  - JDK-8268488: More valuable DerValues
+  - JDK-8268494: Better inlining of inlined interfaces
+  - JDK-8268512: More content for ContentInfo
+  - JDK-8268795: Enhance digests of Jar files
+  - JDK-8268801: Improve PKCS attribute handling
+  - JDK-8268813, CVE-2022-21283: Better String matching
+  - JDK-8269151: Better construction of EncryptedPrivateKeyInfo
+  - JDK-8269944: Better HTTP transport redux
+  - JDK-8270386, CVE-2022-21291: Better verification of scan methods
+  - JDK-8270392, CVE-2022-21293: Improve String constructions
+  - JDK-8270416, CVE-2022-21294: Enhance construction of Identity maps
+  - JDK-8270492, CVE-2022-21282: Better resolution of URIs
+  - JDK-8270498, CVE-2022-21296: Improve SAX Parser configuration management
+  - JDK-8270646, CVE-2022-21299: Improved scanning of XML entities
+  - JDK-8270952, CVE-2022-21277: Improve TIFF file handling
+  - JDK-8271962: Better TrueType font loading
+  - JDK-8271968: Better canonical naming
+  - JDK-8271987: Manifest improved manifest entries
+  - JDK-8272014, CVE-2022-21305: Better array indexing
+  - JDK-8272026, CVE-2022-21340: Verify Jar Verification
+  - JDK-8272236, CVE-2022-21341: Improve serial forms for transport
+  - JDK-8272272: Enhance jcmd communication
+  - JDK-8272462: Enhance image handling
+  - JDK-8273290: Enhance sound handling
+  - JDK-8273756, CVE-2022-21360: Enhance BMP image support
+  - JDK-8273838, CVE-2022-21365: Enhanced BMP processing
+  - JDK-8274096, CVE-2022-21366: Improve decoding of image files
+  - JDK-8279541: Improve HarfBuzz
 * Other changes
   - JDK-6849922: java/awt/Choice/ChoiceKeyEventReaction/ChoiceKeyEventReaction.html fails
   - JDK-7105119: [TEST_BUG] [macosx] In test UIDefaults.toString() must be called with the invokeLater()
@@ -206,7 +238,6 @@ Live versions of these release notes can be found at:
   - JDK-8250863: Build error with GCC 10 in NetworkInterface.c and k_standard.c
   - JDK-8250888: nsk/jvmti/scenarios/general_functions/GF08/gf08t001/TestDriver.java fails
   - JDK-8251155: HostIdentifier fails to canonicalize hostnames starting with digits
-  - JDK-8251329: (zipfs) Files.walkFileTree walks infinitely if zip has dir named "." inside
   - JDK-8251377: [macos11] JTabbedPane selected tab text is barely legible
   - JDK-8251570: JDK-8215624 causes assert(worker_id < _n_workers) failed: Invalid worker_id
   - JDK-8251930: AArch64: Native types mismatch in hotspot
@@ -314,6 +345,7 @@ Live versions of these release notes can be found at:
   - JDK-8273026: Slow LoginContext.login() on multi threading application
   - JDK-8273229: Update OS detection code to recognize Windows Server 2022
   - JDK-8273235: tools/launcher/HelpFlagsTest.java Fails on Windows 32bit
+  - JDK-8273308: PatternMatchTest.java fails on CI
   - JDK-8273314: Add tier4 test groups
   - JDK-8273342: Null pointer dereference in classFileParser.cpp:2817
   - JDK-8273358: macOS Monterey does not have the font Times needed by Serif
@@ -330,6 +362,7 @@ Live versions of these release notes can be found at:
   - JDK-8273894: ConcurrentModificationException raised every time ReferralsCache drops referral
   - JDK-8273924: ArrayIndexOutOfBoundsException thrown in java.util.JapaneseImperialCalendar.add()
   - JDK-8273961: jdk/nio/zipfs/ZipFSTester.java fails if file path contains '+' character
+  - JDK-8273968: JCK javax_xml tests fail in CI
   - JDK-8274056: JavaAccessibilityUtilities leaks JNI objects
   - JDK-8274083: Update testing docs to mention tiered testing
   - JDK-8274293: Build failure on macOS with Xcode 13.0 as vfork is deprecated

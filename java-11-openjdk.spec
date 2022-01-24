@@ -353,8 +353,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        8
-%global rpmrelease      3
+%global buildver        9
+%global rpmrelease      1
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -383,7 +383,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           0
+%global is_ga           1
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -1145,7 +1145,7 @@ Provides: java-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}.1
+Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -2477,6 +2477,11 @@ end
 %endif
 
 %changelog
+* Mon Jan 24 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.9-1
+- Update to jdk-11.0.14.0+9
+- Update release notes to 11.0.14.0+9
+- Switch to GA mode for final release.
+
 * Thu Jan 20 2022 Fedora Release Engineering <releng@fedoraproject.org> - 1:11.0.14.0.8-0.3.ea.1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
 
