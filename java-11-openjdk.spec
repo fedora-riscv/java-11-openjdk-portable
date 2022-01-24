@@ -354,7 +354,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        9
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1251,6 +1251,7 @@ Patch1011: rh1991003-enable_fips_keys_import.patch
 # RH2021263: Resolve outstanding FIPS issues
 Patch1014: rh2021263-fips_ensure_security_initialised.patch
 Patch1015: rh2021263-fips_missing_native_returns.patch
+Patch1016: rh2021263-fips_separate_policy_and_fips_init.patch
 
 #############################################
 #
@@ -1690,6 +1691,7 @@ popd # openjdk
 %patch1011
 %patch1014
 %patch1015
+%patch1016
 
 # Extract systemtap tapsets
 %if %{with_systemtap}
@@ -2477,6 +2479,9 @@ end
 %endif
 
 %changelog
+* Mon Jan 24 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.9-2
+- Separate crypto policy initialisation from FIPS initialisation, now they are no longer interdependent
+
 * Mon Jan 24 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.9-1
 - Update to jdk-11.0.14.0+9
 - Update release notes to 11.0.14.0+9
