@@ -98,7 +98,7 @@
 
 # while JDK is a techpreview(is_system_jdk=0), some provides are turned off. Once jdk stops to be an techpreview, move it to 1
 # as sytem JDK, we mean any JDK which can run whole system java stack without issues (like bytecode issues, module issues, dependencies...)
-%global is_system_jdk 1
+%global is_system_jdk 0
 
 %global aarch64         aarch64 arm64 armv8
 # we need to distinguish between big and little endian PPC64
@@ -368,7 +368,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        9
-%global rpmrelease      3
+%global rpmrelease      5
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -2531,6 +2531,9 @@ end
 %endif
 
 %changelog
+* Thu Feb 03 2022 Jiri Vanek <jvanek@redhat.com> - 1:11.0.14.0.9-5
+- moved to stop being system jdk
+
 * Wed Feb 02 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.9-3
 - Temporarily move x86 to use Zero in order to get a working build
 - Replace -mstackrealign with -mincoming-stack-boundary=2 -mpreferred-stack-boundary=4 on x86_32 for stack alignment
