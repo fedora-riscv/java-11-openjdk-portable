@@ -132,13 +132,8 @@
 %global zgc_arches x86_64
 # Set of architectures for which alt-java has SSB mitigation
 %global ssbd_arches x86_64
-# Set of architectures where we verify backtraces with gdb (ideally all)
-# Temporarily disable check on x86, x86_64, ppc64le and s390x as gdb crashes
-# ../../gdb/objfiles.h:510: internal-error: sect_index_data not initialized
-# A problem internal to GDB has been detected,
-# further debugging may prove unreliable.
-# See https://bugzilla.redhat.com/show_bug.cgi?id=2041970
-%global gdb_arches sparcv9 sparc64 %{aarch64} %{arm} %{zero_arches}
+# Set of architectures where we verify backtraces with gdb
+%global gdb_arches %{jit_arches} %{zero_arches}
 
 # By default, we build a slowdebug build during main build on JIT architectures
 %if %{with slowdebug}
@@ -368,7 +363,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        9
-%global rpmrelease      5
+%global rpmrelease      6
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -2531,6 +2526,9 @@ end
 %endif
 
 %changelog
+* Mon Feb 07 2022 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.14.0.9-6
+- Re-enable gdb backtrace check.
+
 * Thu Feb 03 2022 Jiri Vanek <jvanek@redhat.com> - 1:11.0.14.0.9-5
 - moved to stop being system jdk
 
