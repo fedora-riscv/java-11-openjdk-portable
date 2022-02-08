@@ -111,11 +111,11 @@
 # Set of architectures for which we build fastdebug builds
 %global fastdebug_arches x86_64 ppc64le aarch64
 # Set of architectures with a Just-In-Time (JIT) compiler
-%global jit_arches      %{arm} %{aarch64} %{power64} s390x sparcv9 sparc64 x86_64
+%global jit_arches      %{arm} %{aarch64} %{ix86} %{power64} s390x sparcv9 sparc64 x86_64
 # Set of architectures which use the Zero assembler port (!jit_arches)
-%global zero_arches ppc s390 %{ix86}
+%global zero_arches ppc s390
 # Set of architectures which run a full bootstrap cycle
-%global bootstrap_arches %{jit_arches} %{ix86}
+%global bootstrap_arches %{jit_arches}
 # Set of architectures which support SystemTap tapsets
 %global systemtap_arches %{jit_arches}
 # Set of architectures with a Ahead-Of-Time (AOT) compiler
@@ -363,7 +363,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        1
-%global rpmrelease      3
+%global rpmrelease      4
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1377,6 +1377,8 @@ Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk1
 Patch4: pr3694-rh1340845-support_fedora_rhel_system_crypto_policy.patch
 # PR3695: Allow use of system crypto policy to be disabled by the user
 Patch7: pr3695-toggle_system_crypto_policy.patch
+# JDK-8282004: x86_32.ad rules that call SharedRuntime helpers should have CALL effects
+Patch8: jdk8282004-x86_32-missing_call_effects.patch
 
 #############################################
 #
@@ -1792,6 +1794,7 @@ pushd %{top_level_dir_name}
 %patch3 -p1
 %patch4 -p1
 %patch7 -p1
+%patch8 -p1
 popd # openjdk
 
 %patch101
@@ -2614,6 +2617,13 @@ end
 %endif
 
 %changelog
+* Wed Feb 16 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.1.1-4
+- Reinstate JIT builds on x86_32.
+- Add JDK-8282004 to fix missing CALL effects on x86_32.
+
+* Wed Feb 16 2022 Jiri Vanek <jvanekredhat.com> - 1:11.0.14.1.1-3
+- Bump release for no apparent reason.
+
 * Mon Feb 14 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.1.1-2
 - Require tzdata 2021e as of JDK-8275766.
 
