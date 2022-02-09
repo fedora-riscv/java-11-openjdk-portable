@@ -363,7 +363,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        9
-%global rpmrelease      8
+%global rpmrelease      9
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -481,6 +481,50 @@
 # not-duplicated scriptlets for normal/debug packages
 %global update_desktop_icons /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 
+%define save_alternatives() %{expand:
+  # warning! alternatives are localised!
+  # LANG=cs_CZ.UTF-8  alternatives --display java | head
+  # LANG=en_US.UTF-8  alternatives --display java | head
+  function nonLocalisedAlternativesDisplayOfMaster() {
+    LANG=en_US.UTF-8 alternatives --display "$MASTER"
+  }
+  function headOfAbove() {
+    nonLocalisedAlternativesDisplayOfMaster | head -n $1
+  }
+  MASTER="%{?1}"
+  LOCAL_LINK="%{?2}"
+  FAMILY="%{?3}"
+  rm -f %{_localstatedir}/lib/rpm-state/"$MASTER"_$FAMILY > /dev/null
+  if nonLocalisedAlternativesDisplayOfMaster > /dev/null ; then
+      if headOfAbove 1 | grep -q manual ; then
+        if headOfAbove 2 | tail -n 1 | grep -q %{compatiblename} ; then
+           headOfAbove 2  > %{_localstatedir}/lib/rpm-state/"$MASTER"_"$FAMILY"
+        fi
+      fi
+  fi
+}
+
+%define save_and_remove_alternatives() %{expand:
+  if [ "x$debug"  == "xtrue" ] ; then
+    set -x
+  fi
+  upgrade1_uninstal0=%{?3}
+  if [ "0$upgrade1_uninstal0" -gt 0 ] ; then # removal of this condition will cause persistence between uninstall
+    %{save_alternatives %{?1} %{?2} %{?4}}
+  fi
+  alternatives --remove  "%{?1}" "%{?2}"
+}
+
+%define set_if_needed_alternatives() %{expand:
+  MASTER="%{?1}"
+  FAMILY="%{?2}"
+  ALTERNATIVES_FILE="%{_localstatedir}/lib/rpm-state/$MASTER"_"$FAMILY"
+  if [ -e  "$ALTERNATIVES_FILE" ] ; then
+    rm "$ALTERNATIVES_FILE"
+    alternatives --set $MASTER $FAMILY
+  fi
+}
+
 
 %define post_script() %{expand:
 update-desktop-database %{_datadir}/applications &> /dev/null || :
@@ -489,14 +533,18 @@ exit 0
 }
 
 %define alternatives_java_install() %{expand:
+if [ "x$debug"  == "xtrue" ] ; then
+  set -x
+fi
 PRIORITY=%{priority}
 if [ "%{?1}" == %{debug_suffix} ]; then
   let PRIORITY=PRIORITY-1
 fi
 
 ext=.gz
+key=java
 alternatives \\
-  --install %{_bindir}/java java %{jrebindir -- %{?1}}/java $PRIORITY  --family %{family} \\
+  --install %{_bindir}/java $key %{jrebindir -- %{?1}}/java $PRIORITY  --family %{family} \\
   --slave %{_jvmdir}/jre jre %{_jvmdir}/%{sdkdir -- %{?1}} \\
   --slave %{_bindir}/%{alt_java_name} %{alt_java_name} %{jrebindir -- %{?1}}/%{alt_java_name} \\
   --slave %{_bindir}/jjs jjs %{jrebindir -- %{?1}}/jjs \\
@@ -522,11 +570,17 @@ alternatives \\
   --slave %{_mandir}/man1/unpack200.1$ext unpack200.1$ext \\
   %{_mandir}/man1/unpack200-%{uniquesuffix -- %{?1}}.1$ext
 
+%{set_if_needed_alternatives $key %{family}}
+
 for X in %{origin} %{javaver} ; do
-  alternatives --install %{_jvmdir}/jre-"$X" jre_"$X" %{_jvmdir}/%{sdkdir -- %{?1}} $PRIORITY --family %{family}
+  key=jre_"$X"
+  alternatives --install %{_jvmdir}/jre-"$X" $key %{_jvmdir}/%{sdkdir -- %{?1}} $PRIORITY --family %{family}
+  %{set_if_needed_alternatives $key %{family}}
 done
 
-alternatives --install %{_jvmdir}/jre-%{javaver}-%{origin} jre_%{javaver}_%{origin} %{_jvmdir}/%{jrelnk -- %{?1}} $PRIORITY  --family %{family}
+key=jre_%{javaver}_%{origin}
+alternatives --install %{_jvmdir}/jre-%{javaver}-%{origin} $key %{_jvmdir}/%{jrelnk -- %{?1}} $PRIORITY  --family %{family}
+%{set_if_needed_alternatives $key %{family}}
 }
 
 %define post_headless() %{expand:
@@ -559,10 +613,14 @@ exit 0
 
 
 %define postun_headless() %{expand:
-  alternatives --remove java %{jrebindir -- %{?1}}/java
-  alternatives --remove jre_%{origin} %{_jvmdir}/%{sdkdir -- %{?1}}
-  alternatives --remove jre_%{javaver} %{_jvmdir}/%{sdkdir -- %{?1}}
-  alternatives --remove jre_%{javaver}_%{origin} %{_jvmdir}/%{jrelnk -- %{?1}}
+  if [ "x$debug"  == "xtrue" ] ; then
+    set -x
+  fi
+  post_state=$1 # from postun, https://docs.fedoraproject.org/en-US/packaging-guidelines/Scriptlets/#_syntax
+  %{save_and_remove_alternatives  java  %{jrebindir -- %{?1}}/java $post_state %{family}}
+  %{save_and_remove_alternatives  jre_%{origin} %{_jvmdir}/%{sdkdir -- %{?1}} $post_state %{family}}
+  %{save_and_remove_alternatives  jre_%{javaver} %{_jvmdir}/%{sdkdir -- %{?1}} $post_state %{family}}
+  %{save_and_remove_alternatives  jre_%{javaver}_%{origin} %{_jvmdir}/%{jrelnk -- %{?1}} $post_state %{family}}
 }
 
 %define posttrans_script() %{expand:
@@ -571,14 +629,18 @@ exit 0
 
 
 %define alternatives_javac_install() %{expand:
+if [ "x$debug"  == "xtrue" ] ; then
+  set -x
+fi
 PRIORITY=%{priority}
 if [ "%{?1}" == %{debug_suffix} ]; then
   let PRIORITY=PRIORITY-1
 fi
 
 ext=.gz
+key=javac
 alternatives \\
-  --install %{_bindir}/javac javac %{sdkbindir -- %{?1}}/javac $PRIORITY  --family %{family} \\
+  --install %{_bindir}/javac $key %{sdkbindir -- %{?1}}/javac $PRIORITY  --family %{family} \\
   --slave %{_jvmdir}/java java_sdk %{_jvmdir}/%{sdkdir -- %{?1}} \\
 %ifarch %{aot_arches}
   --slave %{_bindir}/jaotc jaotc %{sdkbindir -- %{?1}}/jaotc \\
@@ -646,14 +708,19 @@ alternatives \\
   --slave %{_mandir}/man1/rmic.1$ext rmic.1$ext \\
   %{_mandir}/man1/rmic-%{uniquesuffix -- %{?1}}.1$ext \\
   --slave %{_mandir}/man1/serialver.1$ext serialver.1$ext \\
-  %{_mandir}/man1/serialver-%{uniquesuffix -- %{?1}}.1$ext \\
+  %{_mandir}/man1/serialver-%{uniquesuffix -- %{?1}}.1$ext
+
+%{set_if_needed_alternatives  $key %{family}}
 
 for X in %{origin} %{javaver} ; do
-  alternatives \\
-    --install %{_jvmdir}/java-"$X" java_sdk_"$X" %{_jvmdir}/%{sdkdir -- %{?1}} $PRIORITY  --family %{family}
+  key=java_sdk_"$X"
+  alternatives --install %{_jvmdir}/java-"$X" $key %{_jvmdir}/%{sdkdir -- %{?1}} $PRIORITY  --family %{family}
+  %{set_if_needed_alternatives  $key %{family}}
 done
 
-update-alternatives --install %{_jvmdir}/java-%{javaver}-%{origin} java_sdk_%{javaver}_%{origin} %{_jvmdir}/%{sdkdir -- %{?1}} $PRIORITY  --family %{family}
+key=java_sdk_%{javaver}_%{origin}
+alternatives --install %{_jvmdir}/java-%{javaver}-%{origin} $key %{_jvmdir}/%{sdkdir -- %{?1}} $PRIORITY  --family %{family}
+%{set_if_needed_alternatives  $key %{family}}
 }
 
 %define post_devel() %{expand:
@@ -664,10 +731,14 @@ exit 0
 }
 
 %define postun_devel() %{expand:
-  alternatives --remove javac %{sdkbindir -- %{?1}}/javac
-  alternatives --remove java_sdk_%{origin} %{_jvmdir}/%{sdkdir -- %{?1}}
-  alternatives --remove java_sdk_%{javaver} %{_jvmdir}/%{sdkdir -- %{?1}}
-  alternatives --remove java_sdk_%{javaver}_%{origin} %{_jvmdir}/%{sdkdir -- %{?1}}
+  if [ "x$debug"  == "xtrue" ] ; then
+    set -x
+  fi
+  post_state=$1 # from postun, https://docs.fedoraproject.org/en-US/packaging-guidelines/Scriptlets/#_syntax
+  %{save_and_remove_alternatives  javac %{sdkbindir -- %{?1}}/javac $post_state %{family}}
+  %{save_and_remove_alternatives  java_sdk_%{origin} %{_jvmdir}/%{sdkdir -- %{?1}} $post_state %{family}}
+  %{save_and_remove_alternatives  java_sdk_%{javaver} %{_jvmdir}/%{sdkdir -- %{?1}} $post_state %{family}}
+  %{save_and_remove_alternatives  java_sdk_%{javaver}_%{origin} %{_jvmdir}/%{sdkdir -- %{?1}} $post_state %{family}}
 
 update-desktop-database %{_datadir}/applications &> /dev/null || :
 
@@ -684,36 +755,49 @@ exit 0
 }
 
 %define alternatives_javadoc_install() %{expand:
+if [ "x$debug"  == "xtrue" ] ; then
+  set -x
+fi
 PRIORITY=%{priority}
 if [ "%{?1}" == %{debug_suffix} ]; then
   let PRIORITY=PRIORITY-1
 fi
 
-alternatives \\
-  --install %{_javadocdir}/java javadocdir %{_javadocdir}/%{uniquejavadocdir -- %{?1}}/api \\
-  $PRIORITY  --family %{family_noarch}
+key=javadocdir
+alternatives --install %{_javadocdir}/java $key %{_javadocdir}/%{uniquejavadocdir -- %{?1}}/api $PRIORITY  --family %{family_noarch}
+%{set_if_needed_alternatives  $key %{family_noarch}}
 exit 0
 }
 
 %define postun_javadoc() %{expand:
-  alternatives --remove javadocdir %{_javadocdir}/%{uniquejavadocdir -- %{?1}}/api
+if [ "x$debug"  == "xtrue" ] ; then
+  set -x
+fi
+  post_state=$1 # from postun, https://docs.fedoraproject.org/en-US/packaging-guidelines/Scriptlets/#_syntax
+  %{save_and_remove_alternatives  javadocdir  %{_javadocdir}/%{uniquejavadocdir -- %{?1}}/api $post_state %{family_noarch}}
 exit 0
 }
 
 %define alternatives_javadoczip_install() %{expand:
+if [ "x$debug"  == "xtrue" ] ; then
+  set -x
+fi
 PRIORITY=%{priority}
 if [ "%{?1}" == %{debug_suffix} ]; then
   let PRIORITY=PRIORITY-1
 fi
-
-alternatives \\
-  --install %{_javadocdir}/java-zip javadoczip %{_javadocdir}/%{uniquejavadocdir -- %{?1}}.zip \\
-  $PRIORITY  --family %{family_noarch}
+key=javadoczip
+alternatives --install %{_javadocdir}/java-zip $key %{_javadocdir}/%{uniquejavadocdir -- %{?1}}.zip $PRIORITY  --family %{family_noarch}
+%{set_if_needed_alternatives  $key %{family_noarch}}
 exit 0
 }
 
 %define postun_javadoc_zip() %{expand:
-  alternatives --remove javadoczip %{_javadocdir}/%{uniquejavadocdir -- %{?1}}.zip
+  if [ "x$debug"  == "xtrue" ] ; then
+    set -x
+  fi
+  post_state=$1 # from postun, https://docs.fedoraproject.org/en-US/packaging-guidelines/Scriptlets/#_syntax
+  %{save_and_remove_alternatives  javadoczip  %{_javadocdir}/%{uniquejavadocdir -- %{?1}}.zip $post_state %{family_noarch}}
 exit 0
 }
 
@@ -2530,6 +2614,17 @@ end
 %endif
 
 %changelog
+* Wed Feb 09 2022 Jiri Vanek <jvanek@redhat.com> - 1:11.0.14.0.9-9
+- Storing and restoring alterntives during update manually
+- Fixing Bug 2001567 - update of JDK/JRE is removing its manually selected alterantives and select (as auto) system JDK/JRE
+-- The move of alternatives creation to posttrans to fix:
+-- Bug 1200302 - dnf reinstall breaks alternatives
+-- Had caused the alternatives to be removed, and then created again,
+-- instead of being added, and then removing the old, and thus persisting
+-- the selection in family
+-- Thus this fix, is storing the family of manually selected master, and if
+-- stored, then it is restoring the family of the master
+
 * Wed Feb 09 2022 Jiri Vanek <jvanek@redhat.com> - 1:11.0.14.0.9-8
 - Family extracted to globals
 
