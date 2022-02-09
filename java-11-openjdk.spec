@@ -363,7 +363,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        9
-%global rpmrelease      6
+%global rpmrelease      7
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1136,10 +1136,10 @@ Requires(post):   %{alternatives_requires}
 Requires(postun): %{alternatives_requires}
 
 # Standard JPackage javadoc provides
-Provides: java-%{javaver}-javadoc%{?1} = %{epoch}:%{version}-%{release}
-Provides: java-%{javaver}-%{origin}-javadoc%{?1} = %{epoch}:%{version}-%{release}
+Provides: java-%{javaver}-javadoc%{?1}%{?2} = %{epoch}:%{version}-%{release}
+Provides: java-%{javaver}-%{origin}-javadoc%{?1}%{?2} = %{epoch}:%{version}-%{release}
 %if %is_system_jdk
-Provides: java-javadoc%{?1} = %{epoch}:%{version}-%{release}
+Provides: java-javadoc%{?1}%{?2} = %{epoch}:%{version}-%{release}
 %endif
 }
 
@@ -1633,7 +1633,7 @@ Group:   Documentation
 Requires: javapackages-filesystem
 Obsoletes: javadoc-slowdebug < 1:11.0.3.7-4
 
-%{java_javadoc_rpo %{nil}}
+%{java_javadoc_rpo -- %{nil} %{nil}}
 
 %description javadoc
 The %{origin_nice} %{featurever} API documentation.
@@ -1648,7 +1648,8 @@ Group:   Documentation
 Requires: javapackages-filesystem
 Obsoletes: javadoc-zip-slowdebug < 1:11.0.3.7-4
 
-%{java_javadoc_rpo %{nil}}
+%{java_javadoc_rpo -- %{nil} -zip}
+%{java_javadoc_rpo -- %{nil} %{nil}}
 
 %description javadoc-zip
 The %{origin_nice} %{featurever} API documentation compressed in a single archive.
@@ -2526,6 +2527,9 @@ end
 %endif
 
 %changelog
+* Wed Feb 09 2022 Jiri Vanek <jvanek@redhat.com> - 1:11.0.14.0.9-7
+- javadoc-zip got its own provides next to plain javadoc ones
+
 * Mon Feb 07 2022 Severin Gehwolf <sgehwolf@redhat.com> - 1:11.0.14.0.9-6
 - Re-enable gdb backtrace check.
 
