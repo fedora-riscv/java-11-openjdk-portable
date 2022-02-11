@@ -316,7 +316,7 @@
 %global featurever 11
 %global interimver 0
 %global updatever 14
-%global patchver 0
+%global patchver 1
 # If you bump featurever, you must bump also vendor_version_string
 # Used via new version scheme. JDK 11 was
 # GA'ed in September 2018 => 18.9
@@ -362,8 +362,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        9
-%global rpmrelease      9
+%global buildver        1
+%global rpmrelease      1
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -2614,6 +2614,10 @@ end
 %endif
 
 %changelog
+* Fri Feb 11 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.1.1-1
+- Update to jdk-11.0.14.1+1
+- Update release notes to 11.0.14.1+1
+
 * Wed Feb 09 2022 Jiri Vanek <jvanek@redhat.com> - 1:11.0.14.0.9-9
 - Storing and restoring alterntives during update manually
 - Fixing Bug 2001567 - update of JDK/JRE is removing its manually selected alterantives and select (as auto) system JDK/JRE
