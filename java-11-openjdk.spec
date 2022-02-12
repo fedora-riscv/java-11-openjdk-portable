@@ -1127,8 +1127,8 @@ Requires: ca-certificates
 # Require javapackages-filesystem for ownership of /usr/lib/jvm/ and macros
 Requires: javapackages-filesystem
 # Require zone-info data provided by tzdata-java sub-package
-# 2021a required as of JDK-8260356 in April 2021 CPU
-Requires: tzdata-java >= 2021a
+# 2021e required as of JDK-8275766 in January 2022 CPU
+Requires: tzdata-java >= 2021e
 # for support of kernel stream control
 # libsctp.so.1 is being `dlopen`ed on demand
 Requires: lksctp-tools%{?_isa}
@@ -1437,8 +1437,8 @@ BuildRequires: java-%{buildjdkver}-openjdk-devel
 %ifarch %{zero_arches}
 BuildRequires: libffi-devel
 %endif
-# 2021a required as of JDK-8260356 in April 2021 CPU
-BuildRequires: tzdata-java >= 2021a
+# 2021e required as of JDK-8275766 in January 2022 CPU
+BuildRequires: tzdata-java >= 2021e
 # Earlier versions have a bug in tree vectorization on PPC
 BuildRequires: gcc >= 4.8.3-8
 
@@ -2648,6 +2648,9 @@ end
 - Explicitly list JIT architectures rather than relying on those with slowdebug builds
 - Disable the serviceability agent on Zero architectures even when the architecture itself is supported
 - Add backport of JDK-8257794 to fix bogus assert on slowdebug x86-32 Zero builds
+
+* Mon Jan 24 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.9-2
+- Require tzdata 2021e as of JDK-8275766.
 
 * Mon Jan 24 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.0.9-2
 - Separate crypto policy initialisation from FIPS initialisation, now they are no longer interdependent
