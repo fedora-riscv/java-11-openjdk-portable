@@ -363,7 +363,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        1
-%global rpmrelease      4
+%global rpmrelease      5
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -919,7 +919,7 @@ exit 0
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/security/nss.cfg
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/security/nss.fips.cfg
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/management/jmxremote.access
-# this is conifg template, thus not config-noreplace
+# This is a config template, and thus not config-noreplace
 %config  %{etcjavadir -- %{?1}}/conf/management/jmxremote.password.template
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/management/management.properties
 %config(noreplace) %{etcjavadir -- %{?1}}/conf/net.properties
@@ -1726,9 +1726,7 @@ Obsoletes: javadoc-slowdebug < 1:11.0.3.7-4
 
 %description javadoc
 The %{origin_nice} %{featurever} API documentation.
-%endif
 
-%if %{include_normal_build}
 %package javadoc-zip
 Summary: %{origin_nice} %{featurever} API documentation compressed in a single archive
 %if 0%{?rhel} <= 8
@@ -2205,10 +2203,6 @@ quit
 end
 run -version
 EOF
-# Temporarily disable check as gdb crashes on x86, x86_64 & ppc64le:
-# ../../gdb/objfiles.h:510: internal-error: sect_index_data not initialized
-# A problem internal to GDB has been detected,
-# further debugging may prove unreliable.
 %ifarch %{gdb_arches}
 grep 'JavaCallWrapper::JavaCallWrapper' gdb.out
 %endif
@@ -2617,6 +2611,9 @@ end
 %endif
 
 %changelog
+* Thu Feb 17 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.1.1-5
+- Sync cleanups from release branch.
+
 * Wed Feb 16 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.1.1-4
 - Reinstate JIT builds on x86_32.
 - Add JDK-8282004 to fix missing CALL effects on x86_32.
