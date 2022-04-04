@@ -197,10 +197,14 @@
 %global staticlibs_loop %{nil}
 %endif
 
+%if 0%{?flatpak}
+%global bootstrap_build false
+%else
 %ifarch %{bootstrap_arches}
 %global bootstrap_build true
 %else
 %global bootstrap_build false
+%endif
 %endif
 
 %if %{include_staticlibs}
@@ -363,7 +367,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        1
-%global rpmrelease      5
+%global rpmrelease      6
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -2611,6 +2615,9 @@ end
 %endif
 
 %changelog
+* Fri Apr 08 2022 Stephan Bergmann <sbergman@redhat.com> - 1:11.0.14.1.1-6
+- Fix flatpak builds by exempting them from bootstrap
+
 * Thu Feb 17 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.1.1-5
 - Sync cleanups from release branch.
 
