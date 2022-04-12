@@ -319,8 +319,8 @@
 # New Version-String scheme-style defines
 %global featurever 11
 %global interimver 0
-%global updatever 14
-%global patchver 1
+%global updatever 15
+%global patchver 0
 # If you bump featurever, you must bump also vendor_version_string
 # Used via new version scheme. JDK 11 was
 # GA'ed in September 2018 => 18.9
@@ -367,7 +367,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        1
-%global rpmrelease      7
+%global rpmrelease      1
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -396,7 +396,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           1
+%global is_ga           0
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -2621,6 +2621,11 @@ end
 %endif
 
 %changelog
+* Tue Apr 12 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.15.0.1-0.1.ea
+- Update to jdk-11.0.15.0+1
+- Update release notes to 11.0.15.0+1
+- Switch to EA mode for 11.0.15 pre-release builds.
+
 * Tue Apr 12 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.14.1.1-7
 - Detect NSS at runtime for FIPS detection
 - Turn off build-time NSS linking and go back to an explicit Requires on NSS
