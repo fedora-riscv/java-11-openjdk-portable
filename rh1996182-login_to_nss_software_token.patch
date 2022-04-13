@@ -1,9 +1,3 @@
-commit 53bda6adfacc02b8dddd8f10350c9569bca4eb1e
-Author: Martin Balao <mbalao@redhat.com>
-Date:   Fri Aug 27 19:42:07 2021 +0100
-
-    RH1996182: Login to the NSS Software Token in FIPS Mode
-
 diff --git openjdk.orig/src/java.base/share/classes/module-info.java openjdk/src/java.base/share/classes/module-info.java
 index 5460efcf8c..f08dc2fafc 100644
 --- openjdk.orig/src/java.base/share/classes/module-info.java
@@ -17,11 +11,11 @@ index 5460efcf8c..f08dc2fafc 100644
          jdk.attach,
          jdk.charsets,
 diff --git openjdk.orig/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java openjdk/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
-index 5e227f4531..164de8ff08 100644
+index 099caac605..ffadb43eb1 100644
 --- openjdk.orig/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
 +++ openjdk/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
-@@ -41,6 +41,8 @@ import javax.security.auth.callback.CallbackHandler;
- import javax.security.auth.callback.PasswordCallback;
+@@ -43,6 +43,8 @@ import javax.security.auth.callback.PasswordCallback;
+ import com.sun.crypto.provider.ChaCha20Poly1305Parameters;
  
  import jdk.internal.misc.InnocuousThread;
 +import jdk.internal.misc.SharedSecrets;
@@ -29,7 +23,7 @@ index 5e227f4531..164de8ff08 100644
  import sun.security.util.Debug;
  import sun.security.util.ResourcesMgr;
  import static sun.security.util.SecurityConstants.PROVIDER_VER;
-@@ -58,6 +60,9 @@ import static sun.security.pkcs11.wrapper.PKCS11Constants.*;
+@@ -60,6 +62,9 @@ import static sun.security.pkcs11.wrapper.PKCS11Constants.*;
   */
  public final class SunPKCS11 extends AuthProvider {
  
@@ -39,7 +33,7 @@ index 5e227f4531..164de8ff08 100644
      private static final long serialVersionUID = -1354835039035306505L;
  
      static final Debug debug = Debug.getInstance("sunpkcs11");
-@@ -374,6 +379,24 @@ public final class SunPKCS11 extends AuthProvider {
+@@ -376,6 +381,24 @@ public final class SunPKCS11 extends AuthProvider {
              if (nssModule != null) {
                  nssModule.setProvider(this);
              }
