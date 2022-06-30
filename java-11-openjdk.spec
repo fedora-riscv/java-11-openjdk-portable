@@ -367,7 +367,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        10
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -2621,6 +2621,9 @@ end
 %endif
 
 %changelog
+* Thu Jun 30 2022 Francisco Ferrari Bihurriet <fferrari@redhat.com> - 1:11.0.15.0.10-2
+- RH2007331: SecretKey generate/import operations don't add the CKA_SIGN attribute in FIPS mode
+
 * Sun Apr 24 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.15.0.10-1
 - Update to jdk-11.0.15.0+10
 - Update release notes to 11.0.15.0+10
