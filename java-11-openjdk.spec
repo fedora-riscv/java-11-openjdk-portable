@@ -360,6 +360,8 @@
 
 # Define IcedTea version used for SystemTap tapsets and desktop file
 %global icedteaver      6.0.0pre00-c848b93a8598
+# Define current Git revision for the FIPS support patches
+%global fipsver 9087e80d0ab
 
 # Standard JPackage naming and versioning defines
 %global origin          openjdk
@@ -367,7 +369,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        10
-%global rpmrelease      2
+%global rpmrelease      3
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -383,12 +385,11 @@
 %endif
 %global newjavaver %{featurever}.%{interimver}.%{updatever}.%{patchver}
 
-# Omit trailing 0 in filenames when the patch version is 0
-%if 0%{?patchver} > 0
-%global filever %{newjavaver}
-%else
-%global filever %{featurever}.%{interimver}.%{updatever}
-%endif
+# Strip up to 6 trailing zeros in newjavaver, as the JDK does, to get the correct version used in filenames
+%global filever %(svn=%{newjavaver}; for i in 1 2 3 4 5 6 ; do svn=${svn%%.0} ; done; echo ${svn})
+
+# The tag used to create the OpenJDK tarball
+%global vcstag jdk-%{filever}+%{buildver}%{?tagsuffix:-%{tagsuffix}}
 
 %global javaver         %{featurever}
 
@@ -1290,7 +1291,7 @@ URL:      http://openjdk.java.net/
 
 # to regenerate source0 (jdk) run update_package.sh
 # update_package.sh contains hard-coded repos, revisions, tags, and projects to regenerate the source archives
-Source0: jdk-updates-jdk%{featurever}u-jdk-%{filever}+%{buildver}%{?tagsuffix:-%{tagsuffix}}-4curve.tar.xz
+Source0: jdk-updates-jdk%{featurever}u-%{vcstag}-4curve.tar.xz
 
 # Use 'icedtea_sync.sh' to update the following
 # They are based on code contained in the IcedTea project (6.x).
@@ -1341,28 +1342,28 @@ Patch600: rh1750419-redhat_alt_java.patch
 # RH1582504: Use RSA as default for keytool, as DSA is disabled in all crypto policies except LEGACY
 Patch1003: rh1842572-rsa_default_for_keytool.patch
 
-# FIPS support patches
+# Crypto policy and FIPS support patches
+# Patch is generated from the fips tree at https://github.com/rh-openjdk/jdk11u/tree/fips
+# as follows: git diff %%{vcstag} src make > fips-11u-$(git show -s --format=%h HEAD).patch
+# Diff is limited to src and make subdirectories to exclude .github changes
+# Fixes currently included:
+# PR3694, RH1340845: Add security.useSystemPropertiesFile option to java.security to use system crypto policy
+# PR3695: Allow use of system crypto policy to be disabled by the user
 # RH1655466: Support RHEL FIPS mode using SunPKCS11 provider
-Patch1001: rh1655466-global_crypto_and_fips.patch
 # RH1818909: No ciphersuites availale for SSLSocket in FIPS mode
-Patch1002: rh1818909-fips_default_keystore_type.patch
 # RH1860986: Disable TLSv1.3 with the NSS-FIPS provider until PKCS#11 v3.0 support is available
-Patch1004: rh1860986-disable_tlsv1.3_in_fips_mode.patch
 # RH1915071: Always initialise JavaSecuritySystemConfiguratorAccess
-Patch1007: rh1915071-always_initialise_configurator_access.patch
 # RH1929465: Improve system FIPS detection
-Patch1008: rh1929465-improve_system_FIPS_detection.patch
 # RH1996182: Login to the NSS software token in FIPS mode
-Patch1009: rh1996182-login_to_nss_software_token.patch
 # RH1991003: Allow plain key import unless com.redhat.fips.plainKeySupport is set to false
-Patch1011: rh1991003-enable_fips_keys_import.patch
-# RH2021263: Resolve outstanding FIPS issues
-Patch1014: rh2021263-fips_ensure_security_initialised.patch
-Patch1015: rh2021263-fips_missing_native_returns.patch
+# RH2021263: Make sure java.security.Security is initialised when retrieving JavaSecuritySystemConfiguratorAccess instance
+# RH2021263: Return in C code after having generated Java exception
+# RH2052819: Improve Security initialisation, now FIPS support no longer relies on crypto policy support
+# RH2051605: Detect NSS at Runtime for FIPS detection
 # RH2052819: Fix FIPS reliance on crypto policies
-Patch1016: rh2021263-fips_separate_policy_and_fips_init.patch
-# RH2052829: Detect NSS at Runtime for FIPS detection
-Patch1017: rh2052829-fips_runtime_nss_detection.patch
+# RH2036462: sun.security.pkcs11.wrapper.PKCS11.getInstance breakage
+# RH2090378: Revert to disabling system security properties and FIPS mode support together
+Patch1001: fips-11u-%{fipsver}.patch
 
 #############################################
 #
@@ -1382,10 +1383,6 @@ Patch1017: rh2052829-fips_runtime_nss_detection.patch
 #############################################
 
 Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk10_and_up.patch
-# PR3694, RH1340845: Add security.useSystemPropertiesFile option to java.security to use system crypto policy
-Patch4: pr3694-rh1340845-support_fedora_rhel_system_crypto_policy.patch
-# PR3695: Allow use of system crypto policy to be disabled by the user
-Patch7: pr3695-toggle_system_crypto_policy.patch
 # JDK-8282004: x86_32.ad rules that call SharedRuntime helpers should have CALL effects
 Patch8: jdk8282004-x86_32-missing_call_effects.patch
 
@@ -1799,27 +1796,17 @@ pushd %{top_level_dir_name}
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
-%patch4 -p1
-%patch7 -p1
 %patch8 -p1
+# Add crypto policy and FIPS support
+%patch1001 -p1
+# nss.cfg PKCS11 support; must come last as it also alters java.security
+%patch1000 -p1
 popd # openjdk
 
 %patch101
 
-%patch1000
 %patch600
-%patch1001
-%patch1002
 %patch1003
-%patch1004
-%patch1007
-%patch1008
-%patch1009
-%patch1011
-%patch1014
-%patch1015
-%patch1016
-%patch1017
 
 # Extract systemtap tapsets
 %if %{with_systemtap}
@@ -2016,6 +2003,10 @@ function installjdk() {
 	# Install nss.fips.cfg: NSS configuration for global FIPS mode (crypto-policies)
 	install -m 644 nss.fips.cfg ${imagepath}/conf/security/
 
+	# Turn on system security properties
+	sed -i -e "s:^security.useSystemPropertiesFile=.*:security.useSystemPropertiesFile=true:" \
+	    ${imagepath}/conf/security/java.security
+
 	# Use system-wide tzdata
 	rm ${imagepath}/lib/tzdb.dat
 	ln -s %{_datadir}/javazi-1.8/tzdb.dat ${imagepath}/lib/tzdb.dat
@@ -2126,9 +2117,14 @@ $JAVA_HOME/bin/java --add-opens java.base/javax.crypto=ALL-UNNAMED TestCryptoLev
 $JAVA_HOME/bin/javac -d . %{SOURCE14}
 $JAVA_HOME/bin/java $(echo $(basename %{SOURCE14})|sed "s|\.java||")
 
-# Check system crypto (policy) can be disabled
+# Check system crypto (policy) is active and can be disabled
+# Test takes a single argument - true or false - to state whether system
+# security properties are enabled or not.
 $JAVA_HOME/bin/javac -d . %{SOURCE15}
-$JAVA_HOME/bin/java -Djava.security.disableSystemPropertiesFile=true $(echo $(basename %{SOURCE15})|sed "s|\.java||")
+export PROG=$(echo $(basename %{SOURCE15})|sed "s|\.java||")
+export SEC_DEBUG="-Djava.security.debug=properties"
+$JAVA_HOME/bin/java ${SEC_DEBUG} ${PROG} true
+$JAVA_HOME/bin/java ${SEC_DEBUG} -Djava.security.disableSystemPropertiesFile=true ${PROG} false
 
 # Check correct vendor values have been set
 $JAVA_HOME/bin/javac -d . %{SOURCE16}
@@ -2621,6 +2617,15 @@ end
 %endif
 
 %changelog
+* Thu Jul 07 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.15.0.10-3
+- Rebase FIPS patches from fips branch and simplify by using a single patch from that repository
+- * RH2036462: sun.security.pkcs11.wrapper.PKCS11.getInstance breakage
+- * RH2090378: Revert to disabling system security properties and FIPS mode support together
+- Rebase RH1648249 nss.cfg patch so it applies after the FIPS patch
+- Enable system security properties in the RPM (now disabled by default in the FIPS repo)
+- Improve security properties test to check both enabled and disabled behaviour
+- Run security properties test with property debugging on
+
 * Thu Jun 30 2022 Francisco Ferrari Bihurriet <fferrari@redhat.com> - 1:11.0.15.0.10-2
 - RH2007331: SecretKey generate/import operations don't add the CKA_SIGN attribute in FIPS mode
 

@@ -9,35 +9,59 @@ public class TestSecurityProperties {
     // JDK 8
     private static final String JDK_PROPS_FILE_JDK_8 = System.getProperty("java.home") + "/lib/security/java.security";
 
+    private static final String POLICY_FILE = "/etc/crypto-policies/back-ends/java.config";
+
+    private static final String MSG_PREFIX = "DEBUG: ";
+
     public static void main(String[] args) {
+        if (args.length == 0) {
+            System.err.println("TestSecurityProperties <true|false>");
+            System.err.println("Invoke with 'true' if system security properties should be enabled.");
+            System.err.println("Invoke with 'false' if system security properties should be disabled.");
+            System.exit(1);
+        }
+        boolean enabled = Boolean.valueOf(args[0]);
+        System.out.println(MSG_PREFIX + "System security properties enabled: " + enabled);
         Properties jdkProps = new Properties();
         loadProperties(jdkProps);
+        if (enabled) {
+            loadPolicy(jdkProps);
+        }
         for (Object key: jdkProps.keySet()) {
             String sKey = (String)key;
             String securityVal = Security.getProperty(sKey);
             String jdkSecVal = jdkProps.getProperty(sKey);
             if (!securityVal.equals(jdkSecVal)) {
-                String msg = "Expected value '" + jdkSecVal + "' for key '" + 
+                String msg = "Expected value '" + jdkSecVal + "' for key '" +
                              sKey + "'" + " but got value '" + securityVal + "'";
                 throw new RuntimeException("Test failed! " + msg);
             } else {
-                System.out.println("DEBUG: " + sKey + " = " + jdkSecVal + " as expected.");
+                System.out.println(MSG_PREFIX + sKey + " = " + jdkSecVal + " as expected.");
             }
         }
         System.out.println("TestSecurityProperties PASSED!");
     }
-    
+
     private static void loadProperties(Properties props) {
         String javaVersion = System.getProperty("java.version");
-        System.out.println("Debug: Java version is " + javaVersion);
+        System.out.println(MSG_PREFIX + "Java version is " + javaVersion);
         String propsFile = JDK_PROPS_FILE_JDK_11;
         if (javaVersion.startsWith("1.8.0")) {
             propsFile = JDK_PROPS_FILE_JDK_8;
         }
-        try (FileInputStream fin = new FileInputStream(new File(propsFile))) {
+        try (FileInputStream fin = new FileInputStream(propsFile)) {
             props.load(fin);
         } catch (Exception e) {
             throw new RuntimeException("Test failed!", e);
         }
     }
+
+    private static void loadPolicy(Properties props) {
+        try (FileInputStream fin = new FileInputStream(POLICY_FILE)) {
+            props.load(fin);
+        } catch (Exception e) {
+            throw new RuntimeException("Test failed!", e);
+        }
+    }
+
 }
