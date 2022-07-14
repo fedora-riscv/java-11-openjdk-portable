@@ -319,12 +319,8 @@
 # New Version-String scheme-style defines
 %global featurever 11
 %global interimver 0
-%global updatever 15
+%global updatever 16
 %global patchver 0
-# If you bump featurever, you must bump also vendor_version_string
-# Used via new version scheme. JDK 11 was
-# GA'ed in September 2018 => 18.9
-%global vendor_version_string 18.9
 # buildjdkver is usually same as %%{featurever},
 # but in time of bootstrap of next jdk, it is featurever-1,
 # and this it is better to change it here, on single place
@@ -357,6 +353,7 @@
 %endif
 %endif
 %endif
+%global oj_vendor_version (Red_Hat-%{version}-%{release})
 
 # Define IcedTea version used for SystemTap tapsets and desktop file
 %global icedteaver      6.0.0pre00-c848b93a8598
@@ -369,7 +366,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        10
-%global rpmrelease      3
+%global rpmrelease      4
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1750,6 +1747,8 @@ The %{origin_nice} %{featurever} API documentation compressed in a single archiv
 
 %prep
 
+echo "Preparing %{oj_vendor_version}"
+
 # Using the echo macro breaks rpmdev-bumpspec, as it parses the first line of stdout :-(
 %if 0%{?stapinstall:1}
   echo "CPU: %{_target_cpu}, arch install directory: %{archinstall}, SystemTap install directory: %{stapinstall}"
@@ -1925,7 +1924,7 @@ function buildjdk() {
     --with-version-build=%{buildver} \
     --with-version-pre="%{ea_designator}" \
     --with-version-opt=%{lts_designator} \
-    --with-vendor-version-string="%{vendor_version_string}" \
+    --with-vendor-version-string="%{oj_vendor_version}" \
     --with-vendor-name="%{oj_vendor}" \
     --with-vendor-url="%{oj_vendor_url}" \
     --with-vendor-bug-url="%{oj_vendor_bug_url}" \
@@ -2126,10 +2125,6 @@ export SEC_DEBUG="-Djava.security.debug=properties"
 $JAVA_HOME/bin/java ${SEC_DEBUG} ${PROG} true
 $JAVA_HOME/bin/java ${SEC_DEBUG} -Djava.security.disableSystemPropertiesFile=true ${PROG} false
 
-# Check correct vendor values have been set
-$JAVA_HOME/bin/javac -d . %{SOURCE16}
-$JAVA_HOME/bin/java $(echo $(basename %{SOURCE16})|sed "s|\.java||") "%{oj_vendor}" "%{oj_vendor_url}" "%{oj_vendor_bug_url}"
-
 # Check java launcher has no SSB mitigation
 if ! nm $JAVA_HOME/bin/java | grep set_speculation ; then true ; else false; fi
 
@@ -2139,6 +2134,10 @@ nm $JAVA_HOME/bin/%{alt_java_name} | grep set_speculation
 %else
 if ! nm $JAVA_HOME/bin/%{alt_java_name} | grep set_speculation ; then true ; else false; fi
 %endif
+
+# Check correct vendor values have been set
+$JAVA_HOME/bin/javac -d . %{SOURCE16}
+$JAVA_HOME/bin/java $(echo $(basename %{SOURCE16})|sed "s|\.java||") "%{oj_vendor}" "%{oj_vendor_url}" "%{oj_vendor_bug_url}" "%{oj_vendor_version}"
 
 %if %{include_staticlibs}
 # Check debug symbols in static libraries (smoke test)
@@ -2617,6 +2616,10 @@ end
 %endif
 
 %changelog
+* Thu Jul 14 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.15.0.10-4
+- Make use of the vendor version string to store our version & release rather than an upstream release date
+- Include a test in the RPM to check the build has the correct vendor information.
+
 * Thu Jul 07 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.15.0.10-3
 - Rebase FIPS patches from fips branch and simplify by using a single patch from that repository
 - * RH2036462: sun.security.pkcs11.wrapper.PKCS11.getInstance breakage

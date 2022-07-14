@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 public class CheckVendor {
 
     public static void main(String[] args) {
-	if (args.length < 3) {
-	    System.err.println("CheckVendor <VENDOR> <VENDOR-URL> <VENDOR-BUG-URL>");
+        if (args.length < 4) {
+            System.err.println("CheckVendor <VENDOR> <VENDOR-URL> <VENDOR-BUG-URL> <VENDOR-VERSION-STRING>");
 	    System.exit(1);
 	}
 
@@ -32,6 +32,8 @@ public class CheckVendor {
 	String expectedVendorURL = args[1];
 	String vendorBugURL = System.getProperty("java.vendor.url.bug");
 	String expectedVendorBugURL = args[2];
+        String vendorVersionString = System.getProperty("java.vendor.version");
+        String expectedVendorVersionString = args[3];
 
 	if (!expectedVendor.equals(vendor)) {
 	    System.err.printf("Invalid vendor %s, expected %s\n",
@@ -46,12 +48,18 @@ public class CheckVendor {
 	}
 
 	if (!expectedVendorBugURL.equals(vendorBugURL)) {
-	    System.err.printf("Invalid vendor bug URL%s, expected %s\n",
+            System.err.printf("Invalid vendor bug URL %s, expected %s\n",
 			      vendorBugURL, expectedVendorBugURL);
 	    System.exit(4);
 	}
 
-	System.err.printf("Vendor information verified as %s, %s, %s\n",
-			  vendor, vendorURL, vendorBugURL);
+        if (!expectedVendorVersionString.equals(vendorVersionString)) {
+            System.err.printf("Invalid vendor version string %s, expected %s\n",
+                              vendorVersionString, expectedVendorVersionString);
+	    System.exit(5);
+        }
+
+        System.err.printf("Vendor information verified as %s, %s, %s, %s\n",
+                          vendor, vendorURL, vendorBugURL, vendorVersionString);
     }
 }
