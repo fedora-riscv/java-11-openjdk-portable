@@ -4,7 +4,7 @@
 # Example:
 # When used from local repo set REPO_ROOT pointing to file:// with your repo
 # If your local repo follows upstream forests conventions, it may be enough to set OPENJDK_URL
-# If you want to use a local copy of patch PRTBC01, set the path to it in the PRTBC01 variable
+# If you want to use a local copy of patch GH001, set the path to it in the GH001 variable
 #
 # In any case you have to set PROJECT_NAME REPO_NAME and VERSION. eg:
 # PROJECT_NAME=openjdk
@@ -26,9 +26,16 @@
 # level folder, name is created, based on parameter
 #
 
-if [ ! "x$PRTBC01" = "x" ] ; then
-  if [ ! -f "$PRTBC01" ] ; then
-    echo "You have specified PRTBC01 as $PRTBC01 but it does not exist. Exiting"
+if [ ! "x$GH001" = "x" ] ; then
+  if [ ! -f "$GH001" ] ; then
+    echo "You have specified GH001 as $GH001 but it does not exist. Exiting"
+    exit 1
+  fi
+fi
+
+if [ ! "x$GH003" = "x" ] ; then
+  if [ ! -f "$GH003" ] ; then
+    echo "You have specified GH003 as $GH003 but it does not exist. Exiting"
     exit 1
   fi
 fi
@@ -37,6 +44,8 @@ set -e
 
 OPENJDK_URL_DEFAULT=https://github.com
 COMPRESSION_DEFAULT=xz
+# Corresponding IcedTea version
+ICEDTEA_VERSION=6.0
 
 if [ "x$1" = "xhelp" ] ; then
     echo -e "Behaviour may be specified by setting the following variables:\n"
@@ -48,7 +57,8 @@ if [ "x$1" = "xhelp" ] ; then
     echo "FILE_NAME_ROOT - name of the archive, minus extensions (optional; defaults to PROJECT_NAME-REPO_NAME-VERSION)"
     echo "REPO_ROOT - the location of the Mercurial repository to archive (optional; defaults to OPENJDK_URL/PROJECT_NAME/REPO_NAME)"
     echo "TO_COMPRESS - what part of clone to pack (default is openjdk)"
-    echo "PRTBC01 - the path to the PRTBC01 patch to apply (optional; downloaded if unavailable)"
+    echo "GH001 - the path to the ECC code patch, GH001, to apply (optional; downloaded if unavailable)"
+    echo "GH003 - the path to the ECC test patch, GH003, to apply (optional; downloaded if unavailable)"
     exit 1;
 fi
 
@@ -108,7 +118,8 @@ echo -e "\tCOMPRESSION: ${COMPRESSION}"
 echo -e "\tFILE_NAME_ROOT: ${FILE_NAME_ROOT}"
 echo -e "\tREPO_ROOT: ${REPO_ROOT}"
 echo -e "\tTO_COMPRESS: ${TO_COMPRESS}"
-echo -e "\tPRTBC01: ${PRTBC01}"
+echo -e "\tGH001: ${GH001}"
+echo -e "\tGH003: ${GH003}"
 
 if [ -d ${FILE_NAME_ROOT} ] ; then
   echo "exists exists exists exists exists exists exists "
@@ -141,21 +152,40 @@ pushd "${FILE_NAME_ROOT}"
 	    rm -vf ${CRYPTO_PATH}/ecp_224.c
 
             echo "Syncing EC list with NSS"
-            if [ "x$PRTBC01" = "x" ] ; then
-                # get prTBC01.patch (from http://icedtea.classpath.org/hg/icedtea11) from most correct tag
-                # Do not push it or publish it (see http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=3751)
-		echo "PRTBC01 not found. Downloading..."
-		wget http://icedtea.classpath.org/hg/icedtea11/raw-file/tip/patches/prtbc01-4curve.patch
-	        echo "Applying ${PWD}/prTBC01.patch"
-		patch -Np1 < prtbc01.patch
-		rm prtbc01.patch
+            if [ "x$GH001" = "x" ] ; then
+                # get gh001-4curve.patch (from https://github.com/icedtea-git/icedtea) in the ${ICEDTEA_VERSION} branch
+                # Do not push it or publish it
+		echo "GH001 not found. Downloading..."
+		wget -v https://github.com/icedtea-git/icedtea/raw/${ICEDTEA_VERSION}/patches/gh001-4curve.patch
+	        echo "Applying ${PWD}/gh001-4curve.patch"
+		git apply --stat --apply -v -p1 gh001-4curve.patch
+		rm gh001-4curve.patch
 	    else
-		echo "Applying ${PRTBC01}"
-		patch -Np1 < $PRTBC01
+		echo "Applying ${GH001}"
+		git apply --stat --apply -v -p1 $GH001
             fi;
-            find . -name '*.orig' -exec rm -vf '{}' ';'
+            if [ "x$GH003" = "x" ] ; then
+                # get gh001-4curve.patch (from https://github.com/icedtea-git/icedtea) in the ${ICEDTEA_VERSION} branch
+		echo "GH003 not found. Downloading..."
+		wget -v https://github.com/icedtea-git/icedtea/raw/${ICEDTEA_VERSION}/patches/gh003-4curve.patch
+	        echo "Applying ${PWD}/gh003-4curve.patch"
+		git apply --stat --apply -v -p1 gh003-4curve.patch
+		rm gh003-4curve.patch
+	    else
+		echo "Applying ${GH003}"
+		git apply --stat --apply -v -p1 $GH003
+            fi;
+            find . -name '*.orig' -exec rm -vf '{}' ';' || echo "No .orig files found. This is suspicious, but may happen."
         popd
     fi
+
+    # Generate .src-rev so build has knowledge of the revision the tarball was created from
+    mkdir build
+    pushd build
+    sh ${PWD}/../openjdk/configure
+    make store-source-revision
+    popd
+    rm -rf build
 
     echo "Compressing remaining forest"
     if [ "X$COMPRESSION" = "Xxz" ] ; then
@@ -168,5 +198,3 @@ pushd "${FILE_NAME_ROOT}"
     mv ${TARBALL_NAME} ..
 popd
 echo "Done. You may want to remove the uncompressed version - $FILE_NAME_ROOT."
-
-

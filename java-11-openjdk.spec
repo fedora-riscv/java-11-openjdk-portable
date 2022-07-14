@@ -319,7 +319,7 @@
 # New Version-String scheme-style defines
 %global featurever 11
 %global interimver 0
-%global updatever 15
+%global updatever 16
 %global patchver 0
 # buildjdkver is usually same as %%{featurever},
 # but in time of bootstrap of next jdk, it is featurever-1,
@@ -365,8 +365,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        10
-%global rpmrelease      7
+%global buildver        7
+%global rpmrelease      1
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -394,7 +394,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           1
+%global is_ga           0
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -1161,8 +1161,8 @@ Requires: ca-certificates
 # Require javapackages-filesystem for ownership of /usr/lib/jvm/ and macros
 Requires: javapackages-filesystem
 # Require zone-info data provided by tzdata-java sub-package
-# 2021e required as of JDK-8275766 in January 2022 CPU
-Requires: tzdata-java >= 2021e
+# 2022a required as of JDK-8283350 in 11.0.16
+Requires: tzdata-java >= 2022a
 # for support of kernel stream control
 # libsctp.so.1 is being `dlopen`ed on demand
 Requires: lksctp-tools%{?_isa}
@@ -1322,7 +1322,7 @@ URL:      http://openjdk.java.net/
 
 # to regenerate source0 (jdk) run update_package.sh
 # update_package.sh contains hard-coded repos, revisions, tags, and projects to regenerate the source archives
-Source0: jdk-updates-jdk%{featurever}u-%{vcstag}-4curve.tar.xz
+Source0: openjdk-jdk%{featurever}u-%{vcstag}-4curve.tar.xz
 
 # Use 'icedtea_sync.sh' to update the following
 # They are based on code contained in the IcedTea project (6.x).
@@ -1414,8 +1414,6 @@ Patch1001: fips-11u-%{fipsver}.patch
 #############################################
 
 Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk10_and_up.patch
-# JDK-8282004: x86_32.ad rules that call SharedRuntime helpers should have CALL effects
-Patch8: jdk8282004-x86_32-missing_call_effects.patch
 
 #############################################
 #
@@ -1426,8 +1424,6 @@ Patch8: jdk8282004-x86_32-missing_call_effects.patch
 # need to be reviewed & pushed to the appropriate
 # updates tree of OpenJDK.
 #############################################
-# JDK-8257794: Zero: assert(istate->_stack_limit == istate->_thread->last_Java_sp() + 1) failed: wrong on Linux/x86_32
-Patch101: jdk8257794-remove_broken_assert.patch
 
 #############################################
 #
@@ -1478,8 +1474,8 @@ BuildRequires: java-%{buildjdkver}-openjdk-devel
 %ifarch %{zero_arches}
 BuildRequires: libffi-devel
 %endif
-# 2021e required as of JDK-8275766 in January 2022 CPU
-BuildRequires: tzdata-java >= 2021e
+# 2022a required as of JDK-8283350 in 11.0.16
+BuildRequires: tzdata-java >= 2022a
 # Earlier versions have a bug in tree vectorization on PPC
 BuildRequires: gcc >= 4.8.3-8
 
@@ -1831,14 +1827,11 @@ pushd %{top_level_dir_name}
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
-%patch8 -p1
 # Add crypto policy and FIPS support
 %patch1001 -p1
 # nss.cfg PKCS11 support; must come last as it also alters java.security
 %patch1000 -p1
 popd # openjdk
-
-%patch101
 
 %patch600
 %patch1003
@@ -2052,6 +2045,10 @@ function installjdk() {
 	echo "Hardened java binary recommended for launching untrusted code from the Web e.g. javaws" > man/man1/%{alt_java_name}.1
 	cat man/man1/java.1 >> man/man1/%{alt_java_name}.1
 	popd
+
+	# Print release information
+	cat ${imagepath}/release
+
     fi
 }
 
@@ -2669,6 +2666,22 @@ end
 %endif
 
 %changelog
+* Thu Jul 14 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.16.0.7-0.1.ea
+- Update to jdk-11.0.16+7
+- Update release notes to 11.0.16+7
+- Switch to EA mode for 11.0.16 pre-release builds.
+- Use same tarball naming style as java-17-openjdk and java-latest-openjdk
+- Drop JDK-8282004 patch which is now upstreamed under JDK-8282231
+- Drop JDK-8257794 patch now upstreamed
+- Print release file during build, which should now include a correct SOURCE value from .src-rev
+- Update tarball script with IcedTea GitHub URL and .src-rev generation
+- Use "git apply" with patches in the tarball script to allow binary diffs
+- Include script to generate bug list for release notes
+- Update tzdata requirement to 2022a to match JDK-8283350
+
+* Thu Jul 14 2022 Jiri Vanek <jvanek@redhat.com> - 1:11.0.16.0.7-0.1.ea
+- Add additional patch during tarball generation to align tests with ECC changes
+
 * Thu Jul 14 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.15.0.10-7
 - Explicitly require crypto-policies during build and runtime for system security properties
 
@@ -2681,7 +2694,6 @@ end
 
 * Thu Jul 14 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.15.0.10-4
 - Make use of the vendor version string to store our version & release rather than an upstream release date
-- Include a test in the RPM to check the build has the correct vendor information.
 
 * Thu Jul 07 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.15.0.10-3
 - Rebase FIPS patches from fips branch and simplify by using a single patch from that repository
