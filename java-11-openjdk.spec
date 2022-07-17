@@ -366,7 +366,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -479,6 +479,9 @@
 %global tapsetdirttapset %{tapsetroot}/tapset/
 %global tapsetdir %{tapsetdirttapset}/%{stapinstall}
 %endif
+
+# x86 is no longer supported
+ExcludeArch: %{ix86}
 
 # not-duplicated scriptlets for normal/debug packages
 %global update_desktop_icons /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
@@ -2666,6 +2669,9 @@ end
 %endif
 
 %changelog
+* Sun Jul 17 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.16.0.7-0.2.ea
+- Exclude x86 from builds as the bootstrap JDK is now completely broken and unusable
+
 * Thu Jul 14 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.16.0.7-0.1.ea
 - Update to jdk-11.0.16+7
 - Update release notes to 11.0.16+7
