@@ -366,7 +366,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      3
+%global rpmrelease      4
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -479,6 +479,9 @@
 %global tapsetdirttapset %{tapsetroot}/tapset/
 %global tapsetdir %{tapsetdirttapset}/%{stapinstall}
 %endif
+
+# x86 is no longer supported
+ExclusiveArch:  %{java_arches}
 
 # not-duplicated scriptlets for normal/debug packages
 %global update_desktop_icons /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
@@ -829,20 +832,14 @@ exit 0
 exit 0
 }
 
-%ifarch %{ix86}
-%define files_jre() %{expand:%{_jvmdir}/%{sdkdir -- %{?1}}/gone-jre.sh}
-%else
 %define files_jre() %{expand:
 %{_datadir}/icons/hicolor/*x*/apps/java-%{javaver}-%{origin}.png
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libsplashscreen.so
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libawt_xawt.so
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libjawt.so
 }
-%endif
 
-%ifarch %{ix86}
-%define files_jre_headless() %{expand:%{_jvmdir}/%{sdkdir -- %{?1}}/gone-headless.sh}
-%else
+
 %define files_jre_headless() %{expand:
 %license %{_jvmdir}/%{sdkdir -- %{?1}}/legal
 %doc %{_defaultdocdir}/%{uniquejavadocdir -- %{?1}}/NEWS
@@ -982,11 +979,7 @@ exit 0
 %ghost %{_jvmdir}/%{sdkdir -- %{?1}}/conf.rpmmoved
 %ghost %{_jvmdir}/%{sdkdir -- %{?1}}/lib/security.rpmmoved
 }
-%endif
 
-%ifarch %{ix86}
-%define files_devel() %{expand:%{_jvmdir}/%{sdkdir -- %{?1}}/gone-devel.sh}
-%else
 %define files_devel() %{expand:
 %dir %{_jvmdir}/%{sdkdir -- %{?1}}/bin
 %{_jvmdir}/%{sdkdir -- %{?1}}/bin/jar
@@ -1087,49 +1080,29 @@ exit 0
 %endif
 %endif
 }
-%endif
 
-%ifarch %{ix86}
-%define files_jmods() %{expand:%{_jvmdir}/%{sdkdir -- %{?1}}/gone-jmods.sh}
-%else
 %define files_jmods() %{expand:
 %{_jvmdir}/%{sdkdir -- %{?1}}/jmods
 }
-%endif
 
-%ifarch %{ix86}
-%define files_demo() %{expand:%{_jvmdir}/%{sdkdir -- %{?1}}/gone-demo.sh}
-%else
 %define files_demo() %{expand:
 %license %{_jvmdir}/%{sdkdir -- %{?1}}/legal
 %{_jvmdir}/%{sdkdir -- %{?1}}/demo
 %{_jvmdir}/%{sdkdir -- %{?1}}/sample
 }
-%endif
 
-%ifarch %{ix86}
-%define files_src() %{expand:%{_jvmdir}/%{sdkdir -- %{?1}}/gone-src.sh}
-%else
 %define files_src() %{expand:
 %license %{_jvmdir}/%{sdkdir -- %{?1}}/legal
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/src.zip
 }
-%endif
 
-%ifarch %{ix86}
-%define files_static_libs() %{expand:%{_jvmdir}/%{sdkdir -- %{?1}}/gone-static_libs.sh}
-%else
 %define files_static_libs() %{expand:
 %dir %{_jvmdir}/%{sdkdir -- %{?1}}/lib/static
 %dir %{_jvmdir}/%{sdkdir -- %{?1}}/lib/static/linux-%{archinstall}
 %dir %{_jvmdir}/%{sdkdir -- %{?1}}/lib/static/linux-%{archinstall}/glibc
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/static/linux-%{archinstall}/glibc/lib*.a
 }
-%endif
 
-%ifarch %{ix86}
-%define files_javadoc() %{expand:%{_jvmdir}/%{sdkdir -- %{?1}}/gone-javadoc.sh}
-%else
 %define files_javadoc() %{expand:
 %doc %{_javadocdir}/%{uniquejavadocdir -- %{?1}}
 %license %{_jvmdir}/%{sdkdir -- %{?1}}/legal
@@ -1142,11 +1115,7 @@ exit 0
 %endif
 %endif
 }
-%endif
 
-%ifarch %{ix86}
-%define files_javadoc_zip() %{expand:%{_jvmdir}/%{sdkdir -- %{?1}}/gone-javadoc_zip.sh}
-%else
 %define files_javadoc_zip() %{expand:
 %doc %{_javadocdir}/%{uniquejavadocdir -- %{?1}}.zip
 %license %{_jvmdir}/%{sdkdir -- %{?1}}/legal
@@ -1159,7 +1128,6 @@ exit 0
 %endif
 %endif
 }
-%endif
 
 # not-duplicated requires/provides/obsoletes for normal/debug packages
 %define java_rpo() %{expand:
@@ -1320,7 +1288,7 @@ Provides: java-%{origin}-src%{?1} = %{epoch}:%{version}-%{release}
 
 Name:    java-%{javaver}-%{origin}
 Version: %{newjavaver}.%{buildver}
-Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}.1
+Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -1504,12 +1472,7 @@ BuildRequires: xorg-x11-proto-devel
 BuildRequires: zip
 BuildRequires: unzip
 BuildRequires: javapackages-filesystem
-%ifarch %{ix86}
-# Require javapackages-filesystem to define %{_jvmdir}
-BuildRequires: javapackages-filesystem
-%else
 BuildRequires: java-%{buildjdkver}-openjdk-devel
-%endif
 # Zero-assembler build requirement
 %ifarch %{zero_arches}
 BuildRequires: libffi-devel
@@ -1929,12 +1892,6 @@ sed -e "s:@NSS_LIBDIR@:%{NSS_LIBDIR}:g" %{SOURCE11} > nss.cfg
 sed -e "s:@NSS_LIBDIR@:%{NSS_LIBDIR}:g" %{SOURCE17} > nss.fips.cfg
 
 %build
-
-# x86 is deprecated
-%ifarch %{ix86}
-  exit 0
-%endif
-
 # How many CPU's do we have?
 export NUM_PROC=%(/usr/bin/getconf _NPROCESSORS_ONLN 2> /dev/null || :)
 export NUM_PROC=${NUM_PROC:-1}
@@ -2175,14 +2132,6 @@ done # end of release / debug cycle loop
 # We test debug first as it will give better diagnostics on a crash
 for suffix in %{build_loop} ; do
 
-%ifarch %{ix86}
-
-  # Fake debugsourcefiles.list here after find-debuginfo.sh has already had a go
-  echo "%{_jvmdir}/%{sdkdir -- ${suffix}}/gone-debugsourcefiles.sh" >> debugsourcefiles.list
-  cat debugsourcefiles.list
-
-%else
-
 top_dir_abs_main_build_path=$(pwd)/%{installoutputdir -- ${suffix}%{main_suffix}}
 %if %{include_staticlibs}
 top_dir_abs_staticlibs_build_path=$(pwd)/%{installoutputdir -- ${suffix}%{staticlibs_loop}}
@@ -2312,8 +2261,6 @@ $JAVA_HOME/bin/javap -l java.nio.ByteBuffer | grep "Compiled from"
 $JAVA_HOME/bin/javap -l java.nio.ByteBuffer | grep LineNumberTable
 $JAVA_HOME/bin/javap -l java.nio.ByteBuffer | grep LocalVariableTable
 
-%endif
-
 # build cycles check
 done
 
@@ -2330,36 +2277,6 @@ jdk_image=${top_dir_abs_main_build_path}/images/%{jdkimage}
 
 # Install the jdk
 mkdir -p $RPM_BUILD_ROOT%{_jvmdir}
-
-
-%ifarch %{ix86}
-  mkdir -p $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- ${suffix}}
-
-  file=/tmp/gonejdk.$$
-  echo "OpenJDK on x86 is now deprecated"
-  echo '#!/bin/bash' > $file
-  echo 'echo "We are going to remove i686 jdk. Please fix your package accordingly!"' >> $file
-  echo 'echo "See https://fedoraproject.org/wiki/Changes/Drop_i686_JDKs"' >> $file
-  echo 'echo "See https://pagure.io/fesco/issue/2772"' >> $file
-  echo 'echo "See https://bugzilla.redhat.com/show_bug.cgi?id=2083750"' >> $file
-  echo 'exit 1' >> $file
-
-  for pkgsuffix in jre headless devel demo src debugsourcefiles jmods static_libs ; do
-      cp -a ${file} $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- ${suffix}}/gone-${pkgsuffix}.sh
-  done
-
-  # Docs were only in the normal build
-  if ! echo $suffix | grep -q "debug" ; then
-      for pkgsuffix in javadoc javadoc_zip ; do
-	  cp -a ${file} $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- ${suffix}}/gone-${pkgsuffix}.sh
-      done
-  fi
-
-  rm -f ${file}
-
-%else
-
-# Install the jdk
 cp -a ${jdk_image} $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}
 
 pushd ${jdk_image}
@@ -2465,8 +2382,6 @@ popd
 find $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/ -name "*.so" -exec chmod 755 {} \; ; 
 find $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/ -type d -exec chmod 755 {} \; ; 
 find $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/legal -type f -exec chmod 644 {} \; ; 
-
-%endif
 
 # end, dual install
 done
@@ -2737,6 +2652,19 @@ end
 %endif
 
 %changelog
+* Fri Jul 22 2022 Jiri Vanek <gnu.andrew@redhat.com> - 1:11.0.16.0.7-0.4.ea
+- moved to build only on %%{java_arches}
+-- https://fedoraproject.org/wiki/Changes/Drop_i686_JDKs
+- reverted :
+-- Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild (always mess up release)
+-- Try to build on x86 again by creating a husk of a JDK which does not depend on itself
+-- Exclude x86 from builds as the bootstrap JDK is now completely broken and unusable
+-- Replaced binaries and .so files with bash-stubs on i686
+- added ExclusiveArch:  %%{java_arches}
+-- this now excludes i686
+-- this is safely backport-able to older fedoras, as the macro was  backported proeprly (with i686 included)
+- https://bugzilla.redhat.com/show_bug.cgi?id=2104126
+
 * Thu Jul 21 2022 Fedora Release Engineering <releng@fedoraproject.org> - 1:11.0.16.0.7-0.3.ea.1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_37_Mass_Rebuild
 
