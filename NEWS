@@ -9,6 +9,15 @@ Live versions of these release notes can be found at:
   * https://bitly.com/openjdk11016
   * https://builds.shipilev.net/backports-monitor/release-notes-11.0.16.txt
 
+* Security fixes
+  - JDK-8277608: Address IP Addressing
+  - JDK-8272243: Improve DER parsing
+  - JDK-8272249: Better properties of loaded Properties
+  - JDK-8281859, CVE-2022-21540: Improve class compilation
+  - JDK-8281866, CVE-2022-21541: Enhance MethodHandle invocations
+  - JDK-8283190: Improve MIDI processing
+  - JDK-8284370: Improve zlib usage
+  - JDK-8285407, CVE-2022-34169: Improve Xalan supports
 * Other changes
   - JDK-6986863: ProfileDeferralMgr throwing ConcurrentModificationException
   - JDK-7124293: [macosx] VoiceOver reads percentages rather than the actual values for sliders.
@@ -251,7 +260,6 @@ Live versions of these release notes can be found at:
   - JDK-8284620: CodeBuffer may leak _overflow_arena
   - JDK-8284622: Update versions of some Github Actions used in JDK workflow
   - JDK-8284756: [11u] Remove unused isUseContainerSupport in CgroupV1Subsystem
-  - JDK-8284920: Incorrect Token type causes XPath expression to return empty result
   - JDK-8285395: [JVMCI] [11u] Partial backport of JDK-8220623: InstalledCode
   - JDK-8285397: JNI exception pending in CUPSfuncs.c:250
   - JDK-8285445: cannot open file "NUL:"
