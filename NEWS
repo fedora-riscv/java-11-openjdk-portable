@@ -3,6 +3,26 @@ Key:
 JDK-X  - https://bugs.openjdk.java.net/browse/JDK-X
 CVE-XXXX-YYYY: https://cve.mitre.org/cgi-bin/cvename.cgi?name=XXXX-YYYY
 
+New in release OpenJDK 11.0.16.1 (2022-08-12):
+=============================================
+Live versions of these release notes can be found at:
+  * https://bit.ly/openjdk110161
+  * https://builds.shipilev.net/backports-monitor/release-notes-11.0.16.1.txt
+
+* Other changes
+  - JDK-8292255: Bump update version for OpenJDK: jdk-11.0.16.1
+  - JDK-8292260: [BACKOUT] JDK-8279219: [REDO] C2 crash when allocating array of size too large
+
+Notes on individual issues:
+===========================
+
+hotspot/compiler:
+
+JDK-8292396: C2 Compilation Errors Unpredictably Crashes JVM
+============================================================
+Fixes a regression in the C2 JIT compiler which caused the Java
+Runtime to crash unpredictably.
+
 New in release OpenJDK 11.0.16 (2022-07-19):
 =============================================
 Live versions of these release notes can be found at:
