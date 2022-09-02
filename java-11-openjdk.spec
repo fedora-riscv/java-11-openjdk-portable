@@ -25,6 +25,8 @@
 %bcond_with artifacts
 # Build a fresh libjvm.so for use in a copy of the bootstrap JDK
 %bcond_without fresh_libjvm
+# Build with system libraries
+%bcond_with system_libs
 
 # Workaround for stripping of debug symbols from static libraries
 %if %{with staticlibs}
@@ -39,6 +41,16 @@
 %global build_hotspot_first 1
 %else
 %global build_hotspot_first 0
+%endif
+
+%if %{with system_libs}
+%global system_libs 1
+%global link_type system
+%global freetype_lib %{nil}
+%else
+%global system_libs 0
+%global link_type bundled
+%global freetype_lib |libfreetype[.]so.*
 %endif
 
 # The -g flag says to use strip -g instead of full strip on DSOs or EXEs.
@@ -366,7 +378,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        1
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -425,7 +437,7 @@
 # fix for https://bugzilla.redhat.com/show_bug.cgi?id=1111349
 #         https://bugzilla.redhat.com/show_bug.cgi?id=1590796#c14
 #         https://bugzilla.redhat.com/show_bug.cgi?id=1655938
-%global _privatelibs libsplashscreen[.]so.*|libawt_xawt[.]so.*|libjli[.]so.*|libattach[.]so.*|libawt[.]so.*|libextnet[.]so.*|libawt_headless[.]so.*|libdt_socket[.]so.*|libfontmanager[.]so.*|libinstrument[.]so.*|libj2gss[.]so.*|libj2pcsc[.]so.*|libj2pkcs11[.]so.*|libjaas[.]so.*|libjavajpeg[.]so.*|libjdwp[.]so.*|libjimage[.]so.*|libjsound[.]so.*|liblcms[.]so.*|libmanagement[.]so.*|libmanagement_agent[.]so.*|libmanagement_ext[.]so.*|libmlib_image[.]so.*|libnet[.]so.*|libnio[.]so.*|libprefs[.]so.*|librmi[.]so.*|libsaproc[.]so.*|libsctp[.]so.*|libsunec[.]so.*|libsystemconf[.]so.*|libunpack[.]so.*|libzip[.]so.*
+%global _privatelibs libsplashscreen[.]so.*|libawt_xawt[.]so.*|libjli[.]so.*|libattach[.]so.*|libawt[.]so.*|libextnet[.]so.*|libawt_headless[.]so.*|libdt_socket[.]so.*|libfontmanager[.]so.*|libinstrument[.]so.*|libj2gss[.]so.*|libj2pcsc[.]so.*|libj2pkcs11[.]so.*|libjaas[.]so.*|libjavajpeg[.]so.*|libjdwp[.]so.*|libjimage[.]so.*|libjsound[.]so.*|liblcms[.]so.*|libmanagement[.]so.*|libmanagement_agent[.]so.*|libmanagement_ext[.]so.*|libmlib_image[.]so.*|libnet[.]so.*|libnio[.]so.*|libprefs[.]so.*|librmi[.]so.*|libsaproc[.]so.*|libsctp[.]so.*|libsunec[.]so.*|libsystemconf[.]so.*|libunpack[.]so.*|libzip[.]so.*%{freetype_lib}
 %global _publiclibs libjawt[.]so.*|libjava[.]so.*|libjvm[.]so.*|libverify[.]so.*|libjsig[.]so.*
 %if %is_system_jdk
 %global __provides_exclude ^(%{_privatelibs})$
@@ -882,6 +894,9 @@ exit 0
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libawt_headless.so
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libdt_socket.so
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libfontmanager.so
+%if ! %{system_libs}
+%{_jvmdir}/%{sdkdir -- %{?1}}/lib/libfreetype.so
+%endif
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libinstrument.so
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libj2gss.so
 %{_jvmdir}/%{sdkdir -- %{?1}}/lib/libj2pcsc.so
@@ -1456,14 +1471,8 @@ BuildRequires: desktop-file-utils
 # elfutils only are OK for build without AOT
 BuildRequires: elfutils-devel
 BuildRequires: fontconfig-devel
-BuildRequires: freetype-devel
-BuildRequires: giflib-devel
 BuildRequires: gcc-c++
 BuildRequires: gdb
-BuildRequires: harfbuzz-devel
-BuildRequires: lcms2-devel
-BuildRequires: libjpeg-devel
-BuildRequires: libpng-devel
 BuildRequires: libxslt
 BuildRequires: libX11-devel
 BuildRequires: libXi-devel
@@ -1495,6 +1504,30 @@ BuildRequires: gcc >= 4.8.3-8
 BuildRequires: systemtap-sdt-devel
 %endif
 BuildRequires: make
+
+%if %{system_libs}
+BuildRequires: freetype-devel
+BuildRequires: giflib-devel
+BuildRequires: harfbuzz-devel
+BuildRequires: lcms2-devel
+BuildRequires: libjpeg-devel
+BuildRequires: libpng-devel
+%else
+# Version in src/java.desktop/share/native/libfreetype/include/freetype/freetype.h
+Provides: bundled(freetype) = 2.12.0
+# Version in src/java.desktop/share/native/libsplashscreen/giflib/gif_lib.h
+Provides: bundled(giflib) = 5.2.1
+# Version in src/java.desktop/share/native/libharfbuzz/hb-version.h
+Provides: bundled(harfbuzz) = 2.8.0
+# Version in src/java.desktop/share/native/liblcms/lcms2.h
+Provides: bundled(lcms2) = 2.12.0
+# Version in src/java.desktop/share/native/libjavajpeg/jpeglib.h
+Provides: bundled(libjpeg) = 6b
+# Version in src/java.desktop/share/native/libsplashscreen/libpng/png.h
+Provides: bundled(libpng) = 1.6.37
+# We link statically against libstdc++ to increase portability
+BuildRequires: libstdc++-static
+%endif
 
 # this is always built, also during debug-only build
 # when it is built in debug-only this package is just placeholder
@@ -1831,8 +1864,11 @@ if [ $prioritylength -ne 8 ] ; then
 fi
 
 # OpenJDK patches
+
+%if %{system_libs}
 # Remove libraries that are linked by both static and dynamic builds
 sh %{SOURCE12} %{top_level_dir_name}
+%endif
 
 # Patch the JDK
 pushd %{top_level_dir_name}
@@ -1945,6 +1981,12 @@ function buildjdk() {
     local top_dir_abs_src_path=$(pwd)/%{top_level_dir_name}
     local top_dir_abs_build_path=$(pwd)/${outputdir}
 
+    if [ "x${link_opt}" = "xbundled" ] ; then
+        libc_link_opt="static";
+    else
+        libc_link_opt="dynamic";
+    fi
+
     echo "Using output directory: ${outputdir}";
     echo "Checking build JDK ${buildjdk} is operational..."
     ${buildjdk}/bin/java -version
@@ -1976,13 +2018,14 @@ function buildjdk() {
     --with-native-debug-symbols="%{debug_symbols}" \
     --disable-sysconf-nss \
     --enable-unlimited-crypto \
-    --with-zlib=system \
+    --with-zlib=${link_opt} \
+    --with-freetype=${link_opt} \
     --with-libjpeg=${link_opt} \
     --with-giflib=${link_opt} \
     --with-libpng=${link_opt} \
     --with-lcms=${link_opt} \
     --with-harfbuzz=${link_opt} \
-    --with-stdc++lib=dynamic \
+    --with-stdc++lib=${libc_link_opt} \
     --with-extra-cxxflags="$EXTRA_CPP_FLAGS" \
     --with-extra-cflags="$EXTRA_CFLAGS" \
     --with-extra-asflags="$EXTRA_ASFLAGS" \
@@ -2093,12 +2136,13 @@ for suffix in %{build_loop} ; do
     bootinstalldir=boot${installdir}
 
     if test "x${loop}" = "x%{main_suffix}" ; then
+      link_opt="%{link_type}"
+%if %{system_libs}
       # Copy the source tree so we can remove all in-tree libraries
       cp -a %{top_level_dir_name} %{top_level_dir_name_backup}
       # Remove all libraries that are linked
       sh %{SOURCE12} %{top_level_dir_name} full
-      # Use system libraries
-      link_opt="system"
+%endif
       # Debug builds don't need same targets as release for
       # build speed-up. We also avoid bootstrapping these
       # slower builds.
@@ -2119,9 +2163,11 @@ for suffix in %{build_loop} ; do
           buildjdk ${builddir} ${systemjdk} "${maketargets}" ${debugbuild} ${link_opt}
           installjdk ${builddir} ${installdir}
       fi
+%if %{system_libs}
       # Restore original source tree we modified by removing full in-tree sources
       rm -rf %{top_level_dir_name}
       mv %{top_level_dir_name_backup} %{top_level_dir_name}
+%endif
     else
       # Use bundled libraries for building statically
       link_opt="bundled"
@@ -2670,6 +2716,9 @@ end
 %endif
 
 %changelog
+* Tue Aug 30 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.16.1.1-2
+- Switch to static builds, reducing system dependencies and making build more portable
+
 * Wed Aug 24 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.16.1.1-1
 - Update to jdk-11.0.16.1+1
 - Update release notes to 11.0.16.1+1
