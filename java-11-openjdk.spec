@@ -331,8 +331,8 @@
 # New Version-String scheme-style defines
 %global featurever 11
 %global interimver 0
-%global updatever 16
-%global patchver 1
+%global updatever 17
+%global patchver 0
 # buildjdkver is usually same as %%{featurever},
 # but in time of bootstrap of next jdk, it is featurever-1,
 # and this it is better to change it here, on single place
@@ -378,7 +378,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        1
-%global rpmrelease      2
+%global rpmrelease      1
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -406,7 +406,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           1
+%global is_ga           0
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -1514,11 +1514,11 @@ BuildRequires: libjpeg-devel
 BuildRequires: libpng-devel
 %else
 # Version in src/java.desktop/share/native/libfreetype/include/freetype/freetype.h
-Provides: bundled(freetype) = 2.12.0
+Provides: bundled(freetype) = 2.12.1
 # Version in src/java.desktop/share/native/libsplashscreen/giflib/gif_lib.h
 Provides: bundled(giflib) = 5.2.1
 # Version in src/java.desktop/share/native/libharfbuzz/hb-version.h
-Provides: bundled(harfbuzz) = 2.8.0
+Provides: bundled(harfbuzz) = 4.4.1
 # Version in src/java.desktop/share/native/liblcms/lcms2.h
 Provides: bundled(lcms2) = 2.12.0
 # Version in src/java.desktop/share/native/libjavajpeg/jpeglib.h
@@ -2716,6 +2716,13 @@ end
 %endif
 
 %changelog
+* Tue Sep 06 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.17.0.1-0.1.ea
+- Update to jdk-11.0.17+1
+- Update release notes to 11.0.17+1
+- Switch to EA mode for 11.0.17 pre-release builds.
+- Bump HarfBuzz bundled version to 4.4.1 following JDK-8289853
+- Bump FreeType bundled version to 2.12.1 following JDK-8290334
+
 * Tue Aug 30 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.16.1.1-2
 - Switch to static builds, reducing system dependencies and making build more portable
 
