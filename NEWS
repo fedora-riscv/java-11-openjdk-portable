@@ -9,6 +9,22 @@ Live versions of these release notes can be found at:
   * https://bitly.com/openjdk11017
   * https://builds.shipilev.net/backports-monitor/release-notes-11.0.17.html
 
+* Security fixes
+  - JDK-8282252: Improve BigInteger/Decimal validation
+  - JDK-8285662: Better permission resolution
+  - JDK-8286077, CVE-2022-21618: Wider MultiByte conversions
+  - JDK-8286511: Improve macro allocation
+  - JDK-8286519: Better memory handling
+  - JDK-8286526, CVE-2022-21619: Improve NTLM support
+  - JDK-8286533, CVE-2022-21626: Key X509 usages
+  - JDK-8286910, CVE-2022-21624: Improve JNDI lookups
+  - JDK-8286918, CVE-2022-21628: Better HttpServer service
+  - JDK-8287446: Enhance icon presentations
+  - JDK-8288508: Enhance ECDSA usage
+  - JDK-8289366, CVE-2022-39399: Improve HTTP/2 client usage
+  - JDK-8289853: Update HarfBuzz to 4.4.1
+  - JDK-8290334: Update FreeType to 2.12.1
+  - JDK-8293429: [11u] minor update in attribute style
 * Other changes
   - JDK-6606767: resexhausted00[34] fail assert(!thread->owns_locks(), "must release all locks when leaving VM")
   - JDK-6854300: [TEST_BUG] java/awt/event/MouseEvent/SpuriousExitEnter/SpuriousExitEnter_3.java fails in jdk6u14 & jdk7
@@ -205,13 +221,11 @@ Live versions of these release notes can be found at:
   - JDK-8289549: ISO 4217 Amendment 172 Update
   - JDK-8289569: [test] java/lang/ProcessBuilder/Basic.java fails on Alpine/musl
   - JDK-8289799: Build warning in methodData.cpp memset zero-length parameter
-  - JDK-8289853: Update HarfBuzz to 4.4.1
   - JDK-8289856: [PPC64] SIGSEGV in C2Compiler::init_c2_runtime() after JDK-8289060
   - JDK-8290000: Bump macOS GitHub actions to macOS 11
   - JDK-8290004: [PPC64] JfrGetCallTrace: assert(_pc != nullptr) failed: must have PC
   - JDK-8290198: Shenandoah: a few Shenandoah tests failure after JDK-8214799 11u backport
   - JDK-8290246: test fails "assert(init != __null) failed: initialization not found"
-  - JDK-8290334: Update FreeType to 2.12.1
   - JDK-8290813: jdk/nashorn/api/scripting/test/ScriptObjectMirrorTest.java fails: assertEquals is ambiguous
   - JDK-8290886: [11u]: Backport of JDK-8266250 introduced test failures
   - JDK-8291570: [TESTBUG] Part of JDK-8250984 absent from 11u
@@ -219,6 +233,7 @@ Live versions of these release notes can be found at:
   - JDK-8291794: [11u] Corrections after backport of JDK-8212028
   - JDK-8292579: (tz) Update Timezone Data to 2022c
   - JDK-8292852: [11u] TestMemoryWithCgroupV1 fails after JDK-8292768
+  - JDK-8295057: [11u] Remove designator DEFAULT_PROMOTED_VERSION_PRE=ea for release 11.0.17
 
 Notes on individual issues:
 ===========================
@@ -238,6 +253,17 @@ connections to servers and proxies separately. They are:
 respectively. More information about them can be found on the
 Networking Properties page:
 https://docs.oracle.com/en/java/javase/19/docs/api/java.base/java/net/doc-files/net-properties.html.
+
+JDK-8286918: Better HttpServer service
+======================================
+The HttpServer can be optionally configured with a maximum connection
+limit by setting the jdk.httpserver.maxConnections system property. A
+value of 0 or a negative integer is ignored and considered to
+represent no connection limit. In the case of a positive integer
+value, any newly accepted connections will be first checked against
+the current count of established connections and, if the configured
+limit has been reached, then the newly accepted connection will be
+closed immediately.
 
 hotspot/runtime:
 

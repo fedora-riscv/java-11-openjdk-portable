@@ -5,6 +5,7 @@ TREE=${1}
 TYPE=${2}
 
 ZIP_SRC=src/java.base/share/native/libzip/zlib/
+FREETYPE_SRC=src/java.desktop/share/native/libfreetype/
 JPEG_SRC=src/java.desktop/share/native/libjavajpeg/
 GIF_SRC=src/java.desktop/share/native/libsplashscreen/giflib/
 PNG_SRC=src/java.desktop/share/native/libsplashscreen/libpng/
@@ -31,15 +32,21 @@ cd ${TREE}
 
 echo "Removing built-in libs (they will be linked)"
 
-# On full runs, allow for zlib having already been deleted by minimal
+# On full runs, allow for zlib & freetype having already been deleted by minimal
 echo "Removing zlib"
 if [ "x${TYPE}" = "xminimal" -a ! -d ${ZIP_SRC} ]; then
 	echo "${ZIP_SRC} does not exist. Refusing to proceed."
 	exit 1
 fi	
 rm -rvf ${ZIP_SRC}
+echo "Removing freetype"
+if [ "x${TYPE}" = "xminimal" -a ! -d ${FREETYPE_SRC} ]; then
+	echo "${FREETYPE_SRC} does not exist. Refusing to proceed."
+	exit 1
+fi
+rm -rvf ${FREETYPE_SRC}
 
-# Minimal is limited to just zlib so finish here
+# Minimal is limited to just zlib and freetype so finish here
 if test "x${TYPE}" = "xminimal"; then
     echo "Finished.";
     exit 0;

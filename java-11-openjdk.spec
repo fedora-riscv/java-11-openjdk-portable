@@ -377,8 +377,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        7
-%global rpmrelease      2
+%global buildver        8
+%global rpmrelease      1
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -406,7 +406,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           0
+%global is_ga           1
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -1989,7 +1989,9 @@ function buildjdk() {
     local top_dir_abs_src_path=$(pwd)/%{top_level_dir_name}
     local top_dir_abs_build_path=$(pwd)/${outputdir}
 
-    if [ "x${link_opt}" = "xbundled" ] ; then
+    # This must be set using the global, so that the
+    # static libraries still use a dynamic stdc++lib
+    if [ "x%{link_type}" = "xbundled" ] ; then
         libc_link_opt="static";
     else
         libc_link_opt="dynamic";
@@ -2006,6 +2008,10 @@ function buildjdk() {
     mkdir -p ${outputdir}
     pushd ${outputdir}
 
+    # Note: zlib and freetype use %{link_type}
+    # rather than ${link_opt} as the system versions
+    # are always used in a system_libs build, even
+    # for the static library build
     bash ${top_dir_abs_src_path}/configure \
 %ifarch %{zero_arches}
     --with-jvm-variants=zero \
@@ -2026,8 +2032,8 @@ function buildjdk() {
     --with-native-debug-symbols="%{debug_symbols}" \
     --disable-sysconf-nss \
     --enable-unlimited-crypto \
-    --with-zlib=${link_opt} \
-    --with-freetype=${link_opt} \
+    --with-zlib=%{link_type} \
+    --with-freetype=%{link_type} \
     --with-libjpeg=${link_opt} \
     --with-giflib=${link_opt} \
     --with-libpng=${link_opt} \
@@ -2721,6 +2727,13 @@ end
 %endif
 
 %changelog
+* Wed Oct 19 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.17.0.8-1
+- Update to jdk-11.0.17+8 (GA)
+- Update release notes to 11.0.17+8
+- Switch to GA mode for release
+- The stdc++lib, zlib & freetype options should always be set from the global, so they are not altered for staticlibs builds
+- Remove freetype sources along with zlib sources
+
 * Sat Oct 15 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.17.0.7-0.2.ea
 - Update in-tree tzdata to 2022e with JDK-8294357 & JDK-8295173
 - Update CLDR data with Europe/Kyiv (JDK-8293834)
