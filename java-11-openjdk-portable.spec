@@ -967,6 +967,7 @@ pushd %{top_level_dir_name}
 %patch2001 -p1
 %patch2002 -p1
 %patch2003 -p1
+%patch7777 -p1
 popd # openjdk
 
 %patch600
@@ -1233,7 +1234,8 @@ function installjdk() {
     tar -cJf ../../../../%{staticlibsportablearchive -- "$nameSuffix"} --transform "s|^%{static_libs_image}/lib/*|$portableJDKname/lib/static/linux-%{archinstall}/glibc/|" "%{static_libs_image}/lib"
     sha256sum ../../../../%{staticlibsportablearchive -- "$nameSuffix"} > ../../../../%{staticlibsportablearchive -- "$nameSuffix"}.sha256sum
 %endif
-    if [ "x$suffix" == "x" ] ; then
+    if false ; then
+    # if [ "x$suffix" == "x" ] ; then
       dnameSuffix="$nameSuffix".debuginfo
       tar -cJf ../../../../%{jdkportablearchive -- "$dnameSuffix"} $(find %{jdkportablename -- "$nameSuffix"}/ -name \*.debuginfo)
       sha256sum ../../../../%{jdkportablearchive -- "$dnameSuffix"} > ../../../../%{jdkportablearchive -- "$dnameSuffix"}.sha256sum
@@ -1305,9 +1307,9 @@ done
 # We test debug first as it will give better diagnostics on a crash
 for suffix in %{build_loop} ; do
 
-top_dir_abs_main_build_path=$(pwd)/%{installoutputdir -- ${suffix}%{main_suffix}}
+top_dir_abs_main_build_path=$(pwd)/%{installoutputdir -- ${suffix}}
 %if %{include_staticlibs}
-top_dir_abs_staticlibs_build_path=$(pwd)/%{installoutputdir -- ${suffix}%{staticlibs_loop}}
+top_dir_abs_staticlibs_build_path=${top_dir_abs_main_build_path}
 %endif
 
 export JAVA_HOME=${top_dir_abs_main_build_path}/images/%{jdkimage}
@@ -1331,7 +1333,8 @@ $JAVA_HOME/bin/java $(echo $(basename %{SOURCE14})|sed "s|\.java||")
 $JAVA_HOME/bin/javac -d . %{SOURCE15}
 export PROG=$(echo $(basename %{SOURCE15})|sed "s|\.java||")
 export SEC_DEBUG="-Djava.security.debug=properties"
-$JAVA_HOME/bin/java ${SEC_DEBUG} ${PROG} true
+# Specific to portable:System security properties to be off by default
+$JAVA_HOME/bin/java ${SEC_DEBUG} ${PROG} false
 $JAVA_HOME/bin/java ${SEC_DEBUG} -Djava.security.disableSystemPropertiesFile=true ${PROG} false
 
 # Check java launcher has no SSB mitigation
@@ -1467,11 +1470,6 @@ for suffix in %{build_loop} ; do
   mv ../%{staticlibsportablearchive -- "$nameSuffix"} $RPM_BUILD_ROOT%{_jvmdir}/
   mv ../%{staticlibsportablearchive -- "$nameSuffix"}.sha256sum $RPM_BUILD_ROOT%{_jvmdir}/
 %endif
-  if [ "x$suffix" == "x" ] ; then
-      dnameSuffix="$nameSuffix".debuginfo
-      mv ../%{jdkportablearchive -- "$dnameSuffix"} $RPM_BUILD_ROOT%{_jvmdir}/
-      mv ../%{jdkportablearchive -- "$dnameSuffix"}.sha256sum $RPM_BUILD_ROOT%{_jvmdir}/
-  fi
 # To show sha in the build log
 for file in `ls $RPM_BUILD_ROOT%{_jvmdir}/*.sha256sum` ; do ls -l $file ; cat $file ; done
 done
