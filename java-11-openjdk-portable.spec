@@ -1,3 +1,11 @@
+%if (0%{?rhel} > 0 && 0%{?rhel} < 8)
+# portable jdk 17 specific bug, _jvmdir being missing
+%define _jvmdir /usr/lib/jvm
+%endif
+
+# debug_package %%{nil} is portable-jdks specific
+%define  debug_package %{nil}
+
 # RPM conditionals so as to be able to dynamically produce
 # slowdebug/release builds. See:
 # http://rpm.org/user_doc/conditional_builds.html
@@ -27,6 +35,8 @@
 %bcond_without fresh_libjvm
 # Build with system libraries
 %bcond_with system_libs
+
+%global unpacked_licenses %{_datarootdir}/licenses
 
 # Workaround for stripping of debug symbols from static libraries
 %if %{with staticlibs}
@@ -161,7 +171,7 @@
 # On certain architectures, we compile the Shenandoah GC
 %ifarch %{shenandoah_arches}
 %global use_shenandoah_hotspot 1
-%global shenandoah_feature -shenandoahgc
+%global shenandoah_feature shenandoahgc
 %else
 %global use_shenandoah_hotspot 0
 %global shenandoah_feature -shenandoahgc
@@ -408,7 +418,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           1
+%global is_ga           0
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -1072,6 +1082,7 @@ function buildjdk() {
     local maketargets="${3}"
     local debuglevel=${4}
     local link_opt=${5}
+    local debug_symbols=${6}
 
     local top_dir_abs_src_path=$(pwd)/%{top_level_dir_name}
     local top_dir_abs_build_path=$(pwd)/${outputdir}
@@ -1090,6 +1101,7 @@ function buildjdk() {
     echo "Using make targets: ${maketargets}"
     echo "Using debuglevel: ${debuglevel}"
     echo "Using link_opt: ${link_opt}"
+    echo "Using debug_symbols: ${debug_symbols}"
     echo "Building %{newjavaver}-%{buildver}, pre=%{ea_designator}, opt=%{lts_designator}"
 
     mkdir -p ${outputdir}
@@ -1137,7 +1149,9 @@ function buildjdk() {
     --with-extra-ldflags="%{ourldflags}" \
     --with-num-cores="$NUM_PROC" \
     --disable-javac-server \
-    --with-jvm-features="%{shenandoah_feature},%{zgc_feature}" \
+%ifarch %{zgc_arches}
+    --with-jvm-features=zgc \
+%endif
     --disable-warnings-as-errors
 
     cat spec.gmk
@@ -1252,29 +1266,30 @@ function installjdk() {
 
 %if %{build_hotspot_first}
   # Build a fresh libjvm.so first and use it to bootstrap
-  cp -LR --preserve=mode,timestamps %{bootjdk} newboot
+  cp -LR --preserve=mode,timestamps $BOOT_JDK newboot
   systemjdk=$(pwd)/newboot
-  buildjdk build/newboot ${systemjdk} %{hotspot_target} "release" "bundled"
+  buildjdk build/newboot ${systemjdk} %{hotspot_target} "release" "bundled" "internal"
   mv build/newboot/jdk/lib/server/libjvm.so newboot/lib/server
 %else
-  systemjdk=%{bootjdk}
+  systemjdk=$BOOT_JDK
 %endif
 
 for suffix in %{build_loop} ; do
-
-  if [ "x$suffix" = "x" ] ; then
-      debugbuild=release
-  else
-      # change --something to something
-      debugbuild=`echo $suffix  | sed "s/-//g"`
-  fi
+if [ "x$suffix" = "x" ] ; then
+  debugbuild=release
+  debug_symbols=external # portables specific
+else
+  # change --something to something
+  debugbuild=`echo $suffix  | sed "s/-//g"`
+  debug_symbols=internal
+fi
 
 builddir=%{buildoutputdir -- ${suffix}}
 bootbuilddir=boot${builddir}
 installdir=%{installoutputdir -- ${suffix}}
 bootinstalldir=boot${installdir}
 
-
+link_opt="bundled"
 
 # Debug builds don't need same targets as release for
 # build speed-up. We also avoid bootstrapping these
@@ -1315,9 +1330,9 @@ top_dir_abs_staticlibs_build_path=${top_dir_abs_main_build_path}
 export JAVA_HOME=${top_dir_abs_main_build_path}/images/%{jdkimage}
 
 #check Shenandoah is enabled
-%if %{use_shenandoah_hotspot}
-$JAVA_HOME//bin/java -XX:+UseShenandoahGC -version
-%endif
+#%if %{use_shenandoah_hotspot}
+#$JAVA_HOME/bin/java -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -version
+#%endif
 
 # Check unlimited policy has been used
 $JAVA_HOME/bin/javac -d . %{SOURCE13}
@@ -1391,7 +1406,7 @@ do
     do
      # We expect to see .cpp files, except for architectures like aarch64 and
      # s390 where we expect .o and .oS files
-      echo "$line" | grep -E "ABS ((.*/)?[-_a-zA-Z0-9]+\.(c|cc|cpp|cxx|o|oS))?$"
+      echo "$line" | grep -E "ABS ((.*/)?[-_a-zA-Z0-9]+\.(c|cc|cpp|cxx|o|S|oS))?$"
     done
     IFS="$old_IFS"
 
@@ -1470,6 +1485,9 @@ for suffix in %{build_loop} ; do
   mv ../%{staticlibsportablearchive -- "$nameSuffix"} $RPM_BUILD_ROOT%{_jvmdir}/
   mv ../%{staticlibsportablearchive -- "$nameSuffix"}.sha256sum $RPM_BUILD_ROOT%{_jvmdir}/
 %endif
+
+  mkdir -p $RPM_BUILD_ROOT%{unpacked_licenses}
+  mv ../%{jdkportablearchive -- "$nameSuffix"}-legal $RPM_BUILD_ROOT%{unpacked_licenses}/%{jdkportablearchive -- "$nameSuffix"}
 # To show sha in the build log
 for file in `ls $RPM_BUILD_ROOT%{_jvmdir}/*.sha256sum` ; do ls -l $file ; cat $file ; done
 done
