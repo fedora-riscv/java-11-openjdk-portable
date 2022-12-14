@@ -593,7 +593,7 @@ Source0: openjdk-jdk%{featurever}u-%{vcstag}-4curve.tar.xz
 # They are based on code contained in the IcedTea project (6.x).
 # Systemtap tapsets. Zipped up to keep it small.
 # Disabled in portables
-Source8: tapsets-icedtea-%%{icedteaver}.tar.xz
+#Source8: tapsets-icedtea-%%{icedteaver}.tar.xz
 
 # Desktop files. Adapted from IcedTea
 # Disabled in portables
@@ -607,7 +607,7 @@ Source11: nss.cfg.in
 
 # Removed libraries that we link instead
 # Disabled in portables
-Source12: remove-intree-libraries.sh
+#Source12: remove-intree-libraries.sh
 
 # Ensure we aren't using the limited crypto policy
 Source13: TestCryptoLevel.java
@@ -1239,7 +1239,7 @@ function installjdk() {
     tar -cJf ../../../../%{jreportablearchive -- "$nameSuffix"}  --exclude='**.debuginfo' %{jreportablename -- "$nameSuffix"}
     sha256sum ../../../../%{jreportablearchive -- "$nameSuffix"} > ../../../../%{jreportablearchive -- "$nameSuffix"}.sha256sum
     # copy licenses so they are avialable out of tarball
-    cp -r  %{jdkportablename -- "$nameSuffix"}/legal  ../../../../%{jdkportablearchive -- "$nameSuffix"}-legal
+    cp -rf  %{jdkportablename -- "$nameSuffix"}/legal  ../../../../%{jdkportablearchive -- "$nameSuffix"}-legal
 %if %{include_staticlibs}
     # Static libraries (needed for building graal vm with native image)
     # Tar as overlay. Transform to the JDK name, since we just want to "add"
