@@ -1149,15 +1149,11 @@ function buildjdk() {
     --with-extra-ldflags="%{ourldflags}" \
     --with-num-cores="$NUM_PROC" \
     --disable-javac-server \
-%ifarch %{zgc_arches}
-    --with-jvm-features=zgc \
-%endif
+    --with-jvm-features="%{shenandoah_feature},%{zgc_feature}" \
     --disable-warnings-as-errors
 
     cat spec.gmk
-
     make \
-      JAVAC_FLAGS=-g \
       LOG=trace \
       WARNINGS_ARE_ERRORS="-Wno-error" \
       CFLAGS_WARNINGS_ARE_ERRORS="-Wno-error" \
@@ -1167,101 +1163,118 @@ function buildjdk() {
 }
 
 function installjdk() {
-    local outputdir=${1}
-    local installdir=${2}
-    #Portable specific. We use this for setting JAVA_HOME and JRE_HOME
-    local imagepath=$(pwd)/${installdir}
+    local imagepath=${1}
 
-    echo "Installing build from ${outputdir} to ${installdir}..."
-    mkdir -p ${installdir}
-    echo "Installing images..."
-    mv ${outputdir}/images ${installdir}
-    if [ -d ${outputdir}/bundles ] ; then
-	echo "Installing bundles...";
-	mv ${outputdir}/bundles ${installdir} ;
-    fi
-    if [ -d ${outputdir}/docs ] ; then
-	echo "Installing docs...";
-	mv ${outputdir}/docs ${installdir} ;
-    fi
-
-    %if !%{with artifacts}
-        echo "Removing output directory...";
-        rm -rf ${outputdir}
-    %endif
-
+    if [ -d ${imagepath} ] ; then
         # the build (erroneously) removes read permissions from some jars
         # this is a regression in OpenJDK 7 (our compiler):
         # http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1437
-        find ${imagepath}/images/%{jdkimage} -iname '*.jar' -exec chmod ugo+r {} \;
+        find ${imagepath} -iname '*.jar' -exec chmod ugo+r {} \;
 
         # Build screws up permissions on binaries
         # https://bugs.openjdk.java.net/browse/JDK-8173610
-        find ${imagepath}/images/%{jdkimage} -iname '*.so' -exec chmod +x {} \;
-        find ${imagepath}/images/%{jdkimage}/bin/ -exec chmod +x {} \;
+        find ${imagepath} -iname '*.so' -exec chmod +x {} \;
+        find ${imagepath}/bin/ -exec chmod +x {} \;
 
         # Install nss.cfg right away as we will be using the JRE above
-        export JAVA_HOME=${imagepath}/images/%{jdkimage}
-        export JRE_HOME=${imagepath}/images/%{jreimage} #portable specific
+        install -m 644 nss.cfg ${imagepath}/conf/security/
 
-
-        # Install nss.cfg right away as we will be using the JRE above
-        toplevel_build_dir=`echo %{_builddir}/%{name}-%{version}-%{release}.%{_arch} | sed "s/-portable-/-/"` #nss.cfg is left in top level dir, which do not have portable in package name (note, the missleading name x spec/repo name)
-        install -m 644 $toplevel_build_dir/nss.cfg $JAVA_HOME/conf/security/
-        install -m 644 $toplevel_build_dir/nss.cfg $JRE_HOME/conf/security/ #portable specific
         # Install nss.fips.cfg: NSS configuration for global FIPS mode (crypto-policies)
-        install -m 644 $toplevel_build_dir/nss.fips.cfg $JAVA_HOME/conf/security/
-        install -m 644 $toplevel_build_dir/nss.fips.cfg $JRE_HOME/conf/security/ #portable specific
+        install -m 644 nss.fips.cfg ${imagepath}/conf/security/
+
+        # Turn on system security properties
+        sed -i -e "s:^security.useSystemPropertiesFile=.*:security.useSystemPropertiesFile=true:" \
+            ${imagepath}/conf/security/java.security
 
 
-	# Use system-wide tzdata
-	# rm ${imagepath}/lib/tzdb.dat
-	# ln -s %{_datadir}/javazi-1.8/tzdb.dat ${imagepath}/lib/tzdb.dat
+        # Rename OpenJDK cacerts database
+        mv ${imagepath}/lib/security/cacerts{,.upstream}
+        # Install cacerts symlink needed by some apps which hard-code the path
+        ln -sv /etc/pki/java/cacerts ${imagepath}/lib/security
 
-  pushd ${imagepath}/images
-   if [ "x$suffix" == "x" ] ; then
-     nameSuffix=""
-   else
-     nameSuffix=`echo "$suffix"| sed s/-/./`
-   fi
-    cp  %{SOURCE10} %{jdkimage}/
-    cp  %{SOURCE10} %{jreimage}/
-    for dir in %{jdkimage} %{jreimage} ; do
-      # Create fake alt-java as a placeholder for future alt-java
-      # add alt-java man page
-      echo "Hardened java binary recommended for launching untrusted code from the Web e.g. javaws" > "$dir"/man/man1/%{alt_java_name}.1
-      cat "$dir"/man/man1/java.1 >> "$dir"/man/man1/%{alt_java_name}.1
-    done
-    mv %{jdkimage} %{jdkportablename -- "$nameSuffix"}
-    mv %{jreimage} %{jreportablename -- "$nameSuffix"}
-    tar -cJf ../../../../%{jdkportablearchive -- "$nameSuffix"}  --exclude='**.debuginfo' %{jdkportablename -- "$nameSuffix"}
-    sha256sum ../../../../%{jdkportablearchive -- "$nameSuffix"} > ../../../../%{jdkportablearchive -- "$nameSuffix"}.sha256sum
-    tar -cJf ../../../../%{jreportablearchive -- "$nameSuffix"}  --exclude='**.debuginfo' %{jreportablename -- "$nameSuffix"}
-    sha256sum ../../../../%{jreportablearchive -- "$nameSuffix"} > ../../../../%{jreportablearchive -- "$nameSuffix"}.sha256sum
-    # copy licenses so they are avialable out of tarball
-    cp -rf  %{jdkportablename -- "$nameSuffix"}/legal  ../../../../%{jdkportablearchive -- "$nameSuffix"}-legal
-%if %{include_staticlibs}
-    # Static libraries (needed for building graal vm with native image)
-    # Tar as overlay. Transform to the JDK name, since we just want to "add"
-    # static libraries to that folder
-    portableJDKname=%{staticlibsportablename -- "$nameSuffix"}
-    tar -cJf ../../../../%{staticlibsportablearchive -- "$nameSuffix"} --transform "s|^%{static_libs_image}/lib/*|$portableJDKname/lib/static/linux-%{archinstall}/glibc/|" "%{static_libs_image}/lib"
-    sha256sum ../../../../%{staticlibsportablearchive -- "$nameSuffix"} > ../../../../%{staticlibsportablearchive -- "$nameSuffix"}.sha256sum
-%endif
-    if false ; then
-    # if [ "x$suffix" == "x" ] ; then
-      dnameSuffix="$nameSuffix".debuginfo
-      tar -cJf ../../../../%{jdkportablearchive -- "$dnameSuffix"} $(find %{jdkportablename -- "$nameSuffix"}/ -name \*.debuginfo)
-      sha256sum ../../../../%{jdkportablearchive -- "$dnameSuffix"} > ../../../../%{jdkportablearchive -- "$dnameSuffix"}.sha256sum
+        # Create fake alt-java as a placeholder for future alt-java
+        pushd ${imagepath}
+        # add alt-java man page
+        echo "Hardened java binary recommended for launching untrusted code from the Web e.g. javaws" > man/man1/%{alt_java_name}.1
+        cat man/man1/java.1 >> man/man1/%{alt_java_name}.1
+        popd
     fi
-    mv %{jdkportablename -- "$nameSuffix"} %{jdkimage}
-    mv %{jreportablename -- "$nameSuffix"} %{jreimage}
-  popd #images
+}
 
-  # Print release information
-  # Tweaked as per portable directory structure
-  cat ${imagepath}/images/%{jreimage}/release
+# Checks on debuginfo must be performed before the files are stripped
+# by the RPM installation stage
+function debugcheckjdk() {
+    local imagepath=${1}
 
+    if [ -d ${imagepath} ] ; then
+
+        so_suffix="so"
+        # Check debug symbols are present and can identify code
+        find "${imagepath}" -iname "*.$so_suffix" -print0 | while read -d $'\0' lib
+        do
+            if [ -f "$lib" ] ; then
+                echo "Testing $lib for debug symbols"
+                # All these tests rely on RPM failing the build if the exit code of any set
+                # of piped commands is non-zero.
+
+                # Test for .debug_* sections in the shared object. This is the main test
+                # Stripped objects will not contain these
+                eu-readelf -S "$lib" | grep "] .debug_"
+                test $(eu-readelf -S "$lib" | grep -E "\]\ .debug_(info|abbrev)" | wc --lines) == 2
+
+                # Test FILE symbols. These will most likely be removed by anything that
+                # manipulates symbol tables because it's generally useless. So a nice test
+                # that nothing has messed with symbols
+                old_IFS="$IFS"
+                IFS=$'\n'
+                for line in $(eu-readelf -s "$lib" | grep "00000000      0 FILE    LOCAL  DEFAULT")
+                do
+                    # We expect to see .cpp and .S files, except for architectures like aarch64 and
+                    # s390 where we expect .o and .oS files
+                    echo "$line" | grep -E "ABS ((.*/)?[-_a-zA-Z0-9]+\.(c|cc|cpp|cxx|o|S|oS))?$"
+                done
+                IFS="$old_IFS"
+
+                # If this is the JVM, look for javaCalls.(cpp|o) in FILEs, for extra sanity checking
+                if [ "`basename $lib`" = "libjvm.so" ]; then
+                    eu-readelf -s "$lib" | \
+                        grep -E "00000000      0 FILE    LOCAL  DEFAULT      ABS javaCalls.(cpp|o)$"
+                fi
+
+                # Test that there are no .gnu_debuglink sections pointing to another
+                # debuginfo file. There shouldn't be any debuginfo files, so the link makes
+                # no sense either
+                eu-readelf -S "$lib" | grep 'gnu'
+                if eu-readelf -S "$lib" | grep "\] .gnu_debuglink" | grep PROGBITS; then
+                   echo "bad .gnu_debuglink section."
+                   eu-readelf -x .gnu_debuglink "$lib"
+                   false
+                fi
+            fi
+        done
+
+        # Make sure gdb can do a backtrace based on line numbers on libjvm.so
+        # javaCalls.cpp:58 should map to:
+        # http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/ff3b27e6bcc2/src/share/vm/runtime/javaCalls.cpp#l58
+        # Using line number 1 might cause build problems. See:
+        # https://bugzilla.redhat.com/show_bug.cgi?id=1539664
+        # https://bugzilla.redhat.com/show_bug.cgi?id=1538767
+        gdb -q "${imagepath}/bin/java" <<EOF | tee gdb.out
+handle SIGSEGV pass nostop noprint
+handle SIGILL pass nostop noprint
+set breakpoint pending on
+break javaCalls.cpp:58
+commands 1
+backtrace
+quit
+end
+run -version
+EOF
+%ifarch %{gdb_arches}
+        grep 'JavaCallWrapper::JavaCallWrapper' gdb.out
+%endif
+
+    fi
 }
 
 %if %{build_hotspot_first}
@@ -1291,30 +1304,247 @@ bootinstalldir=boot${installdir}
 
 link_opt="bundled"
 
-# Debug builds don't need same targets as release for
-# build speed-up. We also avoid bootstrapping these
-# slower builds.
-if echo $debugbuild | grep -q "debug" ; then
-  maketargets="%{debug_targets}"
-  run_bootstrap=false
-else
-  maketargets="%{release_targets}"
-  run_bootstrap=%{bootstrap_build}
-fi
+  for loop in %{main_suffix} %{staticlibs_loop} ; do
 
-if ${run_bootstrap} ; then
-  buildjdk ${bootbuilddir} ${systemjdk} "%{bootstrap_targets}" ${debugbuild} ${link_opt} ${debug_symbols}
-  installjdk ${bootbuilddir} ${bootinstalldir}
-  buildjdk ${builddir} $(pwd)/${bootinstalldir}/images/%{jdkimage} "${maketargets}" ${debugbuild} ${link_opt} ${debug_symbols}
-  installjdk ${builddir} ${installdir}
-  %{!?with_artifacts:rm -rf ${bootinstalldir}}
-else
-  buildjdk ${builddir} ${systemjdk} "${maketargets}" ${debugbuild} ${link_opt} ${debug_symbols}
-  installjdk ${builddir} ${installdir}
-fi
+    builddir=%{buildoutputdir -- ${suffix}${loop}}
+    bootbuilddir=boot${builddir}
+
+    if test "x${loop}" = "x%{main_suffix}" ; then
+      link_opt="%{link_type}"
+%if %{system_libs}
+      # Copy the source tree so we can remove all in-tree libraries
+      cp -a %{top_level_dir_name} %{top_level_dir_name_backup}
+      # Remove all libraries that are linked
+      sh %{SOURCE12} %{top_level_dir_name} full
+%endif
+      # Debug builds don't need same targets as release for
+      # build speed-up. We also avoid bootstrapping these
+      # slower builds.
+      if echo $debugbuild | grep -q "debug" ; then
+        maketargets="%{debug_targets}"
+        run_bootstrap=false
+      else
+        maketargets="%{release_targets}"
+        run_bootstrap=%{bootstrap_build}
+      fi
+      if ${run_bootstrap} ; then
+        buildjdk ${bootbuilddir} ${systemjdk} "%{bootstrap_targets}" ${debugbuild} ${link_opt}
+        buildjdk ${builddir} $(pwd)/${bootbuilddir}/images/%{jdkimage} "${maketargets}" ${debugbuild} ${link_opt}
+        rm -rf ${bootbuilddir}
+      else
+        buildjdk ${builddir} ${systemjdk} "${maketargets}" ${debugbuild} ${link_opt}
+      fi
+%if %{system_libs}
+      # Restore original source tree we modified by removing full in-tree sources
+      rm -rf %{top_level_dir_name}
+      mv %{top_level_dir_name_backup} %{top_level_dir_name}
+%endif
+    else
+      # Use bundled libraries for building statically
+      link_opt="bundled"
+      # Static library cycle only builds the static libraries
+      maketargets="%{static_libs_target}"
+      # Always just do the one build for the static libraries
+      buildjdk ${builddir} ${systemjdk} "${maketargets}" ${debugbuild} ${link_opt}
+    fi
+
+  done # end of main / staticlibs loop
+
+  # Final setup on the main image
+  top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
+  installjdk ${top_dir_abs_main_build_path}/images/%{jdkimage}
+  # Check debug symbols were built into the dynamic libraries
+  debugcheckjdk ${top_dir_abs_main_build_path}/images/%{jdkimage}
+
+  # Print release information
+  cat ${top_dir_abs_main_build_path}/images/%{jdkimage}/release
+
+################################################################################
+  pushd ${top_dir_abs_main_build_path}/images
+  if [ "x$suffix" == "x" ] ; then
+    nameSuffix=""
+  else
+    nameSuffix=`echo "$suffix"| sed s/-/./`
+  fi
+    mv %{jdkimage} %{jdkportablename -- "$nameSuffix"}
+    mv %{jreimage} %{jreportablename -- "$nameSuffix"}
+    tar -cJf ../../../../%{jdkportablearchive -- "$nameSuffix"}  --exclude='**.debuginfo' %{jdkportablename -- "$nameSuffix"}
+    sha256sum ../../../../%{jdkportablearchive -- "$nameSuffix"} > ../../../../%{jdkportablearchive -- "$nameSuffix"}.sha256sum
+    tar -cJf ../../../../%{jreportablearchive -- "$nameSuffix"}  --exclude='**.debuginfo' %{jreportablename -- "$nameSuffix"}
+    sha256sum ../../../../%{jreportablearchive -- "$nameSuffix"} > ../../../../%{jreportablearchive -- "$nameSuffix"}.sha256sum
+    # copy licenses so they are avialable out of tarball
+    cp -rf  %{jdkportablename -- "$nameSuffix"}/legal  ../../../../%{jdkportablearchive -- "%{normal_suffix}"}-legal
+    mv %{jdkportablename -- "$nameSuffix"} %{jdkimage}
+    mv %{jreportablename -- "$nameSuffix"} %{jreimage}
+  popd #images
+%if %{include_staticlibs}
+  top_dir_abs_staticlibs_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{staticlibs_suffix}}
+  pushd ${top_dir_abs_staticlibs_build_path}/images
+    # Static libraries (needed for building graal vm with native image)
+    # Tar as overlay. Transform to the JDK name, since we just want to "add"
+    # static libraries to that folder
+    portableJDKname=%{staticlibsportablename -- "$nameSuffix"}
+    tar -cJf ../../../../%{staticlibsportablearchive -- "$nameSuffix"} --transform "s|^%{static_libs_image}/lib/*|$portableJDKname/lib/static/linux-%{archinstall}/glibc/|" "%{static_libs_image}/lib"
+    sha256sum ../../../../%{staticlibsportablearchive -- "$nameSuffix"} > ../../../../%{staticlibsportablearchive -- "$nameSuffix"}.sha256sum
+  popd #staticlibs-images
+%endif
+################################################################################
+# note, currently no debuginfo, consult portbale spec for external (zipped) debuginfo, being tarred alone
+################################################################################
 
 # build cycles
-# end of release / debug cycle loop
+done # end of release / debug cycle loop
+
+%install
+#STRIP_KEEP_SYMTAB is not applicable in portables
+STRIP_KEEP_SYMTAB=libjvm*
+
+for suffix in %{build_loop} ; do
+top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
+if [ "fixme" == "todo" ] ; then  #todo, extract some parts to build, drop the rest - but keep it in rpms after repack
+
+# done in build
+%if %{include_staticlibs}
+top_dir_abs_staticlibs_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{staticlibs_loop}}
+%endif
+jdk_image=${top_dir_abs_main_build_path}/images/%{jdkimage}
+
+# tbd in rpms
+# Install the jdk
+mkdir -p $RPM_BUILD_ROOT%{_jvmdir}
+cp -a ${jdk_image} $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}
+
+pushd ${jdk_image}
+
+# tbd in rpms
+%if %{with_systemtap}
+  # Install systemtap support files
+  install -dm 755 $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/tapset
+  # note, that uniquesuffix  is in BUILD dir in this case
+  cp -a $RPM_BUILD_DIR/%{uniquesuffix ""}/tapset$suffix/*.stp $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/tapset/
+  pushd  $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/tapset/
+   tapsetFiles=`ls *.stp`
+  popd
+  install -d -m 755 $RPM_BUILD_ROOT%{tapsetdir}
+  for name in $tapsetFiles ; do
+    targeinterntName=`echo $name | sed "s/.stp/$suffix.stp/"`
+    ln -srvf $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/tapset/$name $RPM_BUILD_ROOT%{tapsetdir}/$targetName
+  done
+%endif
+
+# tbd in rpms
+  # Install version-ed symlinks
+  pushd $RPM_BUILD_ROOT%{_jvmdir}
+    ln -sf %{sdkdir -- $suffix} %{jrelnk -- $suffix}
+  popd
+
+# todo fix in build
+  # Install man pages
+  install -d -m 755 $RPM_BUILD_ROOT%{_mandir}/man1
+  for manpage in man/man1/*
+  do
+    # Convert man pages to UTF8 encoding
+    iconv -f ISO_8859-1 -t UTF8 $manpage -o $manpage.tmp
+    mv -f $manpage.tmp $manpage
+    install -m 644 -p $manpage $RPM_BUILD_ROOT%{_mandir}/man1/$(basename \
+      $manpage .1)-%{uniquesuffix -- $suffix}.1
+  done
+  # Remove man pages from jdk image
+  rm -rf $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/man
+
+popd
+
+# done in build
+# Install static libs artefacts
+%if %{include_staticlibs}
+mkdir -p $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/%{static_libs_install_dir}
+cp -a ${top_dir_abs_staticlibs_build_path}/images/%{static_libs_image}/lib/*.a \
+  $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/%{static_libs_install_dir}
+%endif
+
+# todo fix in build
+if ! echo $suffix | grep -q "debug" ; then
+  # Install Javadoc documentation
+  install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}
+  cp -a ${top_dir_abs_main_build_path}/images/docs $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}
+  built_doc_archive=jdk-%{filever}%{ea_designator_zip}+%{buildver}%{lts_designator_zip}-docs.zip
+  cp -a ${top_dir_abs_main_build_path}/bundles/${built_doc_archive} \
+     $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip || ls -l ${top_dir_abs_main_build_path}/bundles/
+fi
+
+# todo fix in build
+# Install release notes
+commondocdir=${RPM_BUILD_ROOT}%{_defaultdocdir}/%{uniquejavadocdir -- $suffix}
+install -d -m 755 ${commondocdir}
+cp -a %{SOURCE10} ${commondocdir}
+
+# Install icons and menu entries
+for s in 16 24 32 48 ; do
+  install -D -p -m 644 \
+    %{top_level_dir_name}/src/java.desktop/unix/classes/sun/awt/X11/java-icon${s}.png \
+    $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/${s}x${s}/apps/java-%{javaver}-%{origin}.png
+done
+
+# tbd in rpms
+# Install desktop files
+install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/{applications,pixmaps}
+for e in jconsole$suffix ; do
+    desktop-file-install --vendor=%{uniquesuffix -- $suffix} --mode=644 \
+        --dir=$RPM_BUILD_ROOT%{_datadir}/applications $e.desktop
+done
+
+# tbd in rpms
+# Install /etc/.java/.systemPrefs/ directory
+# See https://bugzilla.redhat.com/show_bug.cgi?id=741821
+mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/.java/.systemPrefs
+
+# todo fix in build
+# copy samples next to demos; samples are mostly js files
+cp -r %{top_level_dir_name}/src/sample  $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/
+
+
+# tbd in rpms
+# moving config files to /etc
+mkdir -p $RPM_BUILD_ROOT/%{etcjavadir -- $suffix}
+mkdir -p $RPM_BUILD_ROOT/%{etcjavadir -- $suffix}/lib
+mv $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/conf/  $RPM_BUILD_ROOT/%{etcjavadir -- $suffix}
+mv $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/lib/security  $RPM_BUILD_ROOT/%{etcjavadir -- $suffix}/lib
+pushd $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}
+  ln -srv $RPM_BUILD_ROOT%{etcjavadir -- $suffix}/conf  ./conf
+popd
+pushd $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/lib
+  ln -srv $RPM_BUILD_ROOT%{etcjavadir -- $suffix}/lib/security  ./security
+popd
+# end moving files to /etc
+
+# todo fix in build
+# stabilize permissions
+find $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/ -name "*.so" -exec chmod 755 {} \; ;
+find $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/ -type d -exec chmod 755 {} \; ;
+find $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/legal -type f -exec chmod 644 {} \; ;
+
+fi # fixme, todo
+
+################################################################################
+  if [ "x$suffix" == "x" ] ; then
+    nameSuffix=""
+  else
+    nameSuffix=`echo "$suffix"| sed s/-/./`
+  fi
+  mkdir -p $RPM_BUILD_ROOT%{_jvmdir}
+  mv ../%{jdkportablearchive -- "$nameSuffix"} $RPM_BUILD_ROOT%{_jvmdir}/
+  mv ../%{jdkportablearchive -- "$nameSuffix"}.sha256sum $RPM_BUILD_ROOT%{_jvmdir}/
+  mv ../%{jreportablearchive -- "$nameSuffix"} $RPM_BUILD_ROOT%{_jvmdir}/
+  mv ../%{jreportablearchive -- "$nameSuffix"}.sha256sum $RPM_BUILD_ROOT%{_jvmdir}/
+%if %{include_staticlibs}
+  mv ../%{staticlibsportablearchive -- "$nameSuffix"} $RPM_BUILD_ROOT%{_jvmdir}/
+  mv ../%{staticlibsportablearchive -- "$nameSuffix"}.sha256sum $RPM_BUILD_ROOT%{_jvmdir}/
+%endif
+
+  mkdir -p $RPM_BUILD_ROOT%{unpacked_licenses}
+  mv ../%{jdkportablearchive -- "$nameSuffix"}-legal $RPM_BUILD_ROOT%{unpacked_licenses}/%{jdkportablearchive -- "$nameSuffix"}
+# To show sha in the build log
+for file in `ls $RPM_BUILD_ROOT%{_jvmdir}/*.sha256sum` ; do ls -l $file ; cat $file ; done
 done
 
 %check
@@ -1322,17 +1552,16 @@ done
 # We test debug first as it will give better diagnostics on a crash
 for suffix in %{build_loop} ; do
 
-top_dir_abs_main_build_path=$(pwd)/%{installoutputdir -- ${suffix}}
-%if %{include_staticlibs}
-top_dir_abs_staticlibs_build_path=${top_dir_abs_main_build_path}
-%endif
-
+# Tests in the check stage are performed on the installed image
+# rpmbuild operates as follows: build -> install -> test
+# however in portbales, we test built image instead of installed one
+top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
 export JAVA_HOME=${top_dir_abs_main_build_path}/images/%{jdkimage}
 
 #check Shenandoah is enabled
-#%if %{use_shenandoah_hotspot}
-#$JAVA_HOME/bin/java -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -version
-#%endif
+%if %{use_shenandoah_hotspot}
+$JAVA_HOME/bin/java -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -version
+%endif
 
 # Check unlimited policy has been used
 $JAVA_HOME/bin/javac -d . %{SOURCE13}
@@ -1349,7 +1578,7 @@ $JAVA_HOME/bin/javac -d . %{SOURCE15}
 export PROG=$(echo $(basename %{SOURCE15})|sed "s|\.java||")
 export SEC_DEBUG="-Djava.security.debug=properties"
 # Specific to portable:System security properties to be off by default
-$JAVA_HOME/bin/java ${SEC_DEBUG} ${PROG} false
+$JAVA_HOME/bin/java ${SEC_DEBUG} ${PROG} true
 $JAVA_HOME/bin/java ${SEC_DEBUG} -Djava.security.disableSystemPropertiesFile=true ${PROG} false
 
 # Check java launcher has no SSB mitigation
@@ -1373,80 +1602,9 @@ $JAVA_HOME/bin/java -Djava.locale.providers=CLDR $(echo $(basename %{SOURCE18})|
 
 %if %{include_staticlibs}
 # Check debug symbols in static libraries (smoke test)
-export STATIC_LIBS_HOME=${top_dir_abs_staticlibs_build_path}/images/%{static_libs_image}
-#readelf --debug-dump $STATIC_LIBS_HOME/lib/libfdlibm.a | grep w_remainder.c
-#readelf --debug-dump $STATIC_LIBS_HOME/lib/libfdlibm.a | grep e_remainder.c
-%endif
-
-# debug-symbols are only in debug portable build
-if [ "x$suffix" == "x" ] ; then 
-  so_suffix="debuginfo"
-else
-  so_suffix="so"
-fi
-# Check debug symbols are present and can identify code
-find "$JAVA_HOME" -iname "*.$so_suffix" -print0 | while read -d $'\0' lib
-do
-  if [ -f "$lib" ] ; then
-    echo "Testing $lib for debug symbols"
-    # All these tests rely on RPM failing the build if the exit code of any set
-    # of piped commands is non-zero.
-
-    # Test for .debug_* sections in the shared object. This is the main test
-    # Stripped objects will not contain these
-    eu-readelf -S "$lib" | grep "] .debug_"
-    test $(eu-readelf -S "$lib" | grep -E "\]\ .debug_(info|abbrev)" | wc --lines) == 2
-
-    # Test FILE symbols. These will most likely be removed by anything that
-    # manipulates symbol tables because it's generally useless. So a nice test
-    # that nothing has messed with symbols
-    old_IFS="$IFS"
-    IFS=$'\n'
-    for line in $(eu-readelf -s "$lib" | grep "00000000      0 FILE    LOCAL  DEFAULT")
-    do
-     # We expect to see .cpp files, except for architectures like aarch64 and
-     # s390 where we expect .o and .oS files
-      echo "$line" | grep -E "ABS ((.*/)?[-_a-zA-Z0-9]+\.(c|cc|cpp|cxx|o|S|oS))?$"
-    done
-    IFS="$old_IFS"
-
-    # If this is the JVM, look for javaCalls.(cpp|o) in FILEs, for extra sanity checking
-    if [ "`basename $lib`" = "libjvm.so" ]; then
-      eu-readelf -s "$lib" | \
-        grep -E "00000000      0 FILE    LOCAL  DEFAULT      ABS javaCalls.(cpp|o)$"
-    fi
-
-    # Test that there are no .gnu_debuglink sections pointing to another
-    # debuginfo file. There shouldn't be any debuginfo files, so the link makes
-    # no sense either
-    eu-readelf -S "$lib" | grep 'gnu'
-    if eu-readelf -S "$lib" | grep '] .gnu_debuglink' | grep PROGBITS; then
-      echo "bad .gnu_debuglink section."
-      eu-readelf -x .gnu_debuglink "$lib"
-      false
-    fi
-  fi
-done
-
-# Make sure gdb can do a backtrace based on line numbers on libjvm.so
-# javaCalls.cpp:58 should map to:
-# http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot/file/ff3b27e6bcc2/src/share/vm/runtime/javaCalls.cpp#l58
-# Using line number 1 might cause build problems. See:
-# https://bugzilla.redhat.com/show_bug.cgi?id=1539664
-# https://bugzilla.redhat.com/show_bug.cgi?id=1538767
-gdb -q "$JAVA_HOME/bin/java" <<EOF | tee gdb.out
-handle SIGSEGV pass nostop noprint
-handle SIGILL pass nostop noprint
-set breakpoint pending on
-break javaCalls.cpp:58
-commands 1
-backtrace
-quit
-end
-run -version
-EOF
-%ifarch %{gdb_arches}
-grep 'JavaCallWrapper::JavaCallWrapper' gdb.out
+export STATIC_LIBS_HOME=${top_dir_abs_main_build_path}/../../%{buildoutputdir -- ${suffix}%{staticlibs_suffix}}/images/static-libs/lib/
+readelf --debug-dump $STATIC_LIBS_HOME/libfdlibm.a | grep w_remainder.c
+readelf --debug-dump $STATIC_LIBS_HOME/libfdlibm.a | grep e_remainder.c
 %endif
 
 # Check src.zip has all sources. See RHBZ#1130490
@@ -1463,33 +1621,6 @@ $JAVA_HOME/bin/javap -l java.nio.ByteBuffer | grep LineNumberTable
 $JAVA_HOME/bin/javap -l java.nio.ByteBuffer | grep LocalVariableTable
 
 # build cycles check
-done
-
-%install
-#STRIP_KEEP_SYMTAB is not applicable in portables
-#STRIP_KEEP_SYMTAB=libjvm*
-
-for suffix in %{build_loop} ; do
-
-  if [ "x$suffix" == "x" ] ; then
-    nameSuffix=""
-  else
-    nameSuffix=`echo "$suffix"| sed s/-/./`
-  fi
-  mkdir -p $RPM_BUILD_ROOT%{_jvmdir}
-  mv ../%{jdkportablearchive -- "$nameSuffix"} $RPM_BUILD_ROOT%{_jvmdir}/
-  mv ../%{jdkportablearchive -- "$nameSuffix"}.sha256sum $RPM_BUILD_ROOT%{_jvmdir}/
-  mv ../%{jreportablearchive -- "$nameSuffix"} $RPM_BUILD_ROOT%{_jvmdir}/
-  mv ../%{jreportablearchive -- "$nameSuffix"}.sha256sum $RPM_BUILD_ROOT%{_jvmdir}/
-%if %{include_staticlibs}
-  mv ../%{staticlibsportablearchive -- "$nameSuffix"} $RPM_BUILD_ROOT%{_jvmdir}/
-  mv ../%{staticlibsportablearchive -- "$nameSuffix"}.sha256sum $RPM_BUILD_ROOT%{_jvmdir}/
-%endif
-
-  mkdir -p $RPM_BUILD_ROOT%{unpacked_licenses}
-  mv ../%{jdkportablearchive -- "$nameSuffix"}-legal $RPM_BUILD_ROOT%{unpacked_licenses}/%{jdkportablearchive -- "$nameSuffix"}
-# To show sha in the build log
-for file in `ls $RPM_BUILD_ROOT%{_jvmdir}/*.sha256sum` ; do ls -l $file ; cat $file ; done
 done
 
 %if %{include_normal_build}
