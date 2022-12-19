@@ -349,8 +349,9 @@
 # but in time of bootstrap of next jdk, it is featurever-1,
 # and this it is better to change it here, on single place
 %global buildjdkver %{featurever}
-# Add LTS designator for RHEL builds
-%if 0%{?rhel}
+# We don't add any LTS designator for STS packages (Fedora and EPEL).
+# We need to explicitly exclude EPEL as it would have the %%{rhel} macro defined.
+%if 0%{?rhel} && !0%{?epel}
   %global lts_designator "LTS"
   %global lts_designator_zip -%{lts_designator}
 %else
@@ -405,14 +406,13 @@
 %global priority %( printf '%08d' 1 )
 %endif
 %global newjavaver %{featurever}.%{interimver}.%{updatever}.%{patchver}
+%global javaver         %{featurever}
 
 # Strip up to 6 trailing zeros in newjavaver, as the JDK does, to get the correct version used in filenames
 %global filever %(svn=%{newjavaver}; for i in 1 2 3 4 5 6 ; do svn=${svn%%.0} ; done; echo ${svn})
 
 # The tag used to create the OpenJDK tarball
 %global vcstag jdk-%{filever}+%{buildver}%{?tagsuffix:-%{tagsuffix}}
-
-%global javaver         %{featurever}
 
 # Define milestone (EA for pre-releases, GA for releases)
 # Release will be (where N is usually a number starting at 1):
@@ -814,8 +814,8 @@ The %{origin_nice} %{featurever} runtime environment - portable edition.
 
 %if %{include_debug_build}
 %package slowdebug
-Summary: %{origin_nice} %{featurever} Runtime Environment %{debug_on}
-%if 0%{?rhel} <= 8
+Summary: %{origin_nice} %{featurever} Runtime Environment portable edition %{debug_on}
+%if (0%{?rhel} > 0 && 0%{?rhel} <= 8) || (0%{?fedora} >= 0 && 0%{?fedora} < 30)
 Group:   Development/Languages
 %endif
 
@@ -1396,7 +1396,6 @@ link_opt="bundled"
 done # end of release / debug cycle loop
 
 %install
-#STRIP_KEEP_SYMTAB is not applicable in portables
 STRIP_KEEP_SYMTAB=libjvm*
 
 for suffix in %{build_loop} ; do
@@ -1541,11 +1540,14 @@ fi # fixme, todo
   mv ../%{staticlibsportablearchive -- "$nameSuffix"}.sha256sum $RPM_BUILD_ROOT%{_jvmdir}/
 %endif
 
-  mkdir -p $RPM_BUILD_ROOT%{unpacked_licenses}
-  mv ../%{jdkportablearchive -- "$nameSuffix"}-legal $RPM_BUILD_ROOT%{unpacked_licenses}/%{jdkportablearchive -- "$nameSuffix"}
+# end, dual install
+done
+
+mkdir -p $RPM_BUILD_ROOT%{unpacked_licenses}
+mv ../%{jdkportablearchive -- "%{normal_suffix}"}-legal $RPM_BUILD_ROOT%{unpacked_licenses}/%{jdkportablearchive -- "%{normal_suffix}"}
 # To show sha in the build log
 for file in `ls $RPM_BUILD_ROOT%{_jvmdir}/*.sha256sum` ; do ls -l $file ; cat $file ; done
-done
+################################################################################
 
 %check
 
@@ -1687,10 +1689,6 @@ done
 %endif
 
 %changelog
-* Sat Oct 15 2022 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.17.0.8-2
-- Update in-tree tzdata to 2022e with JDK-8294357 & JDK-8295173
-- Update CLDR data with Europe/Kyiv (JDK-8293834)
-- Drop JDK-8292223 patch which we found to be unnecessary
-- Update TestTranslations.java to use public API based on TimeZoneNamesTest upstream
-- Related: rhbz#2133695
+* Mon Dec 19 2022 Jiri Andrlik <jandrlik@redhat.com> - 1:11.0.17.0.8-2
+- initial import
 
