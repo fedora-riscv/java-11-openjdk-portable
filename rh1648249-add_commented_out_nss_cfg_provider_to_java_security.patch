@@ -1,0 +1,12 @@
+diff --git a/src/java.base/share/conf/security/java.security b/src/java.base/share/conf/security/java.security
+index 474fe6f401f..7e94ae32023 100644
+--- a/src/java.base/share/conf/security/java.security
++++ b/src/java.base/share/conf/security/java.security
+@@ -84,6 +84,7 @@ security.provider.tbd=Apple
+ #ifndef solaris
+ security.provider.tbd=SunPKCS11
+ #endif
++#security.provider.tbd=SunPKCS11 ${java.home}/lib/security/nss.cfg
+ 
+ #
+ # Security providers used when FIPS mode support is active
