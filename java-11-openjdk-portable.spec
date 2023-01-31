@@ -1674,7 +1674,7 @@ done
 %endif
 
 %changelog
-* Thu Jan 31 2023 Jiri Andrlik <jandrlik@redhat.com> - 1:11.0.18.0.9-0.1.ea.1
+* Tue Jan 31 2023 Jiri Andrlik <jandrlik@redhat.com> - 1:11.0.18.0.9-0.1.ea.1
 - aligning with current fedora rpms, moving to newest tzdata-2022g
 
 * Thu Jan 19 2023 Fedora Release Engineering <releng@fedoraproject.org> - 1:11.0.17.0.8-0.2.ea.1
