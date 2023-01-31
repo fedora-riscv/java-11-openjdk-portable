@@ -1189,7 +1189,7 @@ function installjdk() {
 # Checks on debuginfo must be performed before the files are stripped
 # by the RPM installation stage
 function debugcheckjdk() {
-java-11-openjdk-portable.spec    local imagepath=${1}
+    local imagepath=${1}
 
     if [ -d ${imagepath} ] ; then
 
