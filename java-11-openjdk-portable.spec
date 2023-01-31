@@ -1,8 +1,3 @@
-%if (0%{?rhel} > 0 && 0%{?rhel} < 8)
-# portable jdk 17 specific bug, _jvmdir being missing
-%define _jvmdir /usr/lib/jvm
-%endif
-
 # debug_package %%{nil} is portable-jdks specific
 %define  debug_package %{nil}
 
@@ -343,7 +338,7 @@
 # New Version-String scheme-style defines
 %global featurever 11
 %global interimver 0
-%global updatever 17
+%global updatever 18
 %global patchver 0
 # buildjdkver is usually same as %%{featurever},
 # but in time of bootstrap of next jdk, it is featurever-1,
@@ -390,8 +385,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        8
-%global rpmrelease      2
+%global buildver        9
+%global rpmrelease      1
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -708,12 +703,6 @@ Patch7777: jdk8271148-external_doesnt_produce_debuginfo.patch
 # able to be removed once that release is out
 # and used by this RPM.
 #############################################
-# JDK-8293834: Update CLDR data following tzdata 2022c update
-Patch2001: jdk8293834-kyiv_cldr_update.patch
-# JDK-8294357: (tz) Update Timezone Data to 2022d
-Patch2002: jdk8294357-tzdata2022d.patch
-# JDK-8295173: (tz) Update Timezone Data to 2022e
-Patch2003: jdk8295173-tzdata2022e.patch
 
 BuildRequires: autoconf
 BuildRequires: automake
@@ -770,9 +759,8 @@ BuildRequires: java-%{buildjdkver}-openjdk-devel
 %ifarch %{zero_arches}
 BuildRequires: libffi-devel
 %endif
-# 2022d required as of JDK-8294357
-# Should be bumped to 2022e once available (JDK-8295173)
-BuildRequires: tzdata-java >= 2022d
+# 2022g required as of JDK-8297804
+BuildRequires: tzdata-java >= 2022g
 # Earlier versions have a bug in tree vectorization on PPC
 BuildRequires: gcc >= 4.8.3-8
 
@@ -974,9 +962,6 @@ pushd %{top_level_dir_name}
 # nss.cfg PKCS11 support; must come last as it also alters java.security
 %patch1000 -p1
 # tzdata updates targetted for 17.0.6
-%patch2001 -p1
-%patch2002 -p1
-%patch2003 -p1
 %patch7777 -p1
 popd # openjdk
 
@@ -1204,7 +1189,7 @@ function installjdk() {
 # Checks on debuginfo must be performed before the files are stripped
 # by the RPM installation stage
 function debugcheckjdk() {
-    local imagepath=${1}
+java-11-openjdk-portable.spec    local imagepath=${1}
 
     if [ -d ${imagepath} ] ; then
 
@@ -1689,6 +1674,9 @@ done
 %endif
 
 %changelog
+* Thu Jan 31 2023 Jiri Andrlik <jandrlik@redhat.com> - 1:11.0.18.0.9-0.1.ea.1
+- aligning with current fedora rpms, moving to newest tzdata-2022g
+
 * Thu Jan 19 2023 Fedora Release Engineering <releng@fedoraproject.org> - 1:11.0.17.0.8-0.2.ea.1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
 
