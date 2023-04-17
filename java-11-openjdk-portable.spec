@@ -1,3 +1,8 @@
+%if (0%{?rhel} > 0 && 0%{?rhel} < 8)
+# portable jdk 17 specific bug, _jvmdir being missing
+%define _jvmdir /usr/lib/jvm
+%endif
+
 # debug_package %%{nil} is portable-jdks specific
 %define  debug_package %{nil}
 
@@ -24,12 +29,17 @@
 %bcond_without release
 # Enable static library builds by default.
 %bcond_without staticlibs
-# Remove build artifacts by default
-%bcond_with artifacts
 # Build a fresh libjvm.so for use in a copy of the bootstrap JDK
 %bcond_without fresh_libjvm
 # Build with system libraries
 %bcond_with system_libs
+
+
+%if (0%{?rhel} > 0 && 0%{?rhel} < 8)
+# This is RHEL 7 specific as it doesn't seem to have the
+# __brp_strip_static_archive macro.
+%define __os_install_post %{nil}
+%endif
 
 %global unpacked_licenses %{_datarootdir}/licenses
 
@@ -39,13 +49,6 @@
 %global include_staticlibs 1
 %else
 %global include_staticlibs 0
-%endif
-
-# Define whether to use the bootstrap JDK directly or with a fresh libjvm.so
-%if %{with fresh_libjvm}
-%global build_hotspot_first 1
-%else
-%global build_hotspot_first 0
 %endif
 
 %if %{with system_libs}
@@ -62,6 +65,10 @@
 # This fixes detailed NMT and other tools which need minimal debug info.
 # See: https://bugzilla.redhat.com/show_bug.cgi?id=1520879
 %global _find_debuginfo_opts -g
+
+# With LTO flags enabled, debuginfo checks fail for some reason. Disable
+# LTO for a passing build. This really needs to be looked at.
+%define _lto_cflags %{nil}
 
 # note: parametrized macros are order-sensitive (unlike not-parametrized) even with normal macros
 # also necessary when passing it as parameter to other macros. If not macro, then it is considered a switch
@@ -152,7 +159,7 @@
 # Set of architectures where we verify backtraces with gdb
 %global gdb_arches %{jit_arches} %{zero_arches}
 
-# By default, we build a slowdebug build during main build on JIT architectures
+# By default, we build a debug build during main build on JIT architectures
 %if %{with slowdebug}
 %ifarch %{debug_arches}
 %global include_debug_build 1
@@ -244,13 +251,6 @@
 %global debug_targets images %{static_libs_target} legacy-jre-image
 # Target to use to just build HotSpot
 %global hotspot_target hotspot
-
-# JDK to use for bootstrapping
-%global bootjdk /usr/lib/jvm/java-%{buildjdkver}-openjdk
-
-# Disable LTO as this causes build failures at the moment.
-# See RHBZ#1861401
-%define _lto_cflags %{nil}
 
 # Filter out flags from the optflags macro that cause problems with the OpenJDK build
 # We filter out -O flags so that the optimization of HotSpot is not lowered from O3 to O2
@@ -350,8 +350,18 @@
   %global lts_designator "LTS"
   %global lts_designator_zip -%{lts_designator}
 %else
-  %global lts_designator ""
-  %global lts_designator_zip ""
+ %global lts_designator ""
+ %global lts_designator_zip ""
+%endif
+# JDK to use for bootstrapping
+%global bootjdk /usr/lib/jvm/java-%{buildjdkver}-openjdk
+# Define whether to use the bootstrap JDK directly or with a fresh libjvm.so
+# This will only work where the bootstrap JDK is the same major version
+# as the JDK being built
+%if %{with fresh_libjvm} && %{buildjdkver} == %{featurever}
+%global build_hotspot_first 1
+%else
+%global build_hotspot_first 0
 %endif
 
 # Define vendor information used by OpenJDK
@@ -386,7 +396,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        9
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -580,8 +590,7 @@ License:  ASL 1.1 and ASL 2.0 and BSD and BSD with advertising and GPL+ and GPLv
 URL:      http://openjdk.java.net/
 
 
-# to regenerate source0 (jdk) run update_package.sh
-# update_package.sh contains hard-coded repos, revisions, tags, and projects to regenerate the source archives
+# The source tarball, generated using generate_source_tarball.sh
 Source0: openjdk-jdk%{featurever}u-%{vcstag}-4curve.tar.xz
 
 # Use 'icedtea_sync.sh' to update the following
@@ -680,29 +689,21 @@ Patch1001: fips-11u-%{fipsver}.patch
 
 #############################################
 #
-# Upstreamable patches
+# OpenJDK patches in need of upstreaming
 #
-# This section includes patches which need to
-# be reviewed & pushed to the current development
-# tree of OpenJDK.
 #############################################
 
 Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk10_and_up.patch
 
-#############################################
-#
 # JDK-8271148: static-libs-image target --with-native-debug-symbols=external doesn't produce debug info
 Patch7777: jdk8271148-external_doesnt_produce_debuginfo.patch
 
 #############################################
 #
-# Patches appearing in 11.0.18
+# OpenJDK patches which missed last update
 #
-# This section includes patches which are present
-# in the listed OpenJDK 11u release and should be
-# able to be removed once that release is out
-# and used by this RPM.
 #############################################
+#empty now
 
 BuildRequires: autoconf
 BuildRequires: automake
@@ -754,13 +755,15 @@ BuildRequires: unzip
 BuildRequires: javapackages-filesystem
 BuildRequires: java-%{buildjdkver}-openjdk-devel
 %endif
-
 # Zero-assembler build requirement
 %ifarch %{zero_arches}
 BuildRequires: libffi-devel
 %endif
 # 2022g required as of JDK-8297804
 BuildRequires: tzdata-java >= 2022g
+
+# cacerts build requirement in portable mode
+BuildRequires: ca-certificates
 # Earlier versions have a bug in tree vectorization on PPC
 BuildRequires: gcc >= 4.8.3-8
 
@@ -828,7 +831,7 @@ The %{origin_nice} %{featurever} runtime environment - portable edition.
 
 %if %{include_normal_build}
 %package devel
-Summary: %{origin_nice} %{featurever} Development Environment portable edition.
+Summary: %{origin_nice} %{featurever} Development Environment portable edition
 %if (0%{?rhel} > 0 && 0%{?rhel} <= 8) || (0%{?fedora} >= 0 && 0%{?fedora} < 30)
 Group:   Development/Languages
 %endif
@@ -937,6 +940,12 @@ if [ %{include_debug_build} -eq 0 -a  %{include_normal_build} -eq 0 -a  %{includ
   echo "You have disabled all builds (normal,fastdebug,slowdebug). That is a no go."
   exit 14
 fi
+
+%if %{with fresh_libjvm} && ! %{build_hotspot_first}
+echo "WARNING: The build of a fresh libjvm has been disabled due to a JDK version mismatch"
+echo "Build JDK version is %{buildjdkver}, feature JDK version is %{featurever}"
+%endif
+
 %setup -q -c -n %{uniquesuffix ""} -T -a 0
 # https://bugzilla.redhat.com/show_bug.cgi?id=1189084
 prioritylength=`expr length %{priority}`
@@ -1178,11 +1187,13 @@ function installjdk() {
         ln -sv /etc/pki/java/cacerts ${imagepath}/lib/security
 
         # Create fake alt-java as a placeholder for future alt-java
-        pushd ${imagepath}
-        # add alt-java man page
-        echo "Hardened java binary recommended for launching untrusted code from the Web e.g. javaws" > man/man1/%{alt_java_name}.1
-        cat man/man1/java.1 >> man/man1/%{alt_java_name}.1
-        popd
+        if [ -d man/man1 ] ; then
+          pushd ${imagepath}
+            # add alt-java man page
+            echo "Hardened java binary recommended for launching untrusted code from the Web e.g. javaws" > man/man1/%{alt_java_name}.1
+            cat man/man1/java.1 >> man/man1/%{alt_java_name}.1
+          popd
+       fi
     fi
 }
 
@@ -1262,6 +1273,10 @@ EOF
     fi
 }
 
+# stubs to copy icons to final images
+abs_src_path=$(pwd)/openjdk/src
+icon_stub_path=java.desktop/unix/classes/sun/awt/X11
+
 %if %{build_hotspot_first}
   # Build a fresh libjvm.so first and use it to bootstrap
   cp -LR --preserve=mode,timestamps $BOOT_JDK newboot
@@ -1290,10 +1305,8 @@ bootinstalldir=boot${installdir}
 link_opt="bundled"
 
   for loop in %{main_suffix} %{staticlibs_loop} ; do
-
     builddir=%{buildoutputdir -- ${suffix}${loop}}
     bootbuilddir=boot${builddir}
-
     if test "x${loop}" = "x%{main_suffix}" ; then
       link_opt="%{link_type}"
 %if %{system_libs}
@@ -1337,8 +1350,11 @@ link_opt="bundled"
 
   # Final setup on the main image
   top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
-  installjdk ${top_dir_abs_main_build_path}/images/%{jdkimage}
-  # Check debug symbols were built into the dynamic libraries
+    imagePath=${top_dir_abs_main_build_path}/images/%{jdkimage}
+    installjdk ${imagePath}
+    mkdir -p ${imagePath}/ext_stubs/${icon_stub_path}
+    cp -av ${abs_src_path}/${icon_stub_path}/*.png ${imagePath}/ext_stubs/${icon_stub_path}
+  # Check debug symbols were built into the dynamic libraries; todo,  why it passes in JDK only?
   debugcheckjdk ${top_dir_abs_main_build_path}/images/%{jdkimage}
 
   # Print release information
@@ -1346,11 +1362,11 @@ link_opt="bundled"
 
 ################################################################################
   pushd ${top_dir_abs_main_build_path}/images
-  if [ "x$suffix" == "x" ] ; then
-    nameSuffix=""
-  else
-    nameSuffix=`echo "$suffix"| sed s/-/./`
-  fi
+    if [ "x$suffix" == "x" ] ; then
+      nameSuffix=""
+    else
+      nameSuffix=`echo "$suffix"| sed s/-/./`
+    fi
     mv %{jdkimage} %{jdkportablename -- "$nameSuffix"}
     mv %{jreimage} %{jreportablename -- "$nameSuffix"}
     tar -cJf ../../../../%{jdkportablearchive -- "$nameSuffix"}  --exclude='**.debuginfo' %{jdkportablename -- "$nameSuffix"}
@@ -1582,10 +1598,14 @@ if ! nm $JAVA_HOME/bin/%{alt_java_name} | grep set_speculation ; then true ; els
 $JAVA_HOME/bin/javac -d . %{SOURCE16}
 $JAVA_HOME/bin/java $(echo $(basename %{SOURCE16})|sed "s|\.java||") "%{oj_vendor}" "%{oj_vendor_url}" "%{oj_vendor_bug_url}" "%{oj_vendor_version}"
 
-# Check translations are available for new timezones
+%if ! 0%{?flatpak}
+# Check translations are available for new timezones (during flatpak builds, the
+# tzdb.dat used by this test is not where the test expects it, so this is
+# disabled for flatpak builds) 
 $JAVA_HOME/bin/javac -d . %{SOURCE18}
 $JAVA_HOME/bin/java $(echo $(basename %{SOURCE18})|sed "s|\.java||") JRE
 $JAVA_HOME/bin/java -Djava.locale.providers=CLDR $(echo $(basename %{SOURCE18})|sed "s|\.java||") CLDR
+%endif
 
 %if %{include_staticlibs}
 # Check debug symbols in static libraries (smoke test)
@@ -1674,6 +1694,12 @@ done
 %endif
 
 %changelog
+* Mon Apr 17 2023 Jiri Vanek <jvanek@redhat.com> - 1:11.0.18.0.9-0.1.ea.2
+- Update generate_tarball.sh add support for passing a boot JDK to the configure run
+- Automatically turn off building a fresh HotSpot first, if the bootstrap JDK is not the same major version as that being built
+- added png icons from x11 source package, so they can be reused by rpms
+ - Fix flatpak builds by disabling TestTranslations test due to missing tzdb.dat
+
 * Tue Jan 31 2023 Jiri Andrlik <jandrlik@redhat.com> - 1:11.0.18.0.9-0.1.ea.1
 - aligning with current fedora rpms, moving to newest tzdata-2022g
 
