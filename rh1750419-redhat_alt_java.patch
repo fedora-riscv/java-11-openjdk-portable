@@ -1,7 +1,8 @@
-diff -r 1356affa5e44 make/launcher/Launcher-java.base.gmk
---- openjdk/make/launcher/Launcher-java.base.gmk      Wed Nov 25 08:27:15 2020 +0100
-+++ openjdk/make/launcher/Launcher-java.base.gmk      Tue Dec 01 12:29:30 2020 +0100
-@@ -41,6 +41,16 @@
+diff --git openjdk.orig/make/launcher/Launcher-java.base.gmk openjdk/make/launcher/Launcher-java.base.gmk
+index a8990dd0ef..320fec6e51 100644
+--- openjdk.orig/make/launcher/Launcher-java.base.gmk
++++ openjdk/make/launcher/Launcher-java.base.gmk
+@@ -41,6 +41,16 @@ $(eval $(call SetupBuildLauncher, java, \
      OPTIMIZATION := HIGH, \
  ))
  
@@ -15,13 +16,14 @@ diff -r 1356affa5e44 make/launcher/Launcher-java.base.gmk
 +    OPTIMIZATION := HIGH, \
 +))
 +
- ifeq ($(OPENJDK_TARGET_OS), windows)
+ ifeq ($(call isTargetOs, windows), true)
    $(eval $(call SetupBuildLauncher, javaw, \
        CFLAGS := -DJAVAW -DEXPAND_CLASSPATH_WILDCARDS -DENABLE_ARG_FILES, \
-
-diff -r 25e94aa812b2 src/share/bin/alt_main.h
---- /dev/null	Thu Jan 01 00:00:00 1970 +0000
-+++ openjdk/src/java.base/share/native/launcher/alt_main.h	Tue Jun 02 17:15:28 2020 +0100
+diff --git openjdk.orig/src/java.base/share/native/launcher/alt_main.h openjdk/src/java.base/share/native/launcher/alt_main.h
+new file mode 100644
+index 0000000000..697df2898a
+--- /dev/null
++++ openjdk/src/java.base/share/native/launcher/alt_main.h
 @@ -0,0 +1,73 @@
 +/*
 + * Copyright (c) 2019, Red Hat, Inc. All rights reserved.
@@ -96,9 +98,10 @@ diff -r 25e94aa812b2 src/share/bin/alt_main.h
 +}
 +
 +#endif // REDHAT_ALT_JAVA
-diff -r 25e94aa812b2 src/share/bin/main.c
---- openjdk/src/java.base/share/native/launcher/main.c	Wed Feb 05 12:20:36 2020 -0300
-+++ openjdk/src/java.base/share/native/launcher/main.c	Tue Jun 02 17:15:28 2020 +0100
+diff --git openjdk.orig/src/java.base/share/native/launcher/main.c openjdk/src/java.base/share/native/launcher/main.c
+index b734fe2ba7..79dc830765 100644
+--- openjdk.orig/src/java.base/share/native/launcher/main.c
++++ openjdk/src/java.base/share/native/launcher/main.c
 @@ -34,6 +34,14 @@
  #include "jli_util.h"
  #include "jni.h"

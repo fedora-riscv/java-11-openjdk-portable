@@ -338,7 +338,7 @@
 # New Version-String scheme-style defines
 %global featurever 11
 %global interimver 0
-%global updatever 18
+%global updatever 19
 %global patchver 0
 # buildjdkver is usually same as %%{featurever},
 # but in time of bootstrap of next jdk, it is featurever-1,
@@ -388,15 +388,15 @@
 # Define IcedTea version used for SystemTap tapsets and desktop file
 %global icedteaver      6.0.0pre00-c848b93a8598
 # Define current Git revision for the FIPS support patches
-%global fipsver 9087e80d0ab
+%global fipsver b34fb09a5c
 
 # Standard JPackage naming and versioning defines
 %global origin          openjdk
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        9
-%global rpmrelease      3
+%global buildver        7
+%global rpmrelease      1
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -423,7 +423,7 @@
 # Release will be (where N is usually a number starting at 1):
 # - 0.N%%{?extraver}%%{?dist} for EA releases,
 # - N%%{?extraver}{?dist} for GA releases
-%global is_ga           0
+%global is_ga           1
 %if %{is_ga}
 %global ea_designator ""
 %global ea_designator_zip ""
@@ -662,7 +662,7 @@ Patch1003: rh1842572-rsa_default_for_keytool.patch
 
 # Crypto policy and FIPS support patches
 # Patch is generated from the fips tree at https://github.com/rh-openjdk/jdk11u/tree/fips
-# as follows: git diff %%{vcstag} src make > fips-11u-$(git show -s --format=%h HEAD).patch
+# as follows: git diff %%{vcstag} src make test > fips-11u-$(git show -s --format=%h HEAD).patch
 # Diff is limited to src and make subdirectories to exclude .github changes
 # Fixes currently included:
 # PR3694, RH1340845: Add security.useSystemPropertiesFile option to java.security to use system crypto policy
@@ -702,12 +702,19 @@ Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk1
 # JDK-8271148: static-libs-image target --with-native-debug-symbols=external doesn't produce debug info
 Patch7777: jdk8271148-external_doesnt_produce_debuginfo.patch
 
-#############################################
-#
-# OpenJDK patches which missed last update
-#
-#############################################
-#empty now
+ #############################################
+ #
+ # Patches appearing in 11.0.20
+ #
+ # This section includes patches which are present
+ # in the listed OpenJDK 11u release and should be
+ # able to be removed once that release is out
+ # and used by this RPM.
+ #############################################
+# JDK-8274864: Remove Amman/Cairo hacks in ZoneInfoFile
+Patch2002: jdk8274864-remove_amman_cairo_hacks.patch
+# JDK-8305113: (tz) Update Timezone Data to 2023c
+Patch2003: jdk8305113-tzdata2023c.patch
 
 BuildRequires: autoconf
 BuildRequires: automake
@@ -763,8 +770,8 @@ BuildRequires: java-%{buildjdkver}-openjdk-devel
 %ifarch %{zero_arches}
 BuildRequires: libffi-devel
 %endif
-# 2022g required as of JDK-8297804
-BuildRequires: tzdata-java >= 2022g
+# 2023c required as of JDK-8305113
+BuildRequires: tzdata-java >= 2023c
 
 # cacerts build requirement in portable mode
 BuildRequires: ca-certificates
@@ -981,8 +988,11 @@ pushd %{top_level_dir_name}
 %patch1001 -p1
 # nss.cfg PKCS11 support; must come last as it also alters java.security
 %patch1000 -p1
-# tzdata updates targetted for 17.0.6
+# debuginfo fix
 %patch7777 -p1
+# tzdata update
+%patch2002 -p1
+%patch2003 -p1
 popd # openjdk
 
 %patch600
@@ -1717,6 +1727,17 @@ done
 %license %{unpacked_licenses}/%{jdkportablesourcesarchive -- %%{nil}}
 
 %changelog
+* Thu Apr 27 2023 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.19.0.7-0.1.ea
+- Update to jdk-11.0.19.0+7
+- Update release notes to 11.0.19.0+7
+- Require tzdata 2023c due to local inclusion of JDK-8274864 & JDK-8305113
+- Update generate_tarball.sh to add support for passing a boot JDK to the configure run
+- Add POSIX-friendly error codes to generate_tarball.sh and fix whitespace
+- Remove .jcheck and GitHub support when generating tarballs, as done in upstream release tarballs
+- Rebase FIPS support against 11.0.19+6
+- Rebase RH1750419 alt-java patch against 11.0.19+6
+- Update TestTranslations.java to test the new America/Ciudad_Juarez zone
+
 * Tue Apr 18  2023 Jiri Vanek <jvanek@redhat.com> - 1:11.0.18.0.9-0.1.ea.3
 - introduced archfull src archive
 - replaced nasty handling of icons.

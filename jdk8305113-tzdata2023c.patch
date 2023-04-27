@@ -1,0 +1,1098 @@
+commit 0642dd19c61aa884b5c96c219b586a0c635470b5
+Author: Yoshiki Sato <ysatowse@openjdk.org>
+Date:   Wed Apr 5 01:19:00 2023 +0000
+
+    Backport ed9592c6e81f82e2bf6508ce45ba15aad8232181
+
+diff --git a/make/data/tzdata/VERSION b/make/data/tzdata/VERSION
+index 0f328a4a7f..66bd061e8b 100644
+--- a/make/data/tzdata/VERSION
++++ b/make/data/tzdata/VERSION
+@@ -21,4 +21,4 @@
+ # or visit www.oracle.com if you need additional information or have any
+ # questions.
+ #
+-tzdata2022g
++tzdata2023c
+diff --git a/make/data/tzdata/africa b/make/data/tzdata/africa
+index 830d7d10b7..a73405fdb0 100644
+--- a/make/data/tzdata/africa
++++ b/make/data/tzdata/africa
+@@ -344,6 +344,14 @@ Rule	Egypt	2007	only	-	Sep	Thu>=1	24:00	0	-
+ # From Mina Samuel (2016-07-04):
+ # Egyptian government took the decision to cancel the DST,
+ 
++# From Ahmad ElDardiry (2023-03-01):
++# Egypt officially announced today that daylight savings will be
++# applied from last Friday of April to last Thursday of October.
++# From Paul Eggert (2023-03-01):
++# Assume transitions are at 00:00 and 24:00 respectively.
++# From Amir Adib (2023-03-07):
++# https://www.facebook.com/EgyptianCabinet/posts/638829614954129/
++
+ Rule	Egypt	2008	only	-	Aug	lastThu	24:00	0	-
+ Rule	Egypt	2009	only	-	Aug	20	24:00	0	-
+ Rule	Egypt	2010	only	-	Aug	10	24:00	0	-
+@@ -353,6 +361,8 @@ Rule	Egypt	2014	only	-	May	15	24:00	1:00	S
+ Rule	Egypt	2014	only	-	Jun	26	24:00	0	-
+ Rule	Egypt	2014	only	-	Jul	31	24:00	1:00	S
+ Rule	Egypt	2014	only	-	Sep	lastThu	24:00	0	-
++Rule	Egypt	2023	max	-	Apr	lastFri	 0:00	1:00	S
++Rule	Egypt	2023	max	-	Oct	lastThu	24:00	0	-
+ 
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ 		#STDOFF	2:05:08.9
+@@ -452,7 +462,7 @@ Zone	Africa/Nairobi	2:27:16	-	LMT	1908 May
+ # President William R. Tolbert, Jr., July 23, 1971-July 31, 1972.
+ # Monrovia: Executive Mansion.
+ #
+-# Use the abbreviation "MMT" before 1972, as the more-accurate numeric
++# Use the abbreviation "MMT" before 1972, as the more accurate numeric
+ # abbreviation "-004430" would be one byte over the POSIX limit.
+ #
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+@@ -589,8 +599,8 @@ Zone	Africa/Tripoli	0:52:44 -	LMT	1920
+ # DST the coming summer...
+ #
+ # Some sources, in French:
+-# http://www.defimedia.info/news/946/Rashid-Beebeejaun-:-%C2%AB-L%E2%80%99heure-d%E2%80%99%C3%A9t%C3%A9-ne-sera-pas-appliqu%C3%A9e-cette-ann%C3%A9e-%C2%BB
+-# http://lexpress.mu/Story/3398~Beebeejaun---Les-objectifs-d-%C3%A9conomie-d-%C3%A9nergie-de-l-heure-d-%C3%A9t%C3%A9-ont-%C3%A9t%C3%A9-atteints-
++# http://www.defimedia.info/news/946/Rashid-Beebeejaun-:-«-L%E2%80%99heure-d%E2%80%99été-ne-sera-pas-appliquée-cette-année-»
++# http://lexpress.mu/Story/3398~Beebeejaun---Les-objectifs-d-économie-d-énergie-de-l-heure-d-été-ont-été-atteints-
+ #
+ # Our wrap-up:
+ # https://www.timeanddate.com/news/time/mauritius-dst-will-not-repeat.html
+@@ -721,7 +731,7 @@ Zone Indian/Mauritius	3:50:00 -	LMT	1907 # Port Louis
+ # More articles in the press
+ # https://www.yabiladi.com/articles/details/5058/secret-l-heure-d-ete-maroc-leve.html
+ # http://www.lematin.ma/Actualite/Express/Article.asp?id=148923
+-# http://www.lavieeco.com/actualite/Le-Maroc-passe-sur-GMT%2B1-a-partir-de-dim
++# http://www.lavieeco.com/actualite/Le-Maroc-passe-sur-GMT+1-a-partir-de-dim
+ 
+ # From Petr Machata (2011-03-30):
+ # They have it written in English here:
+@@ -736,7 +746,7 @@ Zone Indian/Mauritius	3:50:00 -	LMT	1907 # Port Louis
+ # According to Infomédiaire web site from Morocco (infomediaire.ma),
+ # on March 9, 2012, (in French) Heure légale:
+ # Le Maroc adopte officiellement l'heure d'été
+-# http://www.infomediaire.ma/news/maroc/heure-l%C3%A9gale-le-maroc-adopte-officiellement-lheure-d%C3%A9t%C3%A9
++# http://www.infomediaire.ma/news/maroc/heure-légale-le-maroc-adopte-officiellement-lheure-dété
+ # Governing Council adopted draft decree, that Morocco DST starts on
+ # the last Sunday of March (March 25, 2012) and ends on
+ # last Sunday of September (September 30, 2012)
+@@ -860,19 +870,28 @@ Zone Indian/Mauritius	3:50:00 -	LMT	1907 # Port Louis
+ # Friday or Saturday (and so the 2 days off are on a weekend), the next time
+ # shift will be the next weekend.
+ #
+-# From Paul Eggert (2020-05-31):
++# From Milamber (2021-03-31, 2022-03-10):
++# https://www.mmsp.gov.ma/fr/actualites.aspx?id=2076
++# https://www.ecoactu.ma/horaires-administration-ramadan-gmtheure-gmt-a-partir-de-dimanche-27-mars/
++#
++# From Milamber (2023-03-14, 2023-03-15):
++# The return to legal GMT time will take place this Sunday, March 19 at 3 a.m.
++# ... the return to GMT+1 will be made on Sunday April 23, 2023 at 2 a.m.
++# https://www.mmsp.gov.ma/fr/actualites/passage-à-l%E2%80%99heure-gmt-à-partir-du-dimanche-19-mars-2023
++#
++# From Paul Eggert (2023-03-14):
+ # For now, guess that in the future Morocco will fall back at 03:00
+ # the last Sunday before Ramadan, and spring forward at 02:00 the
+-# first Sunday after two days after Ramadan.  To implement this,
++# first Sunday after one day after Ramadan.  To implement this,
+ # transition dates and times for 2019 through 2087 were determined by
+-# running the following program under GNU Emacs 26.3.  (This algorithm
++# running the following program under GNU Emacs 28.2.  (This algorithm
+ # also produces the correct transition dates for 2016 through 2018,
+ # though the times differ due to Morocco's time zone change in 2018.)
+ # (let ((islamic-year 1440))
+ #   (require 'cal-islam)
+ #   (while (< islamic-year 1511)
+ #     (let ((a (calendar-islamic-to-absolute (list 9 1 islamic-year)))
+-#           (b (+ 2 (calendar-islamic-to-absolute (list 10 1 islamic-year))))
++#           (b (+ 1 (calendar-islamic-to-absolute (list 10 1 islamic-year))))
+ #           (sunday 0))
+ #       (while (/= sunday (mod (setq a (1- a)) 7)))
+ #       (while (/= sunday (mod b 7))
+@@ -886,10 +905,6 @@ Zone Indian/Mauritius	3:50:00 -	LMT	1907 # Port Louis
+ #         (car (cdr (cdr a))) (calendar-month-name (car a) t) (car (cdr a))
+ #         (car (cdr (cdr b))) (calendar-month-name (car b) t) (car (cdr b)))))
+ #     (setq islamic-year (+ 1 islamic-year))))
+-#
+-# From Milamber (2021-03-31, 2022-03-10), confirming these predictions:
+-# https://www.mmsp.gov.ma/fr/actualites.aspx?id=2076
+-# https://www.ecoactu.ma/horaires-administration-ramadan-gmtheure-gmt-a-partir-de-dimanche-27-mars/
+ 
+ # Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Morocco	1939	only	-	Sep	12	 0:00	1:00	-
+@@ -942,7 +957,7 @@ Rule	Morocco	2021	only	-	May	16	 2:00	0	-
+ Rule	Morocco	2022	only	-	Mar	27	 3:00	-1:00	-
+ Rule	Morocco	2022	only	-	May	 8	 2:00	0	-
+ Rule	Morocco	2023	only	-	Mar	19	 3:00	-1:00	-
+-Rule	Morocco	2023	only	-	Apr	30	 2:00	0	-
++Rule	Morocco	2023	only	-	Apr	23	 2:00	0	-
+ Rule	Morocco	2024	only	-	Mar	10	 3:00	-1:00	-
+ Rule	Morocco	2024	only	-	Apr	14	 2:00	0	-
+ Rule	Morocco	2025	only	-	Feb	23	 3:00	-1:00	-
+@@ -958,7 +973,7 @@ Rule	Morocco	2029	only	-	Feb	18	 2:00	0	-
+ Rule	Morocco	2029	only	-	Dec	30	 3:00	-1:00	-
+ Rule	Morocco	2030	only	-	Feb	10	 2:00	0	-
+ Rule	Morocco	2030	only	-	Dec	22	 3:00	-1:00	-
+-Rule	Morocco	2031	only	-	Feb	 2	 2:00	0	-
++Rule	Morocco	2031	only	-	Jan	26	 2:00	0	-
+ Rule	Morocco	2031	only	-	Dec	14	 3:00	-1:00	-
+ Rule	Morocco	2032	only	-	Jan	18	 2:00	0	-
+ Rule	Morocco	2032	only	-	Nov	28	 3:00	-1:00	-
+@@ -974,7 +989,7 @@ Rule	Morocco	2036	only	-	Nov	23	 2:00	0	-
+ Rule	Morocco	2037	only	-	Oct	 4	 3:00	-1:00	-
+ Rule	Morocco	2037	only	-	Nov	15	 2:00	0	-
+ Rule	Morocco	2038	only	-	Sep	26	 3:00	-1:00	-
+-Rule	Morocco	2038	only	-	Nov	 7	 2:00	0	-
++Rule	Morocco	2038	only	-	Oct	31	 2:00	0	-
+ Rule	Morocco	2039	only	-	Sep	18	 3:00	-1:00	-
+ Rule	Morocco	2039	only	-	Oct	23	 2:00	0	-
+ Rule	Morocco	2040	only	-	Sep	 2	 3:00	-1:00	-
+@@ -990,7 +1005,7 @@ Rule	Morocco	2044	only	-	Aug	28	 2:00	0	-
+ Rule	Morocco	2045	only	-	Jul	 9	 3:00	-1:00	-
+ Rule	Morocco	2045	only	-	Aug	20	 2:00	0	-
+ Rule	Morocco	2046	only	-	Jul	 1	 3:00	-1:00	-
+-Rule	Morocco	2046	only	-	Aug	12	 2:00	0	-
++Rule	Morocco	2046	only	-	Aug	 5	 2:00	0	-
+ Rule	Morocco	2047	only	-	Jun	23	 3:00	-1:00	-
+ Rule	Morocco	2047	only	-	Jul	28	 2:00	0	-
+ Rule	Morocco	2048	only	-	Jun	 7	 3:00	-1:00	-
+@@ -1006,7 +1021,7 @@ Rule	Morocco	2052	only	-	Jun	 2	 2:00	0	-
+ Rule	Morocco	2053	only	-	Apr	13	 3:00	-1:00	-
+ Rule	Morocco	2053	only	-	May	25	 2:00	0	-
+ Rule	Morocco	2054	only	-	Apr	 5	 3:00	-1:00	-
+-Rule	Morocco	2054	only	-	May	17	 2:00	0	-
++Rule	Morocco	2054	only	-	May	10	 2:00	0	-
+ Rule	Morocco	2055	only	-	Mar	28	 3:00	-1:00	-
+ Rule	Morocco	2055	only	-	May	 2	 2:00	0	-
+ Rule	Morocco	2056	only	-	Mar	12	 3:00	-1:00	-
+@@ -1022,7 +1037,7 @@ Rule	Morocco	2060	only	-	Mar	 7	 2:00	0	-
+ Rule	Morocco	2061	only	-	Jan	16	 3:00	-1:00	-
+ Rule	Morocco	2061	only	-	Feb	27	 2:00	0	-
+ Rule	Morocco	2062	only	-	Jan	 8	 3:00	-1:00	-
+-Rule	Morocco	2062	only	-	Feb	19	 2:00	0	-
++Rule	Morocco	2062	only	-	Feb	12	 2:00	0	-
+ Rule	Morocco	2062	only	-	Dec	31	 3:00	-1:00	-
+ Rule	Morocco	2063	only	-	Feb	 4	 2:00	0	-
+ Rule	Morocco	2063	only	-	Dec	16	 3:00	-1:00	-
+@@ -1038,7 +1053,7 @@ Rule	Morocco	2067	only	-	Dec	11	 2:00	0	-
+ Rule	Morocco	2068	only	-	Oct	21	 3:00	-1:00	-
+ Rule	Morocco	2068	only	-	Dec	 2	 2:00	0	-
+ Rule	Morocco	2069	only	-	Oct	13	 3:00	-1:00	-
+-Rule	Morocco	2069	only	-	Nov	24	 2:00	0	-
++Rule	Morocco	2069	only	-	Nov	17	 2:00	0	-
+ Rule	Morocco	2070	only	-	Oct	 5	 3:00	-1:00	-
+ Rule	Morocco	2070	only	-	Nov	 9	 2:00	0	-
+ Rule	Morocco	2071	only	-	Sep	20	 3:00	-1:00	-
+@@ -1054,7 +1069,7 @@ Rule	Morocco	2075	only	-	Sep	15	 2:00	0	-
+ Rule	Morocco	2076	only	-	Jul	26	 3:00	-1:00	-
+ Rule	Morocco	2076	only	-	Sep	 6	 2:00	0	-
+ Rule	Morocco	2077	only	-	Jul	18	 3:00	-1:00	-
+-Rule	Morocco	2077	only	-	Aug	29	 2:00	0	-
++Rule	Morocco	2077	only	-	Aug	22	 2:00	0	-
+ Rule	Morocco	2078	only	-	Jul	10	 3:00	-1:00	-
+ Rule	Morocco	2078	only	-	Aug	14	 2:00	0	-
+ Rule	Morocco	2079	only	-	Jun	25	 3:00	-1:00	-
+@@ -1064,13 +1079,13 @@ Rule	Morocco	2080	only	-	Jul	21	 2:00	0	-
+ Rule	Morocco	2081	only	-	Jun	 1	 3:00	-1:00	-
+ Rule	Morocco	2081	only	-	Jul	13	 2:00	0	-
+ Rule	Morocco	2082	only	-	May	24	 3:00	-1:00	-
+-Rule	Morocco	2082	only	-	Jul	 5	 2:00	0	-
++Rule	Morocco	2082	only	-	Jun	28	 2:00	0	-
+ Rule	Morocco	2083	only	-	May	16	 3:00	-1:00	-
+ Rule	Morocco	2083	only	-	Jun	20	 2:00	0	-
+ Rule	Morocco	2084	only	-	Apr	30	 3:00	-1:00	-
+ Rule	Morocco	2084	only	-	Jun	11	 2:00	0	-
+ Rule	Morocco	2085	only	-	Apr	22	 3:00	-1:00	-
+-Rule	Morocco	2085	only	-	Jun	 3	 2:00	0	-
++Rule	Morocco	2085	only	-	May	27	 2:00	0	-
+ Rule	Morocco	2086	only	-	Apr	14	 3:00	-1:00	-
+ Rule	Morocco	2086	only	-	May	19	 2:00	0	-
+ Rule	Morocco	2087	only	-	Mar	30	 3:00	-1:00	-
+@@ -1213,15 +1228,15 @@ Zone	Africa/Windhoek	1:08:24 -	LMT	1892 Feb 8
+ # From P Chan (2020-12-03):
+ # GMT was adopted as the standard time of Lagos on 1905-07-01.
+ # Lagos Weekly Record, 1905-06-24, p 3
+-# http://ddsnext.crl.edu/titles/31558#?c=0&m=668&s=0&cv=2&r=0&xywh=1446%2C5221%2C1931%2C1235
++# http://ddsnext.crl.edu/titles/31558#?c=0&m=668&s=0&cv=2&r=0&xywh=1446,5221,1931,1235
+ # says "It is officially notified that on and after the 1st of July 1905
+-# Greenwich Mean Solar Time will be adopted thought the Colony and
++# Greenwich Mean Solar Time will be adopted throughout the Colony and
+ # Protectorate, and that it will be necessary to put all clocks 13 minutes and
+ # 35 seconds back, recording local mean time."
+ #
+ # It seemed that Lagos returned to LMT on 1908-07-01.
+ # [The Lagos Standard], 1908-07-01, p 5
+-# http://ddsnext.crl.edu/titles/31556#?c=0&m=78&s=0&cv=4&r=0&xywh=-92%2C3590%2C3944%2C2523
++# http://ddsnext.crl.edu/titles/31556#?c=0&m=78&s=0&cv=4&r=0&xywh=-92,3590,3944,2523
+ # says "Scarcely have the people become accustomed to this new time, when
+ # another official notice has now appeared announcing that from and after the
+ # 1st July next, return will be made to local mean time."
+@@ -1233,7 +1248,7 @@ Zone	Africa/Windhoek	1:08:24 -	LMT	1892 Feb 8
+ # https://libsysdigi.library.illinois.edu/ilharvest/Africana/Books2011-05/3064634/3064634_1914/3064634_1914_opt.pdf#page=27
+ # "On January 1st [1914], a universal standard time for Nigeria was adopted,
+ # viz., half an hour fast on Greenwich mean time, corresponding to the meridian
+-# 7 [degrees] 30' E. long."
++# 7° 30' E. long."
+ # Lloyd's Register of Shipping (1915) says "Hitherto the time observed in Lagos
+ # was the local mean time. On 1st January, 1914, standard time for the whole of
+ # Nigeria was introduced ... Lagos time has been advanced about 16 minutes
+@@ -1251,7 +1266,7 @@ Zone	Africa/Windhoek	1:08:24 -	LMT	1892 Feb 8
+ # The Lagos Weekly Record, 1919-09-20, p 3 details discussion on the first
+ # reading of this Bill by the Legislative Council of the Colony of Nigeria on
+ # Thursday 1919-08-28:
+-# http://ddsnext.crl.edu/titles/31558?terms&item_id=303484#?m=1118&c=1&s=0&cv=2&r=0&xywh=1261%2C3408%2C2994%2C1915
++# http://ddsnext.crl.edu/titles/31558?terms&item_id=303484#?m=1118&c=1&s=0&cv=2&r=0&xywh=1261,3408,2994,1915
+ # "The proposal is that the Globe should be divided into twelve zones East and
+ # West of Greenwich, of one hour each, Nigeria falling into the zone with a
+ # standard of one hour fast on Greenwich Mean Time.  Nigeria standard time is
+diff --git a/make/data/tzdata/antarctica b/make/data/tzdata/antarctica
+index 792542b922..3de5e726eb 100644
+--- a/make/data/tzdata/antarctica
++++ b/make/data/tzdata/antarctica
+@@ -315,7 +315,7 @@ Zone Antarctica/Rothera	0	-	-00	1976 Dec  1
+ # but that he found it more convenient to keep GMT+12
+ # as supplies for the station were coming from McMurdo Sound,
+ # which was on GMT+12 because New Zealand was on GMT+12 all year
+-# at that time (1957).  (Source: Siple's book 90 Degrees South.)
++# at that time (1957).  (Source: Siple's book 90° South.)
+ #
+ # From Susan Smith
+ # http://www.cybertours.com/whs/pole10.html
+diff --git a/make/data/tzdata/asia b/make/data/tzdata/asia
+index ff81978bc4..6a048c3ad2 100644
+--- a/make/data/tzdata/asia
++++ b/make/data/tzdata/asia
+@@ -2714,6 +2714,40 @@ Zone	Asia/Pyongyang	8:23:00 -	LMT	1908 Apr  1
+ 
+ 
+ # Lebanon
++#
++# From Saadallah Itani (2023-03-23):
++# Lebanon ... announced today delay of Spring forward from March 25 to April 20.
++#
++# From Paul Eggert (2023-03-27):
++# This announcement was by the Lebanese caretaker prime minister Najib Mikati.
++# https://www.mtv.com.lb/en/News/Local/1352516/lebanon-postpones-daylight-saving-time-adoption
++# A video was later leaked to the media of parliament speaker Nabih Berri
++# asking Mikati to postpone DST to aid observance of Ramadan, Mikati objecting
++# that this would cause problems such as scheduling airline flights, to which
++# Berri interjected, "What flights?"
++#
++# The change was controversial and led to a partly-sectarian divide.
++# Many Lebanese institutions, including the education ministry, the Maronite
++# church, and two news channels LCBI and MTV, ignored the announcement and
++# went ahead with the long-scheduled spring-forward on March 25/26, some
++# arguing that the prime minister had not followed the law because the change
++# had not been approved by the cabinet.  Google went with the announcement;
++# Apple ignored it.  At least one bank followed the announcement for its doors,
++# but ignored the announcement in internal computer systems.
++# Beirut international airport listed two times for each departure.
++# Dan Azzi wrote "My view is that this whole thing is a Dumb and Dumber movie."
++# Eventually the prime minister backed down, said the cabinet had decided to
++# stick with its 1998 decision, and that DST would begin midnight March 29/30.
++# https://www.nna-leb.gov.lb/en/miscellaneous/604093/lebanon-has-two-times-of-day-amid-daylight-savings
++# https://www.cnbc.com/2023/03/27/lebanon-in-two-different-time-zones-as-government-disagrees-on-daylight-savings.html
++#
++# Although we could model the chaos with two Zones, that would likely cause
++# more trouble than it would cure.  Since so many manual clocks and
++# computer-based timestamps ignored the announcement, stick with official
++# cabinet resolutions in the data while recording the prime minister's
++# announcement as a comment.  This is how we treated a similar situation in
++# Rio de Janeiro in spring 1993.
++#
+ # Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Lebanon	1920	only	-	Mar	28	0:00	1:00	S
+ Rule	Lebanon	1920	only	-	Oct	25	0:00	0	-
+@@ -2739,6 +2773,10 @@ Rule	Lebanon	1992	only	-	Oct	4	0:00	0	-
+ Rule	Lebanon	1993	max	-	Mar	lastSun	0:00	1:00	S
+ Rule	Lebanon	1993	1998	-	Sep	lastSun	0:00	0	-
+ Rule	Lebanon	1999	max	-	Oct	lastSun	0:00	0	-
++# This one-time rule, announced by the prime minister first for April 21
++# then for March 30, is commented out for reasons described above.
++#Rule	Lebanon	2023	only	-	Mar	30	0:00	1:00	S
++
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Beirut	2:22:00 -	LMT	1880
+ 			2:00	Lebanon	EE%sT
+@@ -2977,7 +3015,7 @@ Zone	Asia/Kathmandu	5:41:16 -	LMT	1920
+ # 9pm and moving clocks forward by one hour for the next three months. ...."
+ #
+ # http://www.worldtimezone.com/dst_news/dst_news_pakistan01.html
+-# http://www.dailytimes.com.pk/default.asp?page=2008%5C05%5C15%5Cstory_15-5-2008_pg1_4
++# http://www.dailytimes.com.pk/default.asp?page=2008\05\15\story_15-5-2008_pg1_4
+ 
+ # From Arthur David Olson (2008-05-19):
+ # XXX--midnight transitions is a guess; 2008 only is a guess.
+@@ -3300,7 +3338,7 @@ Zone	Asia/Karachi	4:28:12 -	LMT	1907
+ # Some of many sources in Arabic:
+ # http://www.samanews.com/index.php?act=Show&id=122638
+ #
+-# http://safa.ps/details/news/74352/%D8%A8%D8%AF%D8%A1-%D8%A7%D9%84%D8%AA%D9%88%D9%82%D9%8A%D8%AA-%D8%A7%D9%84%D8%B5%D9%8A%D9%81%D9%8A-%D8%A8%D8%A7%D9%84%D8%B6%D9%81%D8%A9-%D9%88%D8%BA%D8%B2%D8%A9-%D9%84%D9%8A%D9%84%D8%A9-%D8%A7%D9%84%D8%AC%D9%85%D8%B9%D8%A9.html
++# http://safa.ps/details/news/74352/بدء-التوقيت-الصيفي-بالضفة-وغزة-ليلة-الجمعة.html
+ #
+ # Our brief summary:
+ # https://www.timeanddate.com/news/time/gaza-west-bank-dst-2012.html
+@@ -3310,7 +3348,7 @@ Zone	Asia/Karachi	4:28:12 -	LMT	1907
+ # time from midnight on Friday, March 29, 2013" (translated).
+ # [These are in Arabic and are for Gaza and for Ramallah, respectively.]
+ # http://www.samanews.com/index.php?act=Show&id=154120
+-# http://safa.ps/details/news/99844/%D8%B1%D8%A7%D9%85-%D8%A7%D9%84%D9%84%D9%87-%D8%A8%D8%AF%D8%A1-%D8%A7%D9%84%D8%AA%D9%88%D9%82%D9%8A%D8%AA-%D8%A7%D9%84%D8%B5%D9%8A%D9%81%D9%8A-29-%D8%A7%D9%84%D8%AC%D8%A7%D8%B1%D9%8A.html
++# http://safa.ps/details/news/99844/رام-الله-بدء-التوقيت-الصيفي-29-الجاري.html
+ 
+ # From Steffen Thorsen (2013-09-24):
+ # The Gaza and West Bank are ending DST Thursday at midnight
+@@ -3408,9 +3446,41 @@ Zone	Asia/Karachi	4:28:12 -	LMT	1907
+ # (2022-08-31): ... the Saturday before the last Sunday in March and October
+ # at 2:00 AM ,for the years from 2023 to 2026.
+ # (2022-09-05): https://mtit.pna.ps/Site/New/1453
+-#
+-# From Paul Eggert (2022-08-31):
+-# For now, assume that this rule will also be used after 2026.
++
++# From Heba Hamad (2023-03-22):
++# ... summer time will begin in Palestine from Saturday 04-29-2023,
++# 02:00 AM by 60 minutes forward.
++#
++# From Paul Eggert (2023-03-22):
++# For now, guess that spring and fall transitions will normally
++# continue to use 2022's rules, that during DST Palestine will switch
++# to standard time at 02:00 the last Saturday before Ramadan and back
++# to DST at 02:00 the first Saturday after Ramadan, and that
++# if the normal spring-forward or fall-back transition occurs during
++# Ramadan the former is delayed and the latter advanced.
++# To implement this, I predicted Ramadan-oriented transition dates for
++# 2023 through 2086 by running the following program under GNU Emacs 28.2,
++# with the results integrated by hand into the table below.
++# Predictions after 2086 are approximated without Ramadan.
++#
++# (let ((islamic-year 1444))
++#   (require 'cal-islam)
++#   (while (< islamic-year 1510)
++#     (let ((a (calendar-islamic-to-absolute (list 9 1 islamic-year)))
++#           (b (+ 1 (calendar-islamic-to-absolute (list 10 1 islamic-year))))
++#           (saturday 6))
++#       (while (/= saturday (mod (setq a (1- a)) 7)))
++#       (while (/= saturday (mod b 7))
++#         (setq b (1+ b)))
++#       (setq a (calendar-gregorian-from-absolute a))
++#       (setq b (calendar-gregorian-from-absolute b))
++#       (insert
++#        (format
++#         (concat "Rule Palestine\t%d\tonly\t-\t%s\t%2d\t2:00\t0\t-\n"
++#                 "Rule Palestine\t%d\tonly\t-\t%s\t%2d\t2:00\t1:00\tS\n")
++#         (car (cdr (cdr a))) (calendar-month-name (car a) t) (car (cdr a))
++#         (car (cdr (cdr b))) (calendar-month-name (car b) t) (car (cdr b)))))
++#     (setq islamic-year (+ 1 islamic-year))))
+ 
+ # Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule EgyptAsia	1957	only	-	May	10	0:00	1:00	S
+@@ -3450,8 +3520,86 @@ Rule Palestine	2020	2021	-	Mar	Sat<=30	0:00	1:00	S
+ Rule Palestine	2020	only	-	Oct	24	1:00	0	-
+ Rule Palestine	2021	only	-	Oct	29	1:00	0	-
+ Rule Palestine	2022	only	-	Mar	27	0:00	1:00	S
+-Rule Palestine	2022	max	-	Oct	Sat<=30	2:00	0	-
+-Rule Palestine	2023	max	-	Mar	Sat<=30	2:00	1:00	S
++Rule Palestine	2022	2035	-	Oct	Sat<=30	2:00	0	-
++Rule Palestine	2023	only	-	Apr	29	2:00	1:00	S
++Rule Palestine	2024	only	-	Apr	13	2:00	1:00	S
++Rule Palestine	2025	only	-	Apr	 5	2:00	1:00	S
++Rule Palestine	2026	2054	-	Mar	Sat<=30	2:00	1:00	S
++Rule Palestine	2036	only	-	Oct	18	2:00	0	-
++Rule Palestine	2037	only	-	Oct	10	2:00	0	-
++Rule Palestine	2038	only	-	Sep	25	2:00	0	-
++Rule Palestine	2039	only	-	Sep	17	2:00	0	-
++Rule Palestine	2039	only	-	Oct	22	2:00	1:00	S
++Rule Palestine	2039	2067	-	Oct	Sat<=30	2:00	0	-
++Rule Palestine	2040	only	-	Sep	 1	2:00	0	-
++Rule Palestine	2040	only	-	Oct	13	2:00	1:00	S
++Rule Palestine	2041	only	-	Aug	24	2:00	0	-
++Rule Palestine	2041	only	-	Sep	28	2:00	1:00	S
++Rule Palestine	2042	only	-	Aug	16	2:00	0	-
++Rule Palestine	2042	only	-	Sep	20	2:00	1:00	S
++Rule Palestine	2043	only	-	Aug	 1	2:00	0	-
++Rule Palestine	2043	only	-	Sep	12	2:00	1:00	S
++Rule Palestine	2044	only	-	Jul	23	2:00	0	-
++Rule Palestine	2044	only	-	Aug	27	2:00	1:00	S
++Rule Palestine	2045	only	-	Jul	15	2:00	0	-
++Rule Palestine	2045	only	-	Aug	19	2:00	1:00	S
++Rule Palestine	2046	only	-	Jun	30	2:00	0	-
++Rule Palestine	2046	only	-	Aug	11	2:00	1:00	S
++Rule Palestine	2047	only	-	Jun	22	2:00	0	-
++Rule Palestine	2047	only	-	Jul	27	2:00	1:00	S
++Rule Palestine	2048	only	-	Jun	 6	2:00	0	-
++Rule Palestine	2048	only	-	Jul	18	2:00	1:00	S
++Rule Palestine	2049	only	-	May	29	2:00	0	-
++Rule Palestine	2049	only	-	Jul	 3	2:00	1:00	S
++Rule Palestine	2050	only	-	May	21	2:00	0	-
++Rule Palestine	2050	only	-	Jun	25	2:00	1:00	S
++Rule Palestine	2051	only	-	May	 6	2:00	0	-
++Rule Palestine	2051	only	-	Jun	17	2:00	1:00	S
++Rule Palestine	2052	only	-	Apr	27	2:00	0	-
++Rule Palestine	2052	only	-	Jun	 1	2:00	1:00	S
++Rule Palestine	2053	only	-	Apr	12	2:00	0	-
++Rule Palestine	2053	only	-	May	24	2:00	1:00	S
++Rule Palestine	2054	only	-	Apr	 4	2:00	0	-
++Rule Palestine	2054	only	-	May	16	2:00	1:00	S
++Rule Palestine	2055	only	-	May	 1	2:00	1:00	S
++Rule Palestine	2056	only	-	Apr	22	2:00	1:00	S
++Rule Palestine	2057	only	-	Apr	 7	2:00	1:00	S
++Rule Palestine	2058	max	-	Mar	Sat<=30	2:00	1:00	S
++Rule Palestine	2068	only	-	Oct	20	2:00	0	-
++Rule Palestine	2069	only	-	Oct	12	2:00	0	-
++Rule Palestine	2070	only	-	Oct	 4	2:00	0	-
++Rule Palestine	2071	only	-	Sep	19	2:00	0	-
++Rule Palestine	2072	only	-	Sep	10	2:00	0	-
++Rule Palestine	2072	only	-	Oct	15	2:00	1:00	S
++Rule Palestine	2073	only	-	Sep	 2	2:00	0	-
++Rule Palestine	2073	only	-	Oct	 7	2:00	1:00	S
++Rule Palestine	2074	only	-	Aug	18	2:00	0	-
++Rule Palestine	2074	only	-	Sep	29	2:00	1:00	S
++Rule Palestine	2075	only	-	Aug	10	2:00	0	-
++Rule Palestine	2075	only	-	Sep	14	2:00	1:00	S
++Rule Palestine	2075	max	-	Oct	Sat<=30	2:00	0	-
++Rule Palestine	2076	only	-	Jul	25	2:00	0	-
++Rule Palestine	2076	only	-	Sep	 5	2:00	1:00	S
++Rule Palestine	2077	only	-	Jul	17	2:00	0	-
++Rule Palestine	2077	only	-	Aug	28	2:00	1:00	S
++Rule Palestine	2078	only	-	Jul	 9	2:00	0	-
++Rule Palestine	2078	only	-	Aug	13	2:00	1:00	S
++Rule Palestine	2079	only	-	Jun	24	2:00	0	-
++Rule Palestine	2079	only	-	Aug	 5	2:00	1:00	S
++Rule Palestine	2080	only	-	Jun	15	2:00	0	-
++Rule Palestine	2080	only	-	Jul	20	2:00	1:00	S
++Rule Palestine	2081	only	-	Jun	 7	2:00	0	-
++Rule Palestine	2081	only	-	Jul	12	2:00	1:00	S
++Rule Palestine	2082	only	-	May	23	2:00	0	-
++Rule Palestine	2082	only	-	Jul	 4	2:00	1:00	S
++Rule Palestine	2083	only	-	May	15	2:00	0	-
++Rule Palestine	2083	only	-	Jun	19	2:00	1:00	S
++Rule Palestine	2084	only	-	Apr	29	2:00	0	-
++Rule Palestine	2084	only	-	Jun	10	2:00	1:00	S
++Rule Palestine	2085	only	-	Apr	21	2:00	0	-
++Rule Palestine	2085	only	-	Jun	 2	2:00	1:00	S
++Rule Palestine	2086	only	-	Apr	13	2:00	0	-
++Rule Palestine	2086	only	-	May	18	2:00	1:00	S
+ 
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ Zone	Asia/Gaza	2:17:52	-	LMT	1900 Oct
+@@ -3655,7 +3803,7 @@ Zone	Asia/Singapore	6:55:25 -	LMT	1901 Jan  1
+ # standard time is SLST.
+ #
+ # From Paul Eggert (2016-10-18):
+-# "SLST" seems to be reasonably recent and rarely-used outside time
++# "SLST" seems to be reasonably recent and rarely used outside time
+ # zone nerd sources.  I searched Google News and found three uses of
+ # it in the International Business Times of India in February and
+ # March of this year when discussing cricket match times, but nothing
+diff --git a/make/data/tzdata/australasia b/make/data/tzdata/australasia
+index fbe3b8a6d7..893d7055ea 100644
+--- a/make/data/tzdata/australasia
++++ b/make/data/tzdata/australasia
+@@ -346,7 +346,7 @@ Zone Antarctica/Macquarie 0	-	-00	1899 Nov
+ 
+ # From Steffen Thorsen (2013-01-10):
+ # Fiji will end DST on 2014-01-19 02:00:
+-# http://www.fiji.gov.fj/Media-Center/Press-Releases/DAYLIGHT-SAVINGS-TO-END-THIS-MONTH-%281%29.aspx
++# http://www.fiji.gov.fj/Media-Center/Press-Releases/DAYLIGHT-SAVINGS-TO-END-THIS-MONTH-(1).aspx
+ 
+ # From Ken Rylander (2014-10-20):
+ # DST will start Nov. 2 this year.
+@@ -746,7 +746,7 @@ Zone Pacific/Pago_Pago	 12:37:12 -	LMT	1892 Jul  5
+ #
+ # Samoa's Daylight Saving Time Act 2009 is available here, but does not
+ # contain any dates:
+-# http://www.parliament.gov.ws/documents/acts/Daylight%20Saving%20Act%20%202009%20%28English%29%20-%20Final%207-7-091.pdf
++# http://www.parliament.gov.ws/documents/acts/Daylight%20Saving%20Act%20%202009%20(English)%20-%20Final%207-7-091.pdf
+ 
+ # From Laupue Raymond Hughes (2010-10-07):
+ # Please see
+@@ -1831,7 +1831,7 @@ Zone	Pacific/Efate	11:13:16 -	LMT	1912 Jan 13 # Vila
+ # period.  It would probably be reasonable to assume Guam use GMT+9 during
+ # that period of time like the surrounding area.
+ 
+-# From Paul Eggert (2018-11-18):
++# From Paul Eggert (2023-01-23):
+ # Howse writes (p 153) "The Spaniards, on the other hand, reached the
+ # Philippines and the Ladrones from America," and implies that the Ladrones
+ # (now called the Marianas) kept American date for quite some time.
+@@ -1844,7 +1844,7 @@ Zone	Pacific/Efate	11:13:16 -	LMT	1912 Jan 13 # Vila
+ # they did as that avoids the need for a separate zone due to our 1970 cutoff.
+ #
+ # US Public Law 106-564 (2000-12-23) made UT +10 the official standard time,
+-# under the name "Chamorro Standard Time".  There is no official abbreviation,
++# under the name "Chamorro standard time".  There is no official abbreviation,
+ # but Congressman Robert A. Underwood, author of the bill that became law,
+ # wrote in a press release (2000-12-27) that he will seek the use of "ChST".
+ 
+@@ -2222,24 +2222,18 @@ Zone	Pacific/Efate	11:13:16 -	LMT	1912 Jan 13 # Vila
+ # an international standard, there are some places on the high seas where the
+ # correct date is ambiguous.
+ 
+-# From Wikipedia <https://en.wikipedia.org/wiki/Time_zone> (2005-08-31):
+-# Before 1920, all ships kept local apparent time on the high seas by setting
+-# their clocks at night or at the morning sight so that, given the ship's
+-# speed and direction, it would be 12 o'clock when the Sun crossed the ship's
+-# meridian (12 o'clock = local apparent noon).  During 1917, at the
+-# Anglo-French Conference on Time-keeping at Sea, it was recommended that all
+-# ships, both military and civilian, should adopt hourly standard time zones
+-# on the high seas.  Whenever a ship was within the territorial waters of any
+-# nation it would use that nation's standard time.  The captain was permitted
+-# to change his ship's clocks at a time of his choice following his ship's
+-# entry into another zone time - he often chose midnight.  These zones were
+-# adopted by all major fleets between 1920 and 1925 but not by many
+-# independent merchant ships until World War II.
+-
+-# From Paul Eggert, using references suggested by Oscar van Vlijmen
+-# (2005-03-20):
+-#
+-# The American Practical Navigator (2002)
+-# http://pollux.nss.nima.mil/pubs/pubs_j_apn_sections.html?rid=187
+-# talks only about the 180-degree meridian with respect to ships in
+-# international waters; it ignores the international date line.
++# From Wikipedia <https://en.wikipedia.org/wiki/Nautical_time> (2023-01-23):
++# The nautical time zone system is analogous to the terrestrial time zone
++# system for use on high seas.  Under the system time changes are required for
++# changes of longitude in one-hour steps.  The one-hour step corresponds to a
++# time zone width of 15° longitude.  The 15° gore that is offset from GMT or
++# UT1 (not UTC) by twelve hours is bisected by the nautical date line into two
++# 7°30' gores that differ from GMT by ±12 hours.  A nautical date line is
++# implied but not explicitly drawn on time zone maps.  It follows the 180th
++# meridian except where it is interrupted by territorial waters adjacent to
++# land, forming gaps: it is a pole-to-pole dashed line.
++
++# From Paul Eggert (2023-01-23):
++# The American Practical Navigator <https://msi.nga.mil/Publications/APN>,
++# 2019 edition, merely says that the International Date Line
++# "coincides with the 180th meridian over most of its length."
+diff --git a/make/data/tzdata/backward b/make/data/tzdata/backward
+index fa44f65500..c0746d6dd1 100644
+--- a/make/data/tzdata/backward
++++ b/make/data/tzdata/backward
+@@ -297,6 +297,7 @@ Link	America/Argentina/Cordoba	America/Rosario
+ Link	America/Tijuana		America/Santa_Isabel
+ Link	America/Denver		America/Shiprock
+ Link	America/Toronto		America/Thunder_Bay
++Link	America/Edmonton	America/Yellowknife
+ Link	Pacific/Auckland	Antarctica/South_Pole
+ Link	Asia/Shanghai		Asia/Chongqing
+ Link	Asia/Shanghai		Asia/Harbin
+diff --git a/make/data/tzdata/europe b/make/data/tzdata/europe
+index acc5da3ec7..446d2e1e65 100644
+--- a/make/data/tzdata/europe
++++ b/make/data/tzdata/europe
+@@ -540,9 +540,7 @@ Zone	Europe/London	-0:01:15 -	LMT	1847 Dec  1
+ # other form with a traditional approximation for Irish timestamps
+ # after 1971-10-31 02:00 UTC; although this approximation has tm_isdst
+ # flags that are reversed, its UTC offsets are correct and this often
+-# suffices.  This source file currently uses only nonnegative SAVE
+-# values, but this is intended to change and downstream code should
+-# not rely on it.
++# suffices....
+ #
+ # The following is like GB-Eire and EU, except with standard time in
+ # summer and negative daylight saving time in winter.  It is for when
+@@ -1136,19 +1134,18 @@ Zone Atlantic/Faroe	-0:27:04 -	LMT	1908 Jan 11 # Tórshavn
+ #
+ # From Jürgen Appel (2022-11-25):
+ # https://ina.gl/samlinger/oversigt-over-samlinger/samling/dagsordener/dagsorden.aspx?lang=da&day=24-11-2022
+-# If I understand this correctly, from the next planned switch to
+-# summer time, Greenland will permanently stay at that time, i.e. no
+-# switch back to winter time in 2023 will occur.
+-#
+-# From Paul Eggert (2022-11-28):
+-# The official document in Danish
+-# https://naalakkersuisut.gl/-/media/naalakkersuisut/filer/kundgoerelser/2022/11/2511/31_da_inatsisartutlov-om-tidens-bestemmelse.pdf?la=da&hash=A33597D8A38CC7038465241119EF34F3
+-# says standard time for Greenland is -02, that Naalakkersuisut can lay down
+-# rules for DST and can require some areas to use a different time zone,
+-# and that this all takes effect 2023-03-25 22:00.  The abovementioned
+-# "bekymringer" URL says the intent is no transition March 25, that
+-# Greenland will not go back to winter time in fall 2023, and that
+-# only America/Nuuk is affected (though further changes may occur).
++#
++# From Thomas M. Steenholdt (2022-12-02):
++# - The bill to move America/Nuuk from UTC-03 to UTC-02 passed.
++# - The bill to stop observing DST did not (Greenland will stop observing DST
++#   when EU does).
++# Details on the implementation are here (section 6):
++# https://ina.gl/dvd/EM%202022/pdf/media/2553529/pkt17_em2022_tidens_bestemmelse_bem_da.pdf
++# This is how the change will be implemented:
++# 1. The shift *to* DST in 2023 happens as normal.
++# 2. The shift *from* DST in 2023 happens as normal, but coincides with the
++#    shift to UTC-02 normaltime (people will not change their clocks here).
++# 3. After this, DST is still observed, but as -02/-01 instead of -03/-02.
+ 
+ # Rule	NAME	FROM	TO	-	IN	ON	AT	SAVE	LETTER/S
+ Rule	Thule	1991	1992	-	Mar	lastSun	2:00	1:00	D
+@@ -1172,8 +1169,8 @@ Zone America/Scoresbysund -1:27:52 -	LMT	1916 Jul 28 # Ittoqqortoormiit
+ 			-1:00	EU	-01/+00
+ Zone America/Nuuk	-3:26:56 -	LMT	1916 Jul 28 # Godthåb
+ 			-3:00	-	-03	1980 Apr  6  2:00
+-			-3:00	EU	-03/-02	2023 Mar 25 22:00
+-			-2:00	-	-02
++			-3:00	EU	-03/-02	2023 Oct 29  1:00u
++			-2:00	EU	-02/-01
+ Zone America/Thule	-4:35:08 -	LMT	1916 Jul 28 # Pituffik
+ 			-4:00	Thule	A%sT
+ 
+@@ -1509,9 +1506,9 @@ Zone	Europe/Paris	0:09:21 -	LMT	1891 Mar 16
+ Rule	Germany	1946	only	-	Apr	14	2:00s	1:00	S
+ Rule	Germany	1946	only	-	Oct	 7	2:00s	0	-
+ Rule	Germany	1947	1949	-	Oct	Sun>=1	2:00s	0	-
+-# http://www.ptb.de/de/org/4/44/441/salt.htm says the following transition
+-# occurred at 3:00 MEZ, not the 2:00 MEZ given in Shanks & Pottenger.
+-# Go with the PTB.
++# https://www.ptb.de/cms/en/ptb/fachabteilungen/abt4/fb-44/ag-441/realisation-of-legal-time-in-germany/dst-and-midsummer-dst-in-germany-until-1979.html
++# says the following transition occurred at 3:00 MEZ, not the 2:00 MEZ
++# given in Shanks & Pottenger. Go with the PTB.
+ Rule	Germany	1947	only	-	Apr	 6	3:00s	1:00	S
+ Rule	Germany	1947	only	-	May	11	2:00s	2:00	M
+ Rule	Germany	1947	only	-	Jun	29	3:00	1:00	S
+@@ -2272,7 +2269,7 @@ Zone Europe/Bucharest	1:44:24 -	LMT	1891 Oct
+ # the State Duma has approved ... the draft bill on returning to
+ # winter time standard and return Russia 11 time zones.  The new
+ # regulations will come into effect on October 26, 2014 at 02:00 ...
+-# http://asozd2.duma.gov.ru/main.nsf/%28Spravka%29?OpenAgent&RN=431985-6&02
++# http://asozd2.duma.gov.ru/main.nsf/(Spravka)?OpenAgent&RN=431985-6&02
+ # Here is a link where we put together table (based on approved Bill N
+ # 431985-6) with proposed 11 Russian time zones and corresponding
+ # areas/cities/administrative centers in the Russian Federation (in English):
+@@ -2682,13 +2679,13 @@ Zone Europe/Volgograd	 2:57:40 -	LMT	1920 Jan  3
+ 			 3:00	-	+03	1930 Jun 21
+ 			 4:00	-	+04	1961 Nov 11
+ 			 4:00	Russia	+04/+05	1988 Mar 27  2:00s
+-			 3:00	Russia	+03/+04	1991 Mar 31  2:00s
++			 3:00	Russia	MSK/MSD	1991 Mar 31  2:00s
+ 			 4:00	-	+04	1992 Mar 29  2:00s
+-			 3:00	Russia	+03/+04	2011 Mar 27  2:00s
+-			 4:00	-	+04	2014 Oct 26  2:00s
+-			 3:00	-	+03	2018 Oct 28  2:00s
++			 3:00	Russia	MSK/MSD	2011 Mar 27  2:00s
++			 4:00	-	MSK	2014 Oct 26  2:00s
++			 3:00	-	MSK	2018 Oct 28  2:00s
+ 			 4:00	-	+04	2020 Dec 27  2:00s
+-			 3:00	-	+03
++			 3:00	-	MSK
+ 
+ # From Paul Eggert (2016-11-11):
+ # Europe/Saratov covers:
+@@ -2719,11 +2716,11 @@ Zone Europe/Saratov	 3:04:18 -	LMT	1919 Jul  1  0:00u
+ Zone Europe/Kirov	 3:18:48 -	LMT	1919 Jul  1  0:00u
+ 			 3:00	-	+03	1930 Jun 21
+ 			 4:00	Russia	+04/+05	1989 Mar 26  2:00s
+-			 3:00	Russia	+03/+04	1991 Mar 31  2:00s
++			 3:00	Russia	MSK/MSD	1991 Mar 31  2:00s
+ 			 4:00	-	+04	1992 Mar 29  2:00s
+-			 3:00	Russia	+03/+04	2011 Mar 27  2:00s
+-			 4:00	-	+04	2014 Oct 26  2:00s
+-			 3:00	-	+03
++			 3:00	Russia	MSK/MSD	2011 Mar 27  2:00s
++			 4:00	-	MSK	2014 Oct 26  2:00s
++			 3:00	-	MSK
+ 
+ # From Tim Parenti (2014-07-03), per Oscar van Vlijmen (2001-08-25):
+ # Europe/Samara covers...
+diff --git a/make/data/tzdata/iso3166.tab b/make/data/tzdata/iso3166.tab
+index fbfb74bec4..cea17732dd 100644
+--- a/make/data/tzdata/iso3166.tab
++++ b/make/data/tzdata/iso3166.tab
+@@ -261,7 +261,7 @@ SY	Syria
+ SZ	Eswatini (Swaziland)
+ TC	Turks & Caicos Is
+ TD	Chad
+-TF	French Southern Territories
++TF	French S. Terr.
+ TG	Togo
+ TH	Thailand
+ TJ	Tajikistan
+diff --git a/make/data/tzdata/leapseconds b/make/data/tzdata/leapseconds
+index d6fb840f51..89ce8b89cd 100644
+--- a/make/data/tzdata/leapseconds
++++ b/make/data/tzdata/leapseconds
+@@ -95,11 +95,11 @@ Leap	2016	Dec	31	23:59:60	+	S
+ # Any additional leap seconds will come after this.
+ # This Expires line is commented out for now,
+ # so that pre-2020a zic implementations do not reject this file.
+-#Expires 2023	Jun	28	00:00:00
++#Expires 2023	Dec	28	00:00:00
+ 
+ # POSIX timestamps for the data in this file:
+ #updated 1467936000 (2016-07-08 00:00:00 UTC)
+-#expires 1687910400 (2023-06-28 00:00:00 UTC)
++#expires 1703721600 (2023-12-28 00:00:00 UTC)
+ 
+-#	Updated through IERS Bulletin C64
+-#	File expires on:  28 June 2023
++#	Updated through IERS Bulletin C65
++#	File expires on:  28 December 2023
+diff --git a/make/data/tzdata/northamerica b/make/data/tzdata/northamerica
+index a5fd701f88..e240cf3510 100644
+--- a/make/data/tzdata/northamerica
++++ b/make/data/tzdata/northamerica
+@@ -1,4 +1,3 @@
+-#
+ # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ #
+ # This code is free software; you can redistribute it and/or modify it
+@@ -299,9 +298,10 @@ Zone	PST8PDT		 -8:00	US	P%sT
+ #  -10	Standard Alaska Time (AST)	Alaska-Hawaii standard time (AHST)
+ #  -11	(unofficial) Nome (NST)		Bering standard time (BST)
+ #
+-# From Paul Eggert (2000-01-08), following a heads-up from Rives McDow:
+-# Public law 106-564 (2000-12-23) introduced ... "Chamorro Standard Time"
++# From Paul Eggert (2023-01-23), from a 2001-01-08 heads-up from Rives McDow:
++# Public law 106-564 (2000-12-23) introduced "Chamorro standard time"
+ # for time in Guam and the Northern Marianas.  See the file "australasia".
++# Also see 15 U.S.C. §263 <https://www.law.cornell.edu/uscode/text/15/263>.
+ #
+ # From Paul Eggert (2015-04-17):
+ # HST and HDT are standardized abbreviations for Hawaii-Aleutian
+@@ -618,7 +618,7 @@ Zone America/Los_Angeles -7:52:58 -	LMT	1883 Nov 18 20:00u
+ # local times of other Alaskan locations so that they change simultaneously.
+ 
+ # From Paul Eggert (2014-07-18):
+-# One opinion of the early-1980s turmoil in Alaska over time zones and
++# One opinion of the early 1980s turmoil in Alaska over time zones and
+ # daylight saving time appeared as graffiti on a Juneau airport wall:
+ # "Welcome to Juneau.  Please turn your watch back to the 19th century."
+ # See: Turner W. Alaska's four time zones now two. NY Times 1983-11-01.
+@@ -690,6 +690,10 @@ Zone America/Los_Angeles -7:52:58 -	LMT	1883 Nov 18 20:00u
+ # So they won't be waiting for Alaska to join them on 2019-03-10, but will
+ # rather change their clocks twice in seven weeks.
+ 
++# From Paul Eggert (2023-01-23):
++# America/Adak is for the Aleutian Islands that are part of Alaska
++# and are west of 169.5° W.
++
+ # Zone	NAME		STDOFF	RULES	FORMAT	[UNTIL]
+ Zone America/Juneau	 15:02:19 -	LMT	1867 Oct 19 15:33:32
+ 			 -8:57:41 -	LMT	1900 Aug 20 12:00
+@@ -2148,10 +2152,6 @@ Zone America/Fort_Nelson	-8:10:47 -	LMT	1884
+ # Nunavut ... moved ... to incorporate the whole territory into one time zone.
+ # Nunavut moves to single time zone Oct. 31
+ # http://www.nunatsiaq.com/nunavut/nvt90903_13.html
+-#
+-# From Antoine Leca (1999-09-06):
+-# We then need to create a new timezone for the Kitikmeot region of Nunavut
+-# to differentiate it from the Yellowknife region.
+ 
+ # From Paul Eggert (1999-09-20):
+ # Basic Facts: The New Territory
+@@ -2345,9 +2345,6 @@ Zone America/Cambridge_Bay 0	-	-00	1920 # trading post est.?
+ 			-5:00	-	EST	2000 Nov  5  0:00
+ 			-6:00	-	CST	2001 Apr  1  3:00
+ 			-7:00	Canada	M%sT
+-Zone America/Yellowknife 0	-	-00	1935 # Yellowknife founded?
+-			-7:00	NT_YK	M%sT	1980
+-			-7:00	Canada	M%sT
+ Zone America/Inuvik	0	-	-00	1953 # Inuvik founded
+ 			-8:00	NT_YK	P%sT	1979 Apr lastSun  2:00
+ 			-7:00	NT_YK	M%sT	1980
+@@ -2584,7 +2581,7 @@ Zone America/Dawson	-9:17:40 -	LMT	1900 Aug 20
+ # and in addition changes all of Chihuahua to -06 with no DST.
+ 
+ # From Heitor David Pinto (2022-11-28):
+-# Now the northern municipalities want to have the same time zone as the
++# Now the northern [municipios] want to have the same time zone as the
+ # respective neighboring cities in the US, for example Juárez in UTC-7 with
+ # DST, matching El Paso, and Ojinaga in UTC-6 with DST, matching Presidio....
+ # the president authorized the publication of the decree for November 29,
+@@ -2621,7 +2618,7 @@ Zone America/Merida	-5:58:28 -	LMT	1922 Jan  1  6:00u
+ 			-5:00	-	EST	1982 Dec  2
+ 			-6:00	Mexico	C%sT
+ # Coahuila, Nuevo León, Tamaulipas (near US border)
+-# This includes the following municipalities:
++# This includes the following municipios:
+ #   in Coahuila: Acuña, Allende, Guerrero, Hidalgo, Jiménez, Morelos, Nava,
+ #     Ocampo, Piedras Negras, Villa Unión, Zaragoza
+ #   in Nuevo León: Anáhuac
+@@ -2647,8 +2644,8 @@ Zone America/Mexico_City -6:36:36 -	LMT	1922 Jan  1  7:00u
+ 			-6:00	-	CST	2002 Feb 20
+ 			-6:00	Mexico	C%sT
+ # Chihuahua (near US border - western side)
+-# This includes the municipalities of Janos, Ascensión, Juárez, Guadalupe,
+-# and Práxedis G Guerrero.
++# This includes the municipios of Janos, Ascensión, Juárez, Guadalupe, and
++# Práxedis G Guerrero.
+ # http://gaceta.diputados.gob.mx/PDF/65/2a022/nov/20221124-VII.pdf
+ Zone America/Ciudad_Juarez -7:05:56 -	LMT	1922 Jan  1  7:00u
+ 			-7:00	-	MST	1927 Jun 10 23:00
+@@ -2662,7 +2659,8 @@ Zone America/Ciudad_Juarez -7:05:56 -	LMT	1922 Jan  1  7:00u
+ 			-6:00	-	CST	2022 Nov 30  0:00
+ 			-7:00	US	M%sT
+ # Chihuahua (near US border - eastern side)
+-# The municipalities of Coyame del Sotol, Ojinaga, and Manuel Benavides.
++# This includes the municipios of Coyame del Sotol, Ojinaga, and Manuel
++# Benavides.
+ # http://gaceta.diputados.gob.mx/PDF/65/2a022/nov/20221124-VII.pdf
+ Zone America/Ojinaga	-6:57:40 -	LMT	1922 Jan  1  7:00u
+ 			-7:00	-	MST	1927 Jun 10 23:00
+@@ -3083,7 +3081,7 @@ Zone America/Costa_Rica	-5:36:13 -	LMT	1890        # San José
+ #
+ # He supplied these references:
+ #
+-# http://www.prensalatina.com.mx/article.asp?ID=%7B4CC32C1B-A9F7-42FB-8A07-8631AFC923AF%7D&language=ES
++# http://www.prensalatina.com.mx/article.asp?ID={4CC32C1B-A9F7-42FB-8A07-8631AFC923AF}&language=ES
+ # http://actualidad.terra.es/sociedad/articulo/cuba_llama_ahorrar_energia_cambio_1957044.htm
+ #
+ # From Alex Krivenyshev (2007-10-25):
+diff --git a/make/data/tzdata/southamerica b/make/data/tzdata/southamerica
+index 81fdd793df..4024e7180c 100644
+--- a/make/data/tzdata/southamerica
++++ b/make/data/tzdata/southamerica
+@@ -231,7 +231,7 @@ Rule	Arg	2008	only	-	Oct	Sun>=15	0:00	1:00	-
+ # Hora de verano para la República Argentina
+ # http://buenasiembra.com.ar/esoterismo/astrologia/hora-de-verano-de-la-republica-argentina-27.html
+ # says that standard time in Argentina from 1894-10-31
+-# to 1920-05-01 was -4:16:48.25.  Go with this more-precise value
++# to 1920-05-01 was -4:16:48.25.  Go with this more precise value
+ # over Shanks & Pottenger.  It is upward compatible with Milne, who
+ # says Córdoba time was -4:16:48.2.
+ 
+diff --git a/make/data/tzdata/zone.tab b/make/data/tzdata/zone.tab
+index 939432d345..3edb0d61c8 100644
+--- a/make/data/tzdata/zone.tab
++++ b/make/data/tzdata/zone.tab
+@@ -144,9 +144,8 @@ CA	+744144-0944945	America/Resolute	Central - NU (Resolute)
+ CA	+624900-0920459	America/Rankin_Inlet	Central - NU (central)
+ CA	+5024-10439	America/Regina	CST - SK (most areas)
+ CA	+5017-10750	America/Swift_Current	CST - SK (midwest)
+-CA	+5333-11328	America/Edmonton	Mountain - AB; BC (E); SK (W)
++CA	+5333-11328	America/Edmonton	Mountain - AB; BC (E); NT (E); SK (W)
+ CA	+690650-1050310	America/Cambridge_Bay	Mountain - NU (west)
+-CA	+6227-11421	America/Yellowknife	Mountain - NT (central)
+ CA	+682059-1334300	America/Inuvik	Mountain - NT (west)
+ CA	+4906-11631	America/Creston	MST - BC (Creston)
+ CA	+5546-12014	America/Dawson_Creek	MST - BC (Dawson Cr, Ft St John)
+@@ -162,7 +161,7 @@ CG	-0416+01517	Africa/Brazzaville
+ CH	+4723+00832	Europe/Zurich
+ CI	+0519-00402	Africa/Abidjan
+ CK	-2114-15946	Pacific/Rarotonga
+-CL	-3327-07040	America/Santiago	Chile (most areas)
++CL	-3327-07040	America/Santiago	most of Chile
+ CL	-5309-07055	America/Punta_Arenas	Region of Magallanes
+ CL	-2709-10926	Pacific/Easter	Easter Island
+ CM	+0403+00942	Africa/Douala
+@@ -174,10 +173,10 @@ CU	+2308-08222	America/Havana
+ CV	+1455-02331	Atlantic/Cape_Verde
+ CW	+1211-06900	America/Curacao
+ CX	-1025+10543	Indian/Christmas
+-CY	+3510+03322	Asia/Nicosia	Cyprus (most areas)
++CY	+3510+03322	Asia/Nicosia	most of Cyprus
+ CY	+3507+03357	Asia/Famagusta	Northern Cyprus
+ CZ	+5005+01426	Europe/Prague
+-DE	+5230+01322	Europe/Berlin	Germany (most areas)
++DE	+5230+01322	Europe/Berlin	most of Germany
+ DE	+4742+00841	Europe/Busingen	Busingen
+ DJ	+1136+04309	Africa/Djibouti
+ DK	+5540+01235	Europe/Copenhagen
+@@ -210,7 +209,7 @@ GF	+0456-05220	America/Cayenne
+ GG	+492717-0023210	Europe/Guernsey
+ GH	+0533-00013	Africa/Accra
+ GI	+3608-00521	Europe/Gibraltar
+-GL	+6411-05144	America/Nuuk	Greenland (most areas)
++GL	+6411-05144	America/Nuuk	most of Greenland
+ GL	+7646-01840	America/Danmarkshavn	National Park (east coast)
+ GL	+7029-02158	America/Scoresbysund	Scoresbysund/Ittoqqortoormiit
+ GL	+7634-06847	America/Thule	Thule/Pituffik
+@@ -258,7 +257,7 @@ KP	+3901+12545	Asia/Pyongyang
+ KR	+3733+12658	Asia/Seoul
+ KW	+2920+04759	Asia/Kuwait
+ KY	+1918-08123	America/Cayman
+-KZ	+4315+07657	Asia/Almaty	Kazakhstan (most areas)
++KZ	+4315+07657	Asia/Almaty	most of Kazakhstan
+ KZ	+4448+06528	Asia/Qyzylorda	Qyzylorda/Kyzylorda/Kzyl-Orda
+ KZ	+5312+06337	Asia/Qostanay	Qostanay/Kostanay/Kustanay
+ KZ	+5017+05710	Asia/Aqtobe	Aqtobe/Aktobe
+@@ -282,12 +281,12 @@ MD	+4700+02850	Europe/Chisinau
+ ME	+4226+01916	Europe/Podgorica
+ MF	+1804-06305	America/Marigot
+ MG	-1855+04731	Indian/Antananarivo
+-MH	+0709+17112	Pacific/Majuro	Marshall Islands (most areas)
++MH	+0709+17112	Pacific/Majuro	most of Marshall Islands
+ MH	+0905+16720	Pacific/Kwajalein	Kwajalein
+ MK	+4159+02126	Europe/Skopje
+ ML	+1239-00800	Africa/Bamako
+ MM	+1647+09610	Asia/Yangon
+-MN	+4755+10653	Asia/Ulaanbaatar	Mongolia (most areas)
++MN	+4755+10653	Asia/Ulaanbaatar	most of Mongolia
+ MN	+4801+09139	Asia/Hovd	Bayan-Olgiy, Govi-Altai, Hovd, Uvs, Zavkhan
+ MN	+4804+11430	Asia/Choibalsan	Dornod, Sukhbaatar
+ MO	+221150+1133230	Asia/Macau
+@@ -325,7 +324,7 @@ NO	+5955+01045	Europe/Oslo
+ NP	+2743+08519	Asia/Kathmandu
+ NR	-0031+16655	Pacific/Nauru
+ NU	-1901-16955	Pacific/Niue
+-NZ	-3652+17446	Pacific/Auckland	New Zealand (most areas)
++NZ	-3652+17446	Pacific/Auckland	most of New Zealand
+ NZ	-4357-17633	Pacific/Chatham	Chatham Islands
+ OM	+2336+05835	Asia/Muscat
+ PA	+0858-07932	America/Panama
+@@ -333,7 +332,7 @@ PE	-1203-07703	America/Lima
+ PF	-1732-14934	Pacific/Tahiti	Society Islands
+ PF	-0900-13930	Pacific/Marquesas	Marquesas Islands
+ PF	-2308-13457	Pacific/Gambier	Gambier Islands
+-PG	-0930+14710	Pacific/Port_Moresby	Papua New Guinea (most areas)
++PG	-0930+14710	Pacific/Port_Moresby	most of Papua New Guinea
+ PG	-0613+15534	Pacific/Bougainville	Bougainville
+ PH	+1435+12100	Asia/Manila
+ PK	+2452+06703	Asia/Karachi
+@@ -379,7 +378,7 @@ RU	+4310+13156	Asia/Vladivostok	MSK+07 - Amur River
+ RU	+643337+1431336	Asia/Ust-Nera	MSK+07 - Oymyakonsky
+ RU	+5934+15048	Asia/Magadan	MSK+08 - Magadan
+ RU	+4658+14242	Asia/Sakhalin	MSK+08 - Sakhalin Island
+-RU	+6728+15343	Asia/Srednekolymsk	MSK+08 - Sakha (E); North Kuril Is
++RU	+6728+15343	Asia/Srednekolymsk	MSK+08 - Sakha (E); N Kuril Is
+ RU	+5301+15839	Asia/Kamchatka	MSK+09 - Kamchatka
+ RU	+6445+17729	Asia/Anadyr	MSK+09 - Bering Sea
+ RW	-0157+03004	Africa/Kigali
+@@ -420,7 +419,7 @@ TT	+1039-06131	America/Port_of_Spain
+ TV	-0831+17913	Pacific/Funafuti
+ TW	+2503+12130	Asia/Taipei
+ TZ	-0648+03917	Africa/Dar_es_Salaam
+-UA	+5026+03031	Europe/Kyiv	Ukraine (most areas)
++UA	+5026+03031	Europe/Kyiv	most of Ukraine
+ UG	+0019+03225	Africa/Kampala
+ UM	+2813-17722	Pacific/Midway	Midway Islands
+ UM	+1917+16637	Pacific/Wake	Wake Island
+@@ -443,7 +442,7 @@ US	+465042-1012439	America/North_Dakota/New_Salem	Central - ND (Morton rural)
+ US	+471551-1014640	America/North_Dakota/Beulah	Central - ND (Mercer)
+ US	+394421-1045903	America/Denver	Mountain (most areas)
+ US	+433649-1161209	America/Boise	Mountain - ID (south); OR (east)
+-US	+332654-1120424	America/Phoenix	MST - Arizona (except Navajo)
++US	+332654-1120424	America/Phoenix	MST - AZ (except Navajo)
+ US	+340308-1181434	America/Los_Angeles	Pacific
+ US	+611305-1495401	America/Anchorage	Alaska (most areas)
+ US	+581807-1342511	America/Juneau	Alaska - Juneau area
+@@ -451,7 +450,7 @@ US	+571035-1351807	America/Sitka	Alaska - Sitka area
+ US	+550737-1313435	America/Metlakatla	Alaska - Annette Island
+ US	+593249-1394338	America/Yakutat	Alaska - Yakutat
+ US	+643004-1652423	America/Nome	Alaska (west)
+-US	+515248-1763929	America/Adak	Aleutian Islands
++US	+515248-1763929	America/Adak	Alaska - western Aleutians
+ US	+211825-1575130	Pacific/Honolulu	Hawaii
+ UY	-345433-0561245	America/Montevideo
+ UZ	+3940+06648	Asia/Samarkand	Uzbekistan (west)
+diff --git a/src/java.base/share/classes/sun/util/calendar/ZoneInfoFile.java b/src/java.base/share/classes/sun/util/calendar/ZoneInfoFile.java
+index a51490767d..9fdc741af9 100644
+--- a/src/java.base/share/classes/sun/util/calendar/ZoneInfoFile.java
++++ b/src/java.base/share/classes/sun/util/calendar/ZoneInfoFile.java
+@@ -607,6 +607,17 @@ public final class ZoneInfoFile {
+                 params[8] = endRule.secondOfDay * 1000;
+                 params[9] = toSTZTime[endRule.timeDefinition];
+                 dstSavings = (startRule.offsetAfter - startRule.offsetBefore) * 1000;
++
++                // Note: known mismatching -> Africa/Cairo
++                // ZoneInfo :      startDayOfWeek=5     <= Thursday
++                //                 startTime=86400000   <= 24:00
++                // This:           startDayOfWeek=6     <= Friday
++                //                 startTime=0          <= 0:00
++                if (zoneId.equals("Africa/Cairo") &&
++                        params[7] == Calendar.FRIDAY && params[8] == 0) {
++                    params[7] = Calendar.THURSDAY;
++                    params[8] = SECONDS_PER_DAY * 1000;
++                }
+             } else if (nTrans > 0) {  // only do this if there is something in table already
+                 if (lastyear < LASTYEAR) {
+                     // ZoneInfo has an ending entry for 2037
+diff --git a/src/java.base/share/classes/sun/util/resources/TimeZoneNames.java b/src/java.base/share/classes/sun/util/resources/TimeZoneNames.java
+index bf7918659a..2763ac30ca 100644
+--- a/src/java.base/share/classes/sun/util/resources/TimeZoneNames.java
++++ b/src/java.base/share/classes/sun/util/resources/TimeZoneNames.java
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 1996, 2022, Oracle and/or its affiliates. All rights reserved.
++ * Copyright (c) 1996, 2023, Oracle and/or its affiliates. All rights reserved.
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+  *
+  * This code is free software; you can redistribute it and/or modify it
+@@ -845,9 +845,7 @@ public final class TimeZoneNames extends TimeZoneNamesBundle {
+             {"Europe/Jersey", GMTBST},
+             {"Europe/Kaliningrad", EET},
+             {"Europe/Kiev", EET},
+-            {"Europe/Kirov", new String[] {"Kirov Standard Time", "GMT+03:00",
+-                                           "Kirov Daylight Time", "GMT+03:00",
+-                                           "Kirov Time", "GMT+03:00"}},
++            {"Europe/Kirov", MSK},
+             {"Europe/Lisbon", WET},
+             {"Europe/Ljubljana", CET},
+             {"Europe/London", GMTBST},
+diff --git a/test/jdk/java/util/TimeZone/TimeZoneData/VERSION b/test/jdk/java/util/TimeZone/TimeZoneData/VERSION
+index 0f66ee12c9..c5483b4851 100644
+--- a/test/jdk/java/util/TimeZone/TimeZoneData/VERSION
++++ b/test/jdk/java/util/TimeZone/TimeZoneData/VERSION
+@@ -1 +1 @@
+-tzdata2022g
++tzdata2023c
+diff --git a/test/jdk/java/util/TimeZone/TimeZoneData/aliases.txt b/test/jdk/java/util/TimeZone/TimeZoneData/aliases.txt
+index d495743b26..07c5edbafe 100644
+--- a/test/jdk/java/util/TimeZone/TimeZoneData/aliases.txt
++++ b/test/jdk/java/util/TimeZone/TimeZoneData/aliases.txt
+@@ -211,6 +211,7 @@ Link	America/Argentina/Cordoba	America/Rosario
+ Link	America/Tijuana		America/Santa_Isabel
+ Link	America/Denver		America/Shiprock
+ Link	America/Toronto		America/Thunder_Bay
++Link	America/Edmonton	America/Yellowknife
+ Link	Pacific/Auckland	Antarctica/South_Pole
+ Link	Asia/Shanghai		Asia/Chongqing
+ Link	Asia/Shanghai		Asia/Harbin
+diff --git a/test/jdk/java/util/TimeZone/TimeZoneData/displaynames.txt b/test/jdk/java/util/TimeZone/TimeZoneData/displaynames.txt
+index 44db4dbdb8..03f5305e65 100644
+--- a/test/jdk/java/util/TimeZone/TimeZoneData/displaynames.txt
++++ b/test/jdk/java/util/TimeZone/TimeZoneData/displaynames.txt
+@@ -92,7 +92,6 @@ America/Vancouver PST PDT
+ America/Whitehorse MST
+ America/Winnipeg CST CDT
+ America/Yakutat AKST AKDT
+-America/Yellowknife MST MDT
+ Antarctica/Macquarie AEST AEDT
+ Asia/Beirut EET EEST
+ Asia/Famagusta EET EEST
+@@ -144,6 +143,7 @@ Europe/Dublin IST/GMT IST/GMT
+ Europe/Gibraltar CET CEST
+ Europe/Helsinki EET EEST
+ Europe/Kaliningrad EET
++Europe/Kirov MSK
+ Europe/Kyiv EET EEST
+ Europe/Lisbon WET WEST
+ Europe/London GMT/BST GMT/BST
+@@ -160,6 +160,7 @@ Europe/Tallinn EET EEST
+ Europe/Tirane CET CEST
+ Europe/Vienna CET CEST
+ Europe/Vilnius EET EEST
++Europe/Volgograd MSK
+ Europe/Warsaw CET CEST
+ Europe/Zurich CET CEST
+ HST HST
+diff --git a/test/jdk/java/util/TimeZone/TimeZoneTest.java b/test/jdk/java/util/TimeZone/TimeZoneTest.java
+index d31d1722b7..8e5d403f87 100644
+--- a/test/jdk/java/util/TimeZone/TimeZoneTest.java
++++ b/test/jdk/java/util/TimeZone/TimeZoneTest.java
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 1997, 2021, Oracle and/or its affiliates. All rights reserved.
++ * Copyright (c) 1997, 2023, Oracle and/or its affiliates. All rights reserved.
+  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+  *
+  * This code is free software; you can redistribute it and/or modify it
+@@ -25,7 +25,7 @@
+  * @test
+  * @bug 4028006 4044013 4096694 4107276 4107570 4112869 4130885 7039469 7126465 7158483
+  *      8008577 8077685 8098547 8133321 8138716 8148446 8151876 8159684 8166875 8181157
+- *      8228469 8274407
++ *      8228469 8274407 8305113
+  * @modules java.base/sun.util.resources
+  * @library /java/text/testlib
+  * @summary test TimeZone
+@@ -121,7 +121,7 @@ public class TimeZoneTest extends IntlTest
+             new ZoneDescriptor("GMT", 0, false),
+             new ZoneDescriptor("UTC", 0, false),
+             new ZoneDescriptor("ECT", 60, true),
+-            new ZoneDescriptor("ART", 120, false),
++            new ZoneDescriptor("ART", 120, true),
+             new ZoneDescriptor("EET", 120, true),
+             new ZoneDescriptor("EAT", 180, false),
+             new ZoneDescriptor("MET", 60, true),
