@@ -9,7 +9,7 @@
 # In any case you have to set PROJECT_NAME REPO_NAME and VERSION. eg:
 # PROJECT_NAME=openjdk
 # REPO_NAME=jdk11u
-# VERSION=HEAD
+# VERSION=jdk-11.0.18+10
 # or to eg prepare systemtap:
 # icedtea7's jstack and other tapsets
 # VERSION=6327cf1cea9e
@@ -169,7 +169,7 @@ pushd "${FILE_NAME_ROOT}"
 	echo "Removing langtools test case with non-Free license"
 	rm -vf openjdk/test/langtools/tools/javadoc/api/basic/taglets/UnderlineTaglet.java
     fi
-    if [ -d openjdk/src ]; then 
+    if [ -d openjdk/src ]; then
         pushd openjdk
             echo "Removing EC source code we don't build"
             CRYPTO_PATH=src/jdk.crypto.ec/share/native/libsunec/impl
@@ -220,21 +220,21 @@ pushd "${FILE_NAME_ROOT}"
 
     # Remove commit checks
     echo "Removing $(find openjdk -name '.jcheck' -print)"
-    find openjdk -name '.jcheck' -print0 | xargs -0 rm -r
+    find openjdk -name '.jcheck' -print0 | xargs -0 rm -rf
 
     # Remove history and GHA
     echo "find openjdk -name '.hgtags'"
-    find openjdk -name '.hgtags' -exec rm -v '{}' '+'
+    find openjdk -name '.hgtags' -exec rm -vf '{}' '+'
     echo "find openjdk -name '.hgignore'"
-    find openjdk -name '.hgignore' -exec rm -v '{}' '+'
+    find openjdk -name '.hgignore' -exec rm -vf '{}' '+'
     echo "find openjdk -name '.gitattributes'"
-    find openjdk -name '.gitattributes' -exec rm -v '{}' '+'
+    find openjdk -name '.gitattributes' -exec rm -vf '{}' '+'
     echo "find openjdk -name '.gitignore'"
-    find openjdk -name '.gitignore' -exec rm -v '{}' '+'
+    find openjdk -name '.gitignore' -exec rm -vf '{}' '+'
     echo "find openjdk -name '.git'"
-    find openjdk -name '.git' -exec rm -rv '{}' '+'
+    find openjdk -name '.git' -exec rm -rvf '{}' '+'
     echo "find openjdk -name '.github'"
-    find openjdk -name '.github' -exec rm -rv '{}' '+'
+    find openjdk -name '.github' -exec rm -rvf '{}' '+'
 
     echo "Compressing remaining forest"
     if [ "X$COMPRESSION" = "Xxz" ] ; then
