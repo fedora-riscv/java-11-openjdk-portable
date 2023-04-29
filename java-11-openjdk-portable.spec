@@ -396,7 +396,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1372,8 +1372,10 @@ link_opt="bundled"
 
   # Final setup on the main image
   top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
-    imagePath=${top_dir_abs_main_build_path}/images/%{jdkimage}
+  for image in %{jdkimage} %{jreimage} ; do
+    imagePath=${top_dir_abs_main_build_path}/images/${image}
     installjdk ${imagePath}
+  done
   # Check debug symbols were built into the dynamic libraries; todo,  why it passes in JDK only?
   debugcheckjdk ${top_dir_abs_main_build_path}/images/%{jdkimage}
 
@@ -1387,6 +1389,35 @@ link_opt="bundled"
     else
       nameSuffix=`echo "$suffix"| sed s/-/./`
     fi
+    # additional steps needed for fluent repack; most of them done twice, as images are already populated
+    # maybe most of them should be done in upstream build?
+    for imagedir  in %{jdkimage} %{jreimage} ; do
+      pushd $imagedir
+        # Convert man pages to UTF8 encoding
+		if [ -d man/man1 ] ; then # jre do not have man pages...
+          for manpage in man/man1/*  ; do
+            iconv -f ISO_8859-1 -t UTF8 $manpage -o $manpage.tmp
+            mv -f $manpage.tmp $manpage
+          done
+        fi
+        # Install release notes
+        cp -a %{SOURCE10} `pwd`
+        cp -a %{SOURCE10} `pwd`/legal
+        # stabilize permissions; aprtially duplicated in instalojdk
+        find `pwd` -name "*.so" -exec chmod 755 {} \; -exec echo "set 755 to so {}" \; ;
+        find `pwd` -type d -exec chmod 755 {} \; -exec echo "set 755 to dir {}" \; ;
+        find `pwd`/legal -type f -exec chmod 644 {} \; -exec echo "set 644 to licences {}" \; ;
+      popd # jdkimage/jreimage
+    done # jre/sdk work in loop
+    # javadoc is done only for release sdkimage
+    if ! echo $suffix | grep -q "debug" ; then
+      # Install Javadoc documentation
+      #cp -a docs %{jdkimage}  # not sure if the plaintext javadoc is for some use
+      built_doc_archive=jdk-%{filever}%{ea_designator_zip}+%{buildver}%{lts_designator_zip}-docs.zip
+      cp -a  `pwd`/../bundles/${built_doc_archive} `pwd`/%{jdkimage}/javadocs.zip || ls -l `pwd`/../bundles
+    fi
+    # end of additional steps
+
     mv %{jdkimage} %{jdkportablename -- "$nameSuffix"}
     mv %{jreimage} %{jreportablename -- "$nameSuffix"}
     tar -cJf ../../../../%{jdkportablearchive -- "$nameSuffix"}  --exclude='**.debuginfo' %{jdkportablename -- "$nameSuffix"}
@@ -1425,129 +1456,6 @@ mv ../%{jdkportablesourcesarchive -- ""}.sha256sum $RPM_BUILD_ROOT%{_jvmdir}/
 
 for suffix in %{build_loop} ; do
 top_dir_abs_main_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{main_suffix}}
-if [ "fixme" == "todo" ] ; then  #todo, extract some parts to build, drop the rest - but keep it in rpms after repack
-
-# done in build
-%if %{include_staticlibs}
-top_dir_abs_staticlibs_build_path=$(pwd)/%{buildoutputdir -- ${suffix}%{staticlibs_loop}}
-%endif
-jdk_image=${top_dir_abs_main_build_path}/images/%{jdkimage}
-
-# tbd in rpms
-# Install the jdk
-mkdir -p $RPM_BUILD_ROOT%{_jvmdir}
-cp -a ${jdk_image} $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}
-
-pushd ${jdk_image}
-
-# tbd in rpms
-%if %{with_systemtap}
-  # Install systemtap support files
-  install -dm 755 $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/tapset
-  # note, that uniquesuffix  is in BUILD dir in this case
-  cp -a $RPM_BUILD_DIR/%{uniquesuffix ""}/tapset$suffix/*.stp $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/tapset/
-  pushd  $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/tapset/
-   tapsetFiles=`ls *.stp`
-  popd
-  install -d -m 755 $RPM_BUILD_ROOT%{tapsetdir}
-  for name in $tapsetFiles ; do
-    targeinterntName=`echo $name | sed "s/.stp/$suffix.stp/"`
-    ln -srvf $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/tapset/$name $RPM_BUILD_ROOT%{tapsetdir}/$targetName
-  done
-%endif
-
-# tbd in rpms
-  # Install version-ed symlinks
-  pushd $RPM_BUILD_ROOT%{_jvmdir}
-    ln -sf %{sdkdir -- $suffix} %{jrelnk -- $suffix}
-  popd
-
-# todo fix in build
-  # Install man pages
-  install -d -m 755 $RPM_BUILD_ROOT%{_mandir}/man1
-  for manpage in man/man1/*
-  do
-    # Convert man pages to UTF8 encoding
-    iconv -f ISO_8859-1 -t UTF8 $manpage -o $manpage.tmp
-    mv -f $manpage.tmp $manpage
-    install -m 644 -p $manpage $RPM_BUILD_ROOT%{_mandir}/man1/$(basename \
-      $manpage .1)-%{uniquesuffix -- $suffix}.1
-  done
-  # Remove man pages from jdk image
-  rm -rf $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/man
-
-popd
-
-# done in build
-# Install static libs artefacts
-%if %{include_staticlibs}
-mkdir -p $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/%{static_libs_install_dir}
-cp -a ${top_dir_abs_staticlibs_build_path}/images/%{static_libs_image}/lib/*.a \
-  $RPM_BUILD_ROOT%{_jvmdir}/%{sdkdir -- $suffix}/%{static_libs_install_dir}
-%endif
-
-# todo fix in build
-if ! echo $suffix | grep -q "debug" ; then
-  # Install Javadoc documentation
-  install -d -m 755 $RPM_BUILD_ROOT%{_javadocdir}
-  cp -a ${top_dir_abs_main_build_path}/images/docs $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}
-  built_doc_archive=jdk-%{filever}%{ea_designator_zip}+%{buildver}%{lts_designator_zip}-docs.zip
-  cp -a ${top_dir_abs_main_build_path}/bundles/${built_doc_archive} \
-     $RPM_BUILD_ROOT%{_javadocdir}/%{uniquejavadocdir -- $suffix}.zip || ls -l ${top_dir_abs_main_build_path}/bundles/
-fi
-
-# todo fix in build
-# Install release notes
-commondocdir=${RPM_BUILD_ROOT}%{_defaultdocdir}/%{uniquejavadocdir -- $suffix}
-install -d -m 755 ${commondocdir}
-cp -a %{SOURCE10} ${commondocdir}
-
-# Install icons and menu entries
-for s in 16 24 32 48 ; do
-  install -D -p -m 644 \
-    %{top_level_dir_name}/src/java.desktop/unix/classes/sun/awt/X11/java-icon${s}.png \
-    $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/${s}x${s}/apps/java-%{javaver}-%{origin}.png
-done
-
-# tbd in rpms
-# Install desktop files
-install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/{applications,pixmaps}
-for e in jconsole$suffix ; do
-    desktop-file-install --vendor=%{uniquesuffix -- $suffix} --mode=644 \
-        --dir=$RPM_BUILD_ROOT%{_datadir}/applications $e.desktop
-done
-
-# tbd in rpms
-# Install /etc/.java/.systemPrefs/ directory
-# See https://bugzilla.redhat.com/show_bug.cgi?id=741821
-mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/.java/.systemPrefs
-
-# todo fix in build
-# copy samples next to demos; samples are mostly js files
-cp -r %{top_level_dir_name}/src/sample  $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/
-
-
-# tbd in rpms
-# moving config files to /etc
-mkdir -p $RPM_BUILD_ROOT/%{etcjavadir -- $suffix}
-mkdir -p $RPM_BUILD_ROOT/%{etcjavadir -- $suffix}/lib
-mv $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/conf/  $RPM_BUILD_ROOT/%{etcjavadir -- $suffix}
-mv $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/lib/security  $RPM_BUILD_ROOT/%{etcjavadir -- $suffix}/lib
-pushd $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}
-  ln -srv $RPM_BUILD_ROOT%{etcjavadir -- $suffix}/conf  ./conf
-popd
-pushd $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/lib
-  ln -srv $RPM_BUILD_ROOT%{etcjavadir -- $suffix}/lib/security  ./security
-popd
-# end moving files to /etc
-
-# todo fix in build
-# stabilize permissions
-find $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/ -name "*.so" -exec chmod 755 {} \; ;
-find $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/ -type d -exec chmod 755 {} \; ;
-find $RPM_BUILD_ROOT/%{_jvmdir}/%{sdkdir -- $suffix}/legal -type f -exec chmod 644 {} \; ;
-
-fi # fixme, todo
 
 ################################################################################
   if [ "x$suffix" == "x" ] ; then
@@ -1563,7 +1471,13 @@ fi # fixme, todo
   mv ../%{staticlibsportablearchive -- "$nameSuffix"} $RPM_BUILD_ROOT%{_jvmdir}/
   mv ../%{staticlibsportablearchive -- "$nameSuffix"}.sha256sum $RPM_BUILD_ROOT%{_jvmdir}/
 %endif
-
+  if [ "x$suffix" == "x" ] ; then
+      dnameSuffix="$nameSuffix".debuginfo
+# todo handle debuginfo, see note at build (we will need to pack one stripped and one unstripped release build)
+#      mv ../%{jdkportablearchive -- "$dnameSuffix"} $RPM_BUILD_ROOT%{_jvmdir}/
+#      mv ../%{jdkportablearchive -- "$dnameSuffix"}.sha256sum $RPM_BUILD_ROOT%{_jvmdir}/
+  fi
+################################################################################
 # end, dual install
 done
 ################################################################################
@@ -1639,7 +1553,7 @@ readelf --debug-dump $STATIC_LIBS_HOME/libfdlibm.a | grep e_remainder.c
 %endif
 
 # Check src.zip has all sources. See RHBZ#1130490
-unzip -l $JAVA_HOME/lib/src.zip | grep 'sun.misc.Unsafe'
+$JAVA_HOME/bin/jar -tf $JAVA_HOME/lib/src.zip | grep 'sun.misc.Unsafe'
 
 # Check class files include useful debugging information
 $JAVA_HOME/bin/javap -l java.lang.Object | grep "Compiled from"
@@ -1727,6 +1641,12 @@ done
 %license %{unpacked_licenses}/%{jdkportablesourcesarchive -- %%{nil}}
 
 %changelog
+* Sat Apr 29 2023 Jiri Vanek  <jvanek@redhat.com> - 1:11.0.19.0.7-0.2.ea
+- removed steps which belongs to integrating rpms or done elsewhere:
+- - systemtaps, staticlibs, symlinks,  icons, desktop files
+- moved remaning steps to proepr place:
+- - man pages encoding fix, legal, permissions fix, javadocs
+
 * Thu Apr 27 2023 Andrew Hughes <gnu.andrew@redhat.com> - 1:11.0.19.0.7-0.1.ea
 - Update to jdk-11.0.19.0+7
 - Update release notes to 11.0.19.0+7
