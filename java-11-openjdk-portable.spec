@@ -15,7 +15,7 @@
 # Produce release, fastdebug *and* slowdebug builds on x86_64 (default):
 # $ rpmbuild -ba java-11-openjdk.spec
 #
-# Produce only release builds (no slowdebug builds) on x86_64:
+# Produce only release builds (no debug builds) on x86_64:
 # $ rpmbuild -ba java-11-openjdk.spec --without slowdebug --without fastdebug
 #
 # Only produce a release build on x86_64:
@@ -396,7 +396,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      2
+%global rpmrelease      3
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -1197,16 +1197,6 @@ function installjdk() {
         # Install nss.fips.cfg: NSS configuration for global FIPS mode (crypto-policies)
         install -m 644 nss.fips.cfg ${imagepath}/conf/security/
 
-        # Turn on system security properties
-        sed -i -e "s:^security.useSystemPropertiesFile=.*:security.useSystemPropertiesFile=true:" \
-            ${imagepath}/conf/security/java.security
-
-
-        # Rename OpenJDK cacerts database
-        mv ${imagepath}/lib/security/cacerts{,.upstream}
-        # Install cacerts symlink needed by some apps which hard-code the path
-        ln -sv /etc/pki/java/cacerts ${imagepath}/lib/security
-
         # Create fake alt-java as a placeholder for future alt-java
         if [ -d man/man1 ] ; then
           pushd ${imagepath}
@@ -1512,15 +1502,14 @@ $JAVA_HOME/bin/java --add-opens java.base/javax.crypto=ALL-UNNAMED TestCryptoLev
 $JAVA_HOME/bin/javac -d . %{SOURCE14}
 $JAVA_HOME/bin/java $(echo $(basename %{SOURCE14})|sed "s|\.java||")
 
-# Check system crypto (policy) is active and can be disabled
+# Check system crypto (policy) is deactive and can not be enabled
 # Test takes a single argument - true or false - to state whether system
 # security properties are enabled or not.
 $JAVA_HOME/bin/javac -d . %{SOURCE15}
 export PROG=$(echo $(basename %{SOURCE15})|sed "s|\.java||")
 export SEC_DEBUG="-Djava.security.debug=properties"
-# Specific to portable:System security properties to be off by default
-$JAVA_HOME/bin/java ${SEC_DEBUG} ${PROG} true
-$JAVA_HOME/bin/java ${SEC_DEBUG} -Djava.security.disableSystemPropertiesFile=true ${PROG} false
+$JAVA_HOME/bin/java ${SEC_DEBUG} ${PROG} false
+$JAVA_HOME/bin/java ${SEC_DEBUG} -Djava.security.disableSystemPropertiesFile=false ${PROG} false
 
 # Check java launcher has no SSB mitigation
 if ! nm $JAVA_HOME/bin/java | grep set_speculation ; then true ; else false; fi
@@ -1641,6 +1630,11 @@ done
 %license %{unpacked_licenses}/%{jdkportablesourcesarchive -- %%{nil}}
 
 %changelog
+* Wed May 10 2023 Jiri Vanek  <jvanek@redhat.com> - 1:11.0.19.0.7-0.3.ea
+- disabled system crypoto (it is already be enabled in rpms)
+- kept usptream cacerts (they are already .upstream-ed in rpms)
+- removed removal of EC curves during source generation
+
 * Sat Apr 29 2023 Jiri Vanek  <jvanek@redhat.com> - 1:11.0.19.0.7-0.2.ea
 - removed steps which belongs to integrating rpms or done elsewhere:
 - - systemtaps, staticlibs, symlinks,  icons, desktop files
