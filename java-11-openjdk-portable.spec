@@ -595,7 +595,7 @@ URL:      http://openjdk.java.net/
 
 
 # The source tarball, generated using generate_source_tarball.sh
-Source0: openjdk-jdk%{featurever}u-%{vcstag}-4curve.tar.xz
+Source0: openjdk-jdk%{featurever}u-%{vcstag}.tar.xz
 
 # Use 'icedtea_sync.sh' to update the following
 # They are based on code contained in the IcedTea project (6.x).

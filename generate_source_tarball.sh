@@ -4,7 +4,6 @@
 # Example:
 # When used from local repo set REPO_ROOT pointing to file:// with your repo
 # If your local repo follows upstream forests conventions, it may be enough to set OPENJDK_URL
-# If you want to use a local copy of patch GH001, set the path to it in the GH001 variable
 #
 # In any case you have to set PROJECT_NAME REPO_NAME and VERSION. eg:
 # PROJECT_NAME=openjdk
@@ -26,20 +25,6 @@
 # level folder, name is created, based on parameter
 #
 
-if [ ! "x$GH001" = "x" ] ; then
-  if [ ! -f "$GH001" ] ; then
-    echo "You have specified GH001 as $GH001 but it does not exist. Exiting"
-    exit 1
-  fi
-fi
-
-if [ ! "x$GH003" = "x" ] ; then
-  if [ ! -f "$GH003" ] ; then
-    echo "You have specified GH003 as $GH003 but it does not exist. Exiting"
-    exit 1
-  fi
-fi
-
 set -e
 
 OPENJDK_URL_DEFAULT=https://github.com
@@ -57,8 +42,6 @@ if [ "x$1" = "xhelp" ] ; then
     echo "FILE_NAME_ROOT - name of the archive, minus extensions (optional; defaults to PROJECT_NAME-REPO_NAME-VERSION)"
     echo "REPO_ROOT - the location of the Git repository to archive (optional; defaults to OPENJDK_URL/PROJECT_NAME/REPO_NAME)"
     echo "TO_COMPRESS - what part of clone to pack (default is openjdk)"
-    echo "GH001 - the path to the ECC code patch, GH001, to apply (optional; downloaded if unavailable)"
-    echo "GH003 - the path to the ECC test patch, GH003, to apply (optional; downloaded if unavailable)"
     echo "BOOT_JDK - the bootstrap JDK to satisfy the configure run"
     exit 1;
 fi
@@ -69,7 +52,6 @@ if [ "x$VERSION" = "x" ] ; then
     exit 2
 fi
 echo "Version: ${VERSION}"
-
 NUM_VER=${VERSION##jdk-}
 RELEASE_VER=${NUM_VER%%+*}
 BUILD_VER=${NUM_VER##*+}
@@ -148,8 +130,6 @@ echo -e "\tCOMPRESSION: ${COMPRESSION}"
 echo -e "\tFILE_NAME_ROOT: ${FILE_NAME_ROOT}"
 echo -e "\tREPO_ROOT: ${REPO_ROOT}"
 echo -e "\tTO_COMPRESS: ${TO_COMPRESS}"
-echo -e "\tGH001: ${GH001}"
-echo -e "\tGH003: ${GH003}"
 echo -e "\tBOOT_JDK: ${BOOT_JDK}"
 
 if [ -d ${FILE_NAME_ROOT} ] ; then
@@ -169,46 +149,6 @@ pushd "${FILE_NAME_ROOT}"
 	echo "Removing langtools test case with non-Free license"
 	rm -vf openjdk/test/langtools/tools/javadoc/api/basic/taglets/UnderlineTaglet.java
     fi
-    if [ -d openjdk/src ]; then
-        pushd openjdk
-            echo "Removing EC source code we don't build"
-            CRYPTO_PATH=src/jdk.crypto.ec/share/native/libsunec/impl
-            rm -vf ${CRYPTO_PATH}/ec2.h
-            rm -vf ${CRYPTO_PATH}/ec2_163.c
-            rm -vf ${CRYPTO_PATH}/ec2_193.c
-            rm -vf ${CRYPTO_PATH}/ec2_233.c
-            rm -vf ${CRYPTO_PATH}/ec2_aff.c
-            rm -vf ${CRYPTO_PATH}/ec2_mont.c
-            rm -vf ${CRYPTO_PATH}/ecp_192.c
-            rm -vf ${CRYPTO_PATH}/ecp_224.c
-
-            echo "Syncing EC list with NSS"
-            if [ "x$GH001" = "x" ] ; then
-                # get gh001-4curve.patch (from https://github.com/icedtea-git/icedtea) in the ${ICEDTEA_VERSION} branch
-                # Do not push it or publish it
-		echo "GH001 not found. Downloading..."
-		wget -v https://github.com/icedtea-git/icedtea/raw/${ICEDTEA_VERSION}/patches/gh001-4curve.patch
-	        echo "Applying ${PWD}/gh001-4curve.patch"
-		git apply --stat --apply -v -p1 gh001-4curve.patch
-		rm gh001-4curve.patch
-	    else
-		echo "Applying ${GH001}"
-		git apply --stat --apply -v -p1 $GH001
-            fi;
-            if [ "x$GH003" = "x" ] ; then
-                # get gh001-4curve.patch (from https://github.com/icedtea-git/icedtea) in the ${ICEDTEA_VERSION} branch
-		echo "GH003 not found. Downloading..."
-		wget -v https://github.com/icedtea-git/icedtea/raw/${ICEDTEA_VERSION}/patches/gh003-4curve.patch
-	        echo "Applying ${PWD}/gh003-4curve.patch"
-		git apply --stat --apply -v -p1 gh003-4curve.patch
-		rm gh003-4curve.patch
-	    else
-		echo "Applying ${GH003}"
-		git apply --stat --apply -v -p1 $GH003
-            fi;
-            find . -name '*.orig' -exec rm -vf '{}' ';' || echo "No .orig files found. This is suspicious, but may happen."
-        popd
-    fi
 
     # Generate .src-rev so build has knowledge of the revision the tarball was created from
     mkdir build
@@ -224,17 +164,17 @@ pushd "${FILE_NAME_ROOT}"
 
     # Remove history and GHA
     echo "find openjdk -name '.hgtags'"
-    find openjdk -name '.hgtags' -exec rm -vf '{}' '+'
+    find openjdk -name '.hgtags' -exec rm -fv '{}' '+'
     echo "find openjdk -name '.hgignore'"
-    find openjdk -name '.hgignore' -exec rm -vf '{}' '+'
+    find openjdk -name '.hgignore' -exec rm -fv '{}' '+'
     echo "find openjdk -name '.gitattributes'"
-    find openjdk -name '.gitattributes' -exec rm -vf '{}' '+'
+    find openjdk -name '.gitattributes' -exec rm -fv '{}' '+'
     echo "find openjdk -name '.gitignore'"
-    find openjdk -name '.gitignore' -exec rm -vf '{}' '+'
+    find openjdk -name '.gitignore' -exec rm -fv '{}' '+'
     echo "find openjdk -name '.git'"
-    find openjdk -name '.git' -exec rm -rvf '{}' '+'
+    find openjdk -name '.git' -exec rm -rfv '{}' '+'
     echo "find openjdk -name '.github'"
-    find openjdk -name '.github' -exec rm -rvf '{}' '+'
+    find openjdk -name '.github' -exec rm -rfv '{}' '+'
 
     echo "Compressing remaining forest"
     if [ "X$COMPRESSION" = "Xxz" ] ; then
@@ -242,7 +182,7 @@ pushd "${FILE_NAME_ROOT}"
     else
         SWITCH=czf
     fi
-    TARBALL_NAME=${FILE_NAME_ROOT}-4curve.tar.${COMPRESSION}
+    TARBALL_NAME=${FILE_NAME_ROOT}.tar.${COMPRESSION}
     tar --exclude-vcs -$SWITCH ${TARBALL_NAME} $TO_COMPRESS
     mv ${TARBALL_NAME} ..
 popd
