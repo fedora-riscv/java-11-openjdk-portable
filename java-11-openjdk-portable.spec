@@ -396,7 +396,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      3
+%global rpmrelease      4
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -472,6 +472,14 @@
 # Intentionally use jdkportablenameimpl here since we want to have static-libs files overlayed on
 # top of the JDK archive
 %define staticlibsportablename()     %{expand:%{jdkportablenameimpl -- %%{1}}}
+
+# RPM 4.19 no longer accept our double percentaged %%{nil} passed to %%{1}
+# so we have to pass in "" but evaluate it, otherwise files record will include it
+%define jreportablearchiveForFiles()  %(echo %{jreportablearchive -- ""})
+%define jdkportablearchiveForFiles()  %(echo %{jdkportablearchive -- ""})
+%define jdkportablesourcesarchiveForFiles()  %(echo %{jdkportablesourcesarchive -- ""})
+%define staticlibsportablearchiveForFiles()  %(echo %{staticlibsportablearchive -- ""})
+%define jdkportablesourcesnameForFiles()  %(echo %{jdkportablesourcesname -- ""})
 
 #################################################################
 # fix for https://bugzilla.redhat.com/show_bug.cgi?id=1111349
@@ -1560,9 +1568,9 @@ done
 %if %{include_normal_build}
 %files
 # main package builds always
-%{_jvmdir}/%{jreportablearchive -- %%{nil}}
-%{_jvmdir}/%{jreportablearchive -- %%{nil}}.sha256sum
-%license %{unpacked_licenses}/%{jdkportablesourcesarchive -- %%{nil}}
+%{_jvmdir}/%{jreportablearchiveForFiles}
+%{_jvmdir}/%{jreportablearchiveForFiles}.sha256sum
+%license %{unpacked_licenses}/%{jdkportablesourcesarchiveForFiles}
 %else
 %files
 # placeholder
@@ -1570,19 +1578,19 @@ done
 
 %if %{include_normal_build}
 %files devel
-%{_jvmdir}/%{jdkportablearchive -- %%{nil}}
+%{_jvmdir}/%{jdkportablearchiveForFiles}
 #%{_jvmdir}/%{jdkportablearchive -- .debuginfo}
-%{_jvmdir}/%{jdkportablearchive -- %%{nil}}.sha256sum
+%{_jvmdir}/%{jdkportablearchiveForFiles}.sha256sum
 #%{_jvmdir}/%{jdkportablearchive -- .debuginfo}.sha256sum
-%license %{unpacked_licenses}/%{jdkportablesourcesarchive -- %%{nil}}
+%license %{unpacked_licenses}/%{jdkportablesourcesarchiveForFiles}
 %endif
 
 %if %{include_normal_build}
 %if %{include_staticlibs}
 %files static-libs
-%{_jvmdir}/%{staticlibsportablearchive -- %%{nil}}
-%{_jvmdir}/%{staticlibsportablearchive -- %%{nil}}.sha256sum
-%license %{unpacked_licenses}/%{jdkportablesourcesarchive -- %%{nil}}
+%{_jvmdir}/%{staticlibsportablearchiveForFiles}
+%{_jvmdir}/%{staticlibsportablearchiveForFiles}.sha256sum
+%license %{unpacked_licenses}/%{jdkportablesourcesarchiveForFiles}
 %endif
 %endif
 
@@ -1590,18 +1598,18 @@ done
 %files slowdebug
 %{_jvmdir}/%{jreportablearchive -- .slowdebug}
 %{_jvmdir}/%{jreportablearchive -- .slowdebug}.sha256sum
-%license %{unpacked_licenses}/%{jdkportablesourcesarchive -- %%{nil}}
+%license %{unpacked_licenses}/%{jdkportablesourcesarchiveForFiles}
 
 %files devel-slowdebug
 %{_jvmdir}/%{jdkportablearchive -- .slowdebug}
 %{_jvmdir}/%{jdkportablearchive -- .slowdebug}.sha256sum
-%license %{unpacked_licenses}/%{jdkportablesourcesarchive -- %%{nil}}
+%license %{unpacked_licenses}/%{jdkportablesourcesarchiveForFiles}
 
 %if %{include_staticlibs}
 %files static-libs-slowdebug
 %{_jvmdir}/%{staticlibsportablearchive -- .slowdebug}
 %{_jvmdir}/%{staticlibsportablearchive -- .slowdebug}.sha256sum
-%license %{unpacked_licenses}/%{jdkportablesourcesarchive -- %%{nil}}
+%license %{unpacked_licenses}/%{jdkportablesourcesarchiveForFiles}
 %endif
 %endif
 
@@ -1609,27 +1617,32 @@ done
 %files fastdebug
 %{_jvmdir}/%{jreportablearchive -- .fastdebug}
 %{_jvmdir}/%{jreportablearchive -- .fastdebug}.sha256sum
-%license %{unpacked_licenses}/%{jdkportablesourcesarchive -- %%{nil}}
+%license %{unpacked_licenses}/%{jdkportablesourcesarchiveForFiles}
 
 %files devel-fastdebug
 %{_jvmdir}/%{jdkportablearchive -- .fastdebug}
 %{_jvmdir}/%{jdkportablearchive -- .fastdebug}.sha256sum
-%license %{unpacked_licenses}/%{jdkportablesourcesarchive -- %%{nil}}
+%license %{unpacked_licenses}/%{jdkportablesourcesarchiveForFiles}
 
 %if %{include_staticlibs}
 %files static-libs-fastdebug
 %{_jvmdir}/%{staticlibsportablearchive -- .fastdebug}
 %{_jvmdir}/%{staticlibsportablearchive -- .fastdebug}.sha256sum
-%license %{unpacked_licenses}/%{jdkportablesourcesarchive -- %%{nil}}
+%license %{unpacked_licenses}/%{jdkportablesourcesarchiveForFiles}
 %endif
 %endif
 
 %files sources
-%{_jvmdir}/%{jdkportablesourcesarchive -- %%{nil}}
-%{_jvmdir}/%{jdkportablesourcesarchive -- %%{nil}}.sha256sum
-%license %{unpacked_licenses}/%{jdkportablesourcesarchive -- %%{nil}}
+%{_jvmdir}/%{jdkportablesourcesarchiveForFiles}
+%{_jvmdir}/%{jdkportablesourcesarchiveForFiles}.sha256sum
+%license %{unpacked_licenses}/%{jdkportablesourcesarchiveForFiles}
 
 %changelog
+* Thu Jun 15 2023 Jayashree Huttanagoudar <jhuttana@redhat.com> - 1:11.0.19.0.7-0.4.ea
+- Redeclared ForFiles release sections as %%nil no longer works with %%1
+- RPM 4.19 no longer accept our double percentaged %%{nil} passed to %%{1}
+- so we have to pass in "" but evaluate it, otherwise files record will include it
+
 * Wed May 10 2023 Jiri Vanek  <jvanek@redhat.com> - 1:11.0.19.0.7-0.3.ea
 - disabled system crypoto (it is already be enabled in rpms)
 - kept usptream cacerts (they are already .upstream-ed in rpms)
