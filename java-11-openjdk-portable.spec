@@ -396,7 +396,7 @@
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        7
-%global rpmrelease      5
+%global rpmrelease      6
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -559,7 +559,7 @@ ExcludeArch: %{ix86}
 
 Name:    java-%{javaver}-%{origin}-portable
 Version: %{newjavaver}.%{buildver}
-Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}.1
+Release: %{?eaprefix}%{rpmrelease}%{?extraver}%{?dist}
 # java-1.5.0-ibm from jpackage.org set Epoch to 1 for unknown reasons
 # and this change was brought into RHEL-4. java-1.5.0-ibm packages
 # also included the epoch in their virtual provides. This created a
@@ -699,6 +699,17 @@ Patch1001: fips-11u-%{fipsver}.patch
 #############################################
 
 Patch3:    rh649512-remove_uses_of_far_in_jpeg_libjpeg_turbo_1_4_compat_for_jdk10_and_up.patch
+
+#############################################
+#
+# Backportable patches
+#
+# This section includes patches which are
+# present in the current development tree, but
+# need to be reviewed & pushed to the appropriate
+# updates tree of OpenJDK.
+#############################################
+Patch2001: jdk8242332-rh2108712-sha3-sunpkcs11.patch
 
 # JDK-8271148: static-libs-image target --with-native-debug-symbols=external doesn't produce debug info
 Patch7777: jdk8271148-external_doesnt_produce_debuginfo.patch
@@ -989,6 +1000,8 @@ pushd %{top_level_dir_name}
 %patch1001 -p1
 # nss.cfg PKCS11 support; must come last as it also alters java.security
 %patch1000 -p1
+# PKCS11 SHA3 backport
+%patch2001 -p1
 # debuginfo fix
 %patch7777 -p1
 # tzdata update
@@ -1631,6 +1644,9 @@ done
 %license %{unpacked_licenses}/%{jdkportablesourcesarchiveForFiles}
 
 %changelog
+* Tue Aug 01 2023 Jiri Vanek  <jvanek@redhat.com> - 1:11.0.19.0.7-6
+- added Patch2001 jdk8242332-rh2108712-sha3-sunpkcs11.patch
+
 * Thu Jul 20 2023 Fedora Release Engineering <releng@fedoraproject.org> - 1:11.0.19.0.7-5.1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
 
