@@ -338,7 +338,7 @@
 # New Version-String scheme-style defines
 %global featurever 11
 %global interimver 0
-%global updatever 19
+%global updatever 20
 %global patchver 0
 # buildjdkver is usually same as %%{featurever},
 # but in time of bootstrap of next jdk, it is featurever-1,
@@ -395,8 +395,8 @@
 %global origin_nice     OpenJDK
 %global top_level_dir_name   %{origin}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
-%global buildver        7
-%global rpmrelease      6
+%global buildver        8
+%global rpmrelease      1
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -714,20 +714,6 @@ Patch2001: jdk8242332-rh2108712-sha3-sunpkcs11.patch
 # JDK-8271148: static-libs-image target --with-native-debug-symbols=external doesn't produce debug info
 Patch7777: jdk8271148-external_doesnt_produce_debuginfo.patch
 
- #############################################
- #
- # Patches appearing in 11.0.20
- #
- # This section includes patches which are present
- # in the listed OpenJDK 11u release and should be
- # able to be removed once that release is out
- # and used by this RPM.
- #############################################
-# JDK-8274864: Remove Amman/Cairo hacks in ZoneInfoFile
-Patch2002: jdk8274864-remove_amman_cairo_hacks.patch
-# JDK-8305113: (tz) Update Timezone Data to 2023c
-Patch2003: jdk8305113-tzdata2023c.patch
-
 BuildRequires: autoconf
 BuildRequires: automake
 BuildRequires: alsa-lib-devel
@@ -1004,9 +990,6 @@ pushd %{top_level_dir_name}
 %patch2001 -p1
 # debuginfo fix
 %patch7777 -p1
-# tzdata update
-%patch2002 -p1
-%patch2003 -p1
 popd # openjdk
 
 %patch600
@@ -1644,6 +1627,11 @@ done
 %license %{unpacked_licenses}/%{jdkportablesourcesarchiveForFiles}
 
 %changelog
+* Thu Aug 03 2023 Jiri Vanek  <jvanek@redhat.com> - 1:11.0.20.0.8-1
+- Update to jdk-11.0.20.0+8
+- Update release notes to 11.0.20.0+8
+- removed upstreamed Patch2002 jdk8274864-remove_amman_cairo_hacks.patch Patch2003 jdk8305113-tzdata2023c.patch
+
 * Tue Aug 01 2023 Jiri Vanek  <jvanek@redhat.com> - 1:11.0.19.0.7-6
 - added Patch2001 jdk8242332-rh2108712-sha3-sunpkcs11.patch
 
