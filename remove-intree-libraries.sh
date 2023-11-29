@@ -162,5 +162,3 @@ rm -vf ${LCMS_SRC}/cmsxform.c
 rm -vf ${LCMS_SRC}/lcms2.h
 rm -vf ${LCMS_SRC}/lcms2_internal.h
 rm -vf ${LCMS_SRC}/lcms2_plugin.h
-
-

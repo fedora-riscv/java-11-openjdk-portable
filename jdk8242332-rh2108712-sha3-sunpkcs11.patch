@@ -1,11 +1,11 @@
-commit 81c2107a9188680f7c35ebc7697b292d5972436e
+commit b8711800e3cd9132ad2b195c82cf816210feb77d
 Author: Andrew Hughes <gnu.andrew@redhat.com>
-Date:   Mon Feb 27 13:22:43 2023 +0000
+Date:   Thu Oct 5 03:13:01 2023 +0100
 
     Backport 78be334c3817a1b5840922a9bf1339a40dcc5185
 
 diff --git a/src/java.base/share/classes/sun/security/util/KnownOIDs.java b/src/java.base/share/classes/sun/security/util/KnownOIDs.java
-index 92ecb9adc0c..a5848c96aad 100644
+index b5cc3b05f1..7e235c90dd 100644
 --- a/src/java.base/share/classes/sun/security/util/KnownOIDs.java
 +++ b/src/java.base/share/classes/sun/security/util/KnownOIDs.java
 @@ -155,6 +155,14 @@ public enum KnownOIDs {
@@ -24,7 +24,7 @@ index 92ecb9adc0c..a5848c96aad 100644
      SHA3_256withRSA("2.16.840.1.101.3.4.3.14", "SHA3-256withRSA"),
      SHA3_384withRSA("2.16.840.1.101.3.4.3.15", "SHA3-384withRSA"),
 diff --git a/src/java.base/share/classes/sun/security/util/SignatureUtil.java b/src/java.base/share/classes/sun/security/util/SignatureUtil.java
-index 32c089fd96d..7d5c0c7e299 100644
+index 32c089fd96..7d5c0c7e29 100644
 --- a/src/java.base/share/classes/sun/security/util/SignatureUtil.java
 +++ b/src/java.base/share/classes/sun/security/util/SignatureUtil.java
 @@ -168,4 +168,22 @@ public class SignatureUtil {
@@ -51,7 +51,7 @@ index 32c089fd96d..7d5c0c7e299 100644
 +    }
  }
 diff --git a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11Digest.java b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11Digest.java
-index 41fe61b8a16..daf0bc9f69c 100644
+index 41fe61b8a1..daf0bc9f69 100644
 --- a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11Digest.java
 +++ b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11Digest.java
 @@ -1,5 +1,5 @@
@@ -93,7 +93,7 @@ index 41fe61b8a16..daf0bc9f69c 100644
              break;
          default:
 diff --git a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11KeyGenerator.java b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11KeyGenerator.java
-index 926414608cb..f343e6025e1 100644
+index 926414608c..f343e6025e 100644
 --- a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11KeyGenerator.java
 +++ b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11KeyGenerator.java
 @@ -36,7 +36,9 @@ import static sun.security.pkcs11.wrapper.PKCS11Constants.*;
@@ -428,7 +428,7 @@ index 926414608cb..f343e6025e1 100644
 -
  }
 diff --git a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11Mac.java b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11Mac.java
-index c88e4a6ace5..29b26651c39 100644
+index c88e4a6ace..29b26651c3 100644
 --- a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11Mac.java
 +++ b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11Mac.java
 @@ -39,8 +39,9 @@ import static sun.security.pkcs11.wrapper.PKCS11Constants.*;
@@ -465,7 +465,7 @@ index c88e4a6ace5..29b26651c39 100644
              break;
          case (int)CKM_SSL3_MD5_MAC:
 diff --git a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11PSSSignature.java b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11PSSSignature.java
-index 26eaa4735f1..905b6ea9562 100644
+index 1419be3754..18e00a544b 100644
 --- a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11PSSSignature.java
 +++ b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11PSSSignature.java
 @@ -38,6 +38,7 @@ import java.security.spec.MGF1ParameterSpec;
@@ -738,7 +738,7 @@ index 26eaa4735f1..905b6ea9562 100644
  
      // see JCA spec
 diff --git a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11Signature.java b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11Signature.java
-index e3af106d05a..e49edf32c29 100644
+index e3af106d05..e49edf32c2 100644
 --- a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11Signature.java
 +++ b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/P11Signature.java
 @@ -51,8 +51,15 @@ import sun.security.util.KeyUtil;
@@ -970,111 +970,88 @@ index e3af106d05a..e49edf32c29 100644
  //      return RSASignature.decodeSignature(digestOID, signature);
  //    }
 diff --git a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
-index cf7cd19b689..7a8bcffb92c 100644
+index ffbd671246..d191831dab 100644
 --- a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
 +++ b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
-@@ -550,6 +550,18 @@ public final class SunPKCS11 extends AuthProvider {
-         d(MD, "SHA-512/256",        P11Digest,
-                 s("2.16.840.1.101.3.4.2.6", "OID.2.16.840.1.101.3.4.2.6"),
+@@ -546,6 +546,14 @@ public final class SunPKCS11 extends AuthProvider {
+                 m(CKM_SHA512_224));
+         dA(MD, "SHA-512/256",        P11Digest,
                  m(CKM_SHA512_256));
-+        d(MD, "SHA3-224",        P11Digest,
-+	        s("2.16.840.1.101.3.4.2.7", "OID.2.16.840.1.101.3.4.2.7"),
++        dA(MD, "SHA3-224",        P11Digest,
 +                m(CKM_SHA3_224));
-+        d(MD, "SHA3-256",        P11Digest,
-+	        s("2.16.840.1.101.3.4.2.8", "OID.2.16.840.1.101.3.4.2.8"),
++        dA(MD, "SHA3-256",        P11Digest,
 +                m(CKM_SHA3_256));
-+        d(MD, "SHA3-384",        P11Digest,
-+	        s("2.16.840.1.101.3.4.2.9", "OID.2.16.840.1.101.3.4.2.9"),
++        dA(MD, "SHA3-384",        P11Digest,
 +                m(CKM_SHA3_384));
-+        d(MD, "SHA3-512",        P11Digest,
-+	        s("2.16.840.1.101.3.4.2.10", "OID.2.16.840.1.101.3.4.2.10"),
++        dA(MD, "SHA3-512",        P11Digest,
 +                m(CKM_SHA3_512));
  
          d(MAC, "HmacMD5",       P11MAC,
                  m(CKM_MD5_HMAC));
-@@ -574,7 +586,18 @@ public final class SunPKCS11 extends AuthProvider {
-         d(MAC, "HmacSHA512/256",    P11MAC,
-                 s("1.2.840.113549.2.13", "OID.1.2.840.113549.2.13"),
+@@ -563,7 +571,14 @@ public final class SunPKCS11 extends AuthProvider {
+                 m(CKM_SHA512_224_HMAC));
+         dA(MAC, "HmacSHA512/256",    P11MAC,
                  m(CKM_SHA512_256_HMAC));
 -
-+        d(MAC, "HmacSHA3-224",    P11MAC,
-+                s("2.16.840.1.101.3.4.2.13", "OID.2.16.840.1.101.3.4.2.13"),
++        dA(MAC, "HmacSHA3-224",    P11MAC,
 +                m(CKM_SHA3_224_HMAC));
-+        d(MAC, "HmacSHA3-256",    P11MAC,
-+                s("2.16.840.1.101.3.4.2.14", "OID.2.16.840.1.101.3.4.2.14"),
++        dA(MAC, "HmacSHA3-256",    P11MAC,
 +                m(CKM_SHA3_256_HMAC));
-+        d(MAC, "HmacSHA3-384",    P11MAC,
-+                s("2.16.840.1.101.3.4.2.15", "OID.2.16.840.1.101.3.4.2.15"),
++        dA(MAC, "HmacSHA3-384",    P11MAC,
 +                m(CKM_SHA3_384_HMAC));
-+        d(MAC, "HmacSHA3-512",    P11MAC,
-+                s("2.16.840.1.101.3.4.2.16", "OID.2.16.840.1.101.3.4.2.16"),
++        dA(MAC, "HmacSHA3-512",    P11MAC,
 +                m(CKM_SHA3_512_HMAC));
          d(MAC, "SslMacMD5",     P11MAC,
                  m(CKM_SSL3_MD5_MAC));
          d(MAC, "SslMacSHA1",    P11MAC,
-@@ -604,6 +627,41 @@ public final class SunPKCS11 extends AuthProvider {
+@@ -595,6 +610,30 @@ public final class SunPKCS11 extends AuthProvider {
                  m(CKM_BLOWFISH_KEY_GEN));
          d(KG,  "ChaCha20",      P11KeyGenerator,
                  m(CKM_CHACHA20_KEY_GEN));
 +        d(KG,  "HmacMD5",      P11KeyGenerator, // 1.3.6.1.5.5.8.1.1
 +                m(CKM_GENERIC_SECRET_KEY_GEN));
-+        d(KG,  "HmacSHA1",      P11KeyGenerator,
-+                s("1.2.840.113549.2.7", "OID.1.2.840.113549.2.7"),
++        dA(KG,  "HmacSHA1",      P11KeyGenerator,
 +                m(CKM_SHA_1_KEY_GEN, CKM_GENERIC_SECRET_KEY_GEN));
-+        d(KG,  "HmacSHA224",    P11KeyGenerator,
-+                s("1.2.840.113549.2.8", "OID.1.2.840.113549.2.8"),
++        dA(KG,  "HmacSHA224",    P11KeyGenerator,
 +                m(CKM_SHA224_KEY_GEN, CKM_GENERIC_SECRET_KEY_GEN));
-+        d(KG,  "HmacSHA256",    P11KeyGenerator,
-+                s("1.2.840.113549.2.9", "OID.1.2.840.113549.2.9"),
++        dA(KG,  "HmacSHA256",    P11KeyGenerator,
 +                m(CKM_SHA256_KEY_GEN, CKM_GENERIC_SECRET_KEY_GEN));
-+        d(KG,  "HmacSHA384",    P11KeyGenerator,
-+                s("1.2.840.113549.2.10", "OID.1.2.840.113549.2.10"),
++        dA(KG,  "HmacSHA384",    P11KeyGenerator,
 +                m(CKM_SHA384_KEY_GEN, CKM_GENERIC_SECRET_KEY_GEN));
-+        d(KG,  "HmacSHA512",    P11KeyGenerator,
-+                s("1.2.840.113549.2.11", "OID.1.2.840.113549.2.11"),
++        dA(KG,  "HmacSHA512",    P11KeyGenerator,
 +                m(CKM_SHA512_KEY_GEN, CKM_GENERIC_SECRET_KEY_GEN));
-+        d(KG,  "HmacSHA512/224",    P11KeyGenerator,
-+                s("1.2.840.113549.2.12", "OID.1.2.840.113549.2.12"),
++        dA(KG,  "HmacSHA512/224",    P11KeyGenerator,
 +                m(CKM_SHA512_224_KEY_GEN, CKM_GENERIC_SECRET_KEY_GEN));
-+        d(KG,  "HmacSHA512/256",    P11KeyGenerator,
-+                s("1.2.840.113549.2.13", "OID.1.2.840.113549.2.13"),
++        dA(KG,  "HmacSHA512/256",    P11KeyGenerator,
 +                m(CKM_SHA512_256_KEY_GEN, CKM_GENERIC_SECRET_KEY_GEN));
-+        d(KG,  "HmacSHA3-224",    P11KeyGenerator,
-+                s("2.16.840.1.101.3.4.2.13", "OID.2.16.840.1.101.3.4.2.13"),
++        dA(KG,  "HmacSHA3-224",    P11KeyGenerator,
 +                m(CKM_SHA3_224_KEY_GEN, CKM_GENERIC_SECRET_KEY_GEN));
-+        d(KG,  "HmacSHA3-256",    P11KeyGenerator,
-+                s("2.16.840.1.101.3.4.2.14", "OID.2.16.840.1.101.3.4.2.14"),
++        dA(KG,  "HmacSHA3-256",    P11KeyGenerator,
 +                m(CKM_SHA3_256_KEY_GEN, CKM_GENERIC_SECRET_KEY_GEN));
-+        d(KG,  "HmacSHA3-384",    P11KeyGenerator,
-+                s("2.16.840.1.101.3.4.2.15", "OID.2.16.840.1.101.3.4.2.15"),
++        dA(KG,  "HmacSHA3-384",    P11KeyGenerator,
 +                m(CKM_SHA3_384_KEY_GEN, CKM_GENERIC_SECRET_KEY_GEN));
-+        d(KG,  "HmacSHA3-512",    P11KeyGenerator,
-+                s("2.16.840.1.101.3.4.2.16", "OID.2.16.840.1.101.3.4.2.16"),
++        dA(KG,  "HmacSHA3-512",    P11KeyGenerator,
 +                m(CKM_SHA3_512_KEY_GEN, CKM_GENERIC_SECRET_KEY_GEN));
  
          // register (Secret)KeyFactories if there are any mechanisms
          // for a particular algorithm that we support
-@@ -747,13 +805,40 @@ public final class SunPKCS11 extends AuthProvider {
-         d(SIG, "SHA512withDSA", P11Signature,
-                 s("2.16.840.1.101.3.4.3.4", "OID.2.16.840.1.101.3.4.3.4"),
+@@ -725,37 +764,77 @@ public final class SunPKCS11 extends AuthProvider {
+                 m(CKM_DSA_SHA384));
+         dA(SIG, "SHA512withDSA", P11Signature,
                  m(CKM_DSA_SHA512));
-+        d(SIG, "SHA3-224withDSA", P11Signature,
-+                s("2.16.840.1.101.3.4.3.5", "OID.2.16.840.1.101.3.4.3.5"),
++        dA(SIG, "SHA3-224withDSA", P11Signature,
 +                m(CKM_DSA_SHA3_224));
-+        d(SIG, "SHA3-256withDSA", P11Signature,
-+                s("2.16.840.1.101.3.4.3.6", "OID.2.16.840.1.101.3.4.3.6"),
++        dA(SIG, "SHA3-256withDSA", P11Signature,
 +                m(CKM_DSA_SHA3_256));
-+        d(SIG, "SHA3-384withDSA", P11Signature,
-+                s("2.16.840.1.101.3.4.3.7", "OID.2.16.840.1.101.3.4.3.7"),
++        dA(SIG, "SHA3-384withDSA", P11Signature,
 +                m(CKM_DSA_SHA3_384));
-+        d(SIG, "SHA3-512withDSA", P11Signature,
-+                s("2.16.840.1.101.3.4.3.8", "OID.2.16.840.1.101.3.4.3.8"),
++        dA(SIG, "SHA3-512withDSA", P11Signature,
 +                m(CKM_DSA_SHA3_512));
          d(SIG, "RawDSAinP1363Format",   P11Signature,
-                 s("NONEwithDSAinP1363Format"),
+                 List.of("NONEwithDSAinP1363Format"),
                  m(CKM_DSA));
          d(SIG, "DSAinP1363Format",      P11Signature,
-                 s("SHA1withDSAinP1363Format"),
+                 List.of("SHA1withDSAinP1363Format"),
                  m(CKM_DSA_SHA1, CKM_DSA));
 -
 +        d(SIG, "SHA224withDSAinP1363Format",      P11Signature,
@@ -1095,36 +1072,27 @@ index cf7cd19b689..7a8bcffb92c 100644
 +                m(CKM_DSA_SHA3_512));
          d(SIG, "NONEwithECDSA", P11Signature,
                  m(CKM_ECDSA));
-         d(SIG, "SHA1withECDSA", P11Signature,
-@@ -761,28 +846,49 @@ public final class SunPKCS11 extends AuthProvider {
+         dA(SIG, "SHA1withECDSA", P11Signature,
                  m(CKM_ECDSA_SHA1, CKM_ECDSA));
-         d(SIG, "SHA224withECDSA",       P11Signature,
-                 s("1.2.840.10045.4.3.1", "OID.1.2.840.10045.4.3.1"),
+         dA(SIG, "SHA224withECDSA",       P11Signature,
 -                m(CKM_ECDSA));
 +                m(CKM_ECDSA_SHA224, CKM_ECDSA));
-         d(SIG, "SHA256withECDSA",       P11Signature,
-                 s("1.2.840.10045.4.3.2", "OID.1.2.840.10045.4.3.2"),
+         dA(SIG, "SHA256withECDSA",       P11Signature,
 -                m(CKM_ECDSA));
 +                m(CKM_ECDSA_SHA256, CKM_ECDSA));
-         d(SIG, "SHA384withECDSA",       P11Signature,
-                 s("1.2.840.10045.4.3.3", "OID.1.2.840.10045.4.3.3"),
+         dA(SIG, "SHA384withECDSA",       P11Signature,
 -                m(CKM_ECDSA));
 +                m(CKM_ECDSA_SHA384, CKM_ECDSA));
-         d(SIG, "SHA512withECDSA",       P11Signature,
-                 s("1.2.840.10045.4.3.4", "OID.1.2.840.10045.4.3.4"),
+         dA(SIG, "SHA512withECDSA",       P11Signature,
 -                m(CKM_ECDSA));
 +                m(CKM_ECDSA_SHA512, CKM_ECDSA));
-+        d(SIG, "SHA3-224withECDSA",       P11Signature,
-+                s("1.2.840.10045.4.3.9", "OID.1.2.840.10045.4.3.9"),
++        dA(SIG, "SHA3-224withECDSA",       P11Signature,
 +                m(CKM_ECDSA_SHA3_224, CKM_ECDSA));
-+        d(SIG, "SHA3-256withECDSA",       P11Signature,
-+                s("1.2.840.10045.4.3.10", "OID.1.2.840.10045.4.3.10"),
++        dA(SIG, "SHA3-256withECDSA",       P11Signature,
 +                m(CKM_ECDSA_SHA3_256, CKM_ECDSA));
-+        d(SIG, "SHA3-384withECDSA",       P11Signature,
-+                s("1.2.840.10045.4.3.11", "OID.1.2.840.10045.4.3.11"),
++        dA(SIG, "SHA3-384withECDSA",       P11Signature,
 +                m(CKM_ECDSA_SHA3_384, CKM_ECDSA));
-+        d(SIG, "SHA3-512withECDSA",       P11Signature,
-+                s("1.2.840.10045.4.3.12", "OID.1.2.840.10045.4.3.12"),
++        dA(SIG, "SHA3-512withECDSA",       P11Signature,
 +                m(CKM_ECDSA_SHA3_512, CKM_ECDSA));
          d(SIG, "NONEwithECDSAinP1363Format",   P11Signature,
                  m(CKM_ECDSA));
@@ -1151,29 +1119,25 @@ index cf7cd19b689..7a8bcffb92c 100644
 +        d(SIG, "SHA3-512withECDSAinP1363Format", P11Signature,
 +                m(CKM_ECDSA_SHA3_512, CKM_ECDSA));
 +
-         d(SIG, "MD2withRSA",    P11Signature,
-                 s("1.2.840.113549.1.1.2", "OID.1.2.840.113549.1.1.2"),
+         dA(SIG, "MD2withRSA",    P11Signature,
                  m(CKM_MD2_RSA_PKCS, CKM_RSA_PKCS, CKM_RSA_X_509));
-@@ -805,6 +911,18 @@ public final class SunPKCS11 extends AuthProvider {
-         d(SIG, "SHA512withRSA", P11Signature,
-                 s("1.2.840.113549.1.1.13", "OID.1.2.840.113549.1.1.13"),
+         dA(SIG, "MD5withRSA",    P11Signature,
+@@ -770,6 +849,14 @@ public final class SunPKCS11 extends AuthProvider {
+                 m(CKM_SHA384_RSA_PKCS, CKM_RSA_PKCS, CKM_RSA_X_509));
+         dA(SIG, "SHA512withRSA", P11Signature,
                  m(CKM_SHA512_RSA_PKCS, CKM_RSA_PKCS, CKM_RSA_X_509));
-+        d(SIG, "SHA3-224withRSA", P11Signature,
-+                s("2.16.840.1.101.3.4.3.13", "OID.2.16.840.1.101.3.4.3.13"),
++        dA(SIG, "SHA3-224withRSA", P11Signature,
 +                m(CKM_SHA3_224_RSA_PKCS, CKM_RSA_PKCS, CKM_RSA_X_509));
-+        d(SIG, "SHA3-256withRSA", P11Signature,
-+                s("2.16.840.1.101.3.4.3.14", "OID.2.16.840.1.101.3.4.3.14"),
++        dA(SIG, "SHA3-256withRSA", P11Signature,
 +                m(CKM_SHA3_256_RSA_PKCS, CKM_RSA_PKCS, CKM_RSA_X_509));
-+        d(SIG, "SHA3-384withRSA", P11Signature,
-+                s("2.16.840.1.101.3.4.3.15", "OID.2.16.840.1.101.3.4.3.15"),
++        dA(SIG, "SHA3-384withRSA", P11Signature,
 +                m(CKM_SHA3_384_RSA_PKCS, CKM_RSA_PKCS, CKM_RSA_X_509));
-+        d(SIG, "SHA3-512withRSA", P11Signature,
-+                s("2.16.840.1.101.3.4.3.16", "OID.2.16.840.1.101.3.4.3.16"),
++        dA(SIG, "SHA3-512withRSA", P11Signature,
 +                m(CKM_SHA3_512_RSA_PKCS, CKM_RSA_PKCS, CKM_RSA_X_509));
-         d(SIG, "RSASSA-PSS", P11PSSSignature,
-                 s("1.2.840.113549.1.1.10", "OID.1.2.840.113549.1.1.10"),
+         dA(SIG, "RSASSA-PSS", P11PSSSignature,
                  m(CKM_RSA_PKCS_PSS));
-@@ -818,6 +936,14 @@ public final class SunPKCS11 extends AuthProvider {
+         d(SIG, "SHA1withRSASSA-PSS", P11PSSSignature,
+@@ -782,6 +869,14 @@ public final class SunPKCS11 extends AuthProvider {
                  m(CKM_SHA384_RSA_PKCS_PSS));
          d(SIG, "SHA512withRSASSA-PSS", P11PSSSignature,
                  m(CKM_SHA512_RSA_PKCS_PSS));
@@ -1189,7 +1153,7 @@ index cf7cd19b689..7a8bcffb92c 100644
          d(KG, "SunTlsRsaPremasterSecret",
                      "sun.security.pkcs11.P11TlsRsaPremasterSecretGenerator",
 diff --git a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/wrapper/CK_RSA_PKCS_PSS_PARAMS.java b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/wrapper/CK_RSA_PKCS_PSS_PARAMS.java
-index e077943bbc2..cb04b95304d 100644
+index e077943bbc..cb04b95304 100644
 --- a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/wrapper/CK_RSA_PKCS_PSS_PARAMS.java
 +++ b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/wrapper/CK_RSA_PKCS_PSS_PARAMS.java
 @@ -1,5 +1,5 @@
@@ -1215,7 +1179,7 @@ index e077943bbc2..cb04b95304d 100644
  
 diff --git a/test/jdk/sun/security/pkcs11/KeyGenerator/HmacDefKeySizeTest.java b/test/jdk/sun/security/pkcs11/KeyGenerator/HmacDefKeySizeTest.java
 new file mode 100644
-index 00000000000..d6707028d96
+index 0000000000..d6707028d9
 --- /dev/null
 +++ b/test/jdk/sun/security/pkcs11/KeyGenerator/HmacDefKeySizeTest.java
 @@ -0,0 +1,84 @@
@@ -1304,7 +1268,7 @@ index 00000000000..d6707028d96
 +    }
 +}
 diff --git a/test/jdk/sun/security/pkcs11/KeyGenerator/TestKeyGenerator.java b/test/jdk/sun/security/pkcs11/KeyGenerator/TestKeyGenerator.java
-index b61d10beece..78b7d857e8e 100644
+index b61d10beec..78b7d857e8 100644
 --- a/test/jdk/sun/security/pkcs11/KeyGenerator/TestKeyGenerator.java
 +++ b/test/jdk/sun/security/pkcs11/KeyGenerator/TestKeyGenerator.java
 @@ -23,7 +23,7 @@
@@ -1336,7 +1300,7 @@ index b61d10beece..78b7d857e8e 100644
              test("ARCFOUR", 1024, p, TestResult.TBD);
          } else if (p.getName().equals("SunPKCS11-NSS")) {
 diff --git a/test/jdk/sun/security/pkcs11/Mac/MacSameTest.java b/test/jdk/sun/security/pkcs11/Mac/MacSameTest.java
-index 59af327c1f2..64c42a6dd06 100644
+index 59af327c1f..64c42a6dd0 100644
 --- a/test/jdk/sun/security/pkcs11/Mac/MacSameTest.java
 +++ b/test/jdk/sun/security/pkcs11/Mac/MacSameTest.java
 @@ -23,7 +23,7 @@
@@ -1421,7 +1385,7 @@ index 59af327c1f2..64c42a6dd06 100644
  
          mac.reset();
 diff --git a/test/jdk/sun/security/pkcs11/Mac/ReinitMac.java b/test/jdk/sun/security/pkcs11/Mac/ReinitMac.java
-index 5cad8859840..7e045232e3a 100644
+index 5cad885984..7e045232e3 100644
 --- a/test/jdk/sun/security/pkcs11/Mac/ReinitMac.java
 +++ b/test/jdk/sun/security/pkcs11/Mac/ReinitMac.java
 @@ -1,5 +1,5 @@
@@ -1514,7 +1478,7 @@ index 5cad8859840..7e045232e3a 100644
      }
  }
 diff --git a/test/jdk/sun/security/pkcs11/MessageDigest/ByteBuffers.java b/test/jdk/sun/security/pkcs11/MessageDigest/ByteBuffers.java
-index 7ced00630cc..a7a72e8ea3d 100644
+index 7ced00630c..a7a72e8ea3 100644
 --- a/test/jdk/sun/security/pkcs11/MessageDigest/ByteBuffers.java
 +++ b/test/jdk/sun/security/pkcs11/MessageDigest/ByteBuffers.java
 @@ -1,5 +1,5 @@
@@ -1574,7 +1538,7 @@ index 7ced00630cc..a7a72e8ea3d 100644
          byte[] d1 = md.digest(data);
  
 diff --git a/test/jdk/sun/security/pkcs11/MessageDigest/ReinitDigest.java b/test/jdk/sun/security/pkcs11/MessageDigest/ReinitDigest.java
-index ea7909bc397..268f698276b 100644
+index ea7909bc39..268f698276 100644
 --- a/test/jdk/sun/security/pkcs11/MessageDigest/ReinitDigest.java
 +++ b/test/jdk/sun/security/pkcs11/MessageDigest/ReinitDigest.java
 @@ -1,5 +1,5 @@
@@ -1655,7 +1619,7 @@ index ea7909bc397..268f698276b 100644
  
      private static void check(byte[] d1, byte[] d2) throws Exception {
 diff --git a/test/jdk/sun/security/pkcs11/MessageDigest/TestCloning.java b/test/jdk/sun/security/pkcs11/MessageDigest/TestCloning.java
-index b931c8564b2..ace601c7233 100644
+index b931c8564b..ace601c723 100644
 --- a/test/jdk/sun/security/pkcs11/MessageDigest/TestCloning.java
 +++ b/test/jdk/sun/security/pkcs11/MessageDigest/TestCloning.java
 @@ -1,5 +1,5 @@
@@ -1744,7 +1708,7 @@ index b931c8564b2..ace601c7233 100644
          MessageDigest mdCopy0 = (MessageDigest) mdObj.clone();
  
 diff --git a/test/jdk/sun/security/pkcs11/Signature/ByteBuffers.java b/test/jdk/sun/security/pkcs11/Signature/ByteBuffers.java
-index 26eeacffed9..f5de994779c 100644
+index 26eeacffed..f5de994779 100644
 --- a/test/jdk/sun/security/pkcs11/Signature/ByteBuffers.java
 +++ b/test/jdk/sun/security/pkcs11/Signature/ByteBuffers.java
 @@ -23,7 +23,7 @@
@@ -1770,7 +1734,7 @@ index 26eeacffed9..f5de994779c 100644
          sig.update(t);
          byte[] signature = sig.sign();
 diff --git a/test/jdk/sun/security/pkcs11/Signature/InitAgainPSS.java b/test/jdk/sun/security/pkcs11/Signature/InitAgainPSS.java
-index ccd66599fb0..a2fa7294977 100644
+index ccd66599fb..a2fa729497 100644
 --- a/test/jdk/sun/security/pkcs11/Signature/InitAgainPSS.java
 +++ b/test/jdk/sun/security/pkcs11/Signature/InitAgainPSS.java
 @@ -1,5 +1,5 @@
@@ -1816,7 +1780,7 @@ index ccd66599fb0..a2fa7294977 100644
          PSSParameterSpec params = new PSSParameterSpec("SHA-256", "MGF1",
              new MGF1ParameterSpec("SHA-256"), 32,
 diff --git a/test/jdk/sun/security/pkcs11/Signature/KeyAndParamCheckForPSS.java b/test/jdk/sun/security/pkcs11/Signature/KeyAndParamCheckForPSS.java
-index 2e4fedbf1d5..f1c0492b5fc 100644
+index 2e4fedbf1d..f1c0492b5f 100644
 --- a/test/jdk/sun/security/pkcs11/Signature/KeyAndParamCheckForPSS.java
 +++ b/test/jdk/sun/security/pkcs11/Signature/KeyAndParamCheckForPSS.java
 @@ -1,5 +1,5 @@
@@ -1910,7 +1874,7 @@ index 2e4fedbf1d5..f1c0492b5fc 100644
          System.out.println("test#4: pass");
      }
 diff --git a/test/jdk/sun/security/pkcs11/Signature/ReinitSignature.java b/test/jdk/sun/security/pkcs11/Signature/ReinitSignature.java
-index 42ca7fa203d..8c132ca7e4f 100644
+index 42ca7fa203..8c132ca7e4 100644
 --- a/test/jdk/sun/security/pkcs11/Signature/ReinitSignature.java
 +++ b/test/jdk/sun/security/pkcs11/Signature/ReinitSignature.java
 @@ -23,312 +23,13 @@
@@ -2242,7 +2206,7 @@ index 42ca7fa203d..8c132ca7e4f 100644
          new Random().nextBytes(data);
          sig.initSign(privateKey);
 diff --git a/test/jdk/sun/security/pkcs11/Signature/SigInteropPSS.java b/test/jdk/sun/security/pkcs11/Signature/SigInteropPSS.java
-index 3c3edb5aa6a..11147022771 100644
+index 3c3edb5aa6..1114702277 100644
 --- a/test/jdk/sun/security/pkcs11/Signature/SigInteropPSS.java
 +++ b/test/jdk/sun/security/pkcs11/Signature/SigInteropPSS.java
 @@ -1,5 +1,5 @@
@@ -2263,7 +2227,7 @@ index 3c3edb5aa6a..11147022771 100644
   * @library /test/lib ..
 diff --git a/test/jdk/sun/security/pkcs11/Signature/SigInteropPSS2.java b/test/jdk/sun/security/pkcs11/Signature/SigInteropPSS2.java
 new file mode 100644
-index 00000000000..b8ea9863327
+index 0000000000..b8ea986332
 --- /dev/null
 +++ b/test/jdk/sun/security/pkcs11/Signature/SigInteropPSS2.java
 @@ -0,0 +1,98 @@
@@ -2366,7 +2330,7 @@ index 00000000000..b8ea9863327
 +    }
 +}
 diff --git a/test/jdk/sun/security/pkcs11/Signature/SignatureTestPSS.java b/test/jdk/sun/security/pkcs11/Signature/SignatureTestPSS.java
-index 3a6dbe345e9..4c1f7284bbc 100644
+index 3a6dbe345e..4c1f7284bb 100644
 --- a/test/jdk/sun/security/pkcs11/Signature/SignatureTestPSS.java
 +++ b/test/jdk/sun/security/pkcs11/Signature/SignatureTestPSS.java
 @@ -1,5 +1,5 @@
@@ -2424,7 +2388,7 @@ index 3a6dbe345e9..4c1f7284bbc 100644
              hash, "MGF1", new MGF1ParameterSpec(mgfHash), 0, 1);
 diff --git a/test/jdk/sun/security/pkcs11/Signature/SignatureTestPSS2.java b/test/jdk/sun/security/pkcs11/Signature/SignatureTestPSS2.java
 new file mode 100644
-index 00000000000..516b17972e5
+index 0000000000..516b17972e
 --- /dev/null
 +++ b/test/jdk/sun/security/pkcs11/Signature/SignatureTestPSS2.java
 @@ -0,0 +1,140 @@
@@ -2569,7 +2533,7 @@ index 00000000000..516b17972e5
 +    }
 +}
 diff --git a/test/jdk/sun/security/pkcs11/Signature/TestDSA2.java b/test/jdk/sun/security/pkcs11/Signature/TestDSA2.java
-index 222f8a2a5ed..3161de6fc50 100644
+index 222f8a2a5e..3161de6fc5 100644
 --- a/test/jdk/sun/security/pkcs11/Signature/TestDSA2.java
 +++ b/test/jdk/sun/security/pkcs11/Signature/TestDSA2.java
 @@ -1,5 +1,5 @@
@@ -2664,7 +2628,7 @@ index 222f8a2a5ed..3161de6fc50 100644
      }
  }
 diff --git a/test/jdk/sun/security/pkcs11/Signature/TestRSAKeyLength.java b/test/jdk/sun/security/pkcs11/Signature/TestRSAKeyLength.java
-index f469ca17b65..7e5a012a5ec 100644
+index f469ca17b6..7e5a012a5e 100644
 --- a/test/jdk/sun/security/pkcs11/Signature/TestRSAKeyLength.java
 +++ b/test/jdk/sun/security/pkcs11/Signature/TestRSAKeyLength.java
 @@ -22,8 +22,8 @@
@@ -2697,7 +2661,7 @@ index f469ca17b65..7e5a012a5ec 100644
          kpg.initialize(512);
          KeyPair kp = kpg.generateKeyPair();
 diff --git a/test/jdk/sun/security/pkcs11/nss/p11-nss.txt b/test/jdk/sun/security/pkcs11/nss/p11-nss.txt
-index 49778ea954c..576b1dc4d69 100644
+index 49778ea954..576b1dc4d6 100644
 --- a/test/jdk/sun/security/pkcs11/nss/p11-nss.txt
 +++ b/test/jdk/sun/security/pkcs11/nss/p11-nss.txt
 @@ -11,12 +11,23 @@ library = ${pkcs11test.nss.lib}

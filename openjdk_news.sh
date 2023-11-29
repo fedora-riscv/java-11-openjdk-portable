@@ -18,8 +18,8 @@
 
 OLD_RELEASE=$1
 NEW_RELEASE=$2
-SUBDIR=$3
-REPO=$4
+REPO=$3
+SUBDIR=$4
 SCRIPT_DIR=$(dirname ${0})
 
 if test "x${SUBDIR}" = "x"; then

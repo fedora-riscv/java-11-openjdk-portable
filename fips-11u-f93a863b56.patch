@@ -89,7 +89,7 @@ index 3787b12600..dab108a82b 100644
  LCMS_CFLAGS:=@LCMS_CFLAGS@
  LCMS_LIBS:=@LCMS_LIBS@
 diff --git a/make/lib/Lib-java.base.gmk b/make/lib/Lib-java.base.gmk
-index 4cd656a086..e1fc94b5b4 100644
+index b40d3114b9..0d1d83cf3e 100644
 --- a/make/lib/Lib-java.base.gmk
 +++ b/make/lib/Lib-java.base.gmk
 @@ -178,6 +178,31 @@ ifeq ($(call isTargetOsType, unix), true)
@@ -401,7 +401,7 @@ index 0000000000..8dcb7d9073
 +    }
 +}
 diff --git a/src/java.base/share/classes/java/security/Security.java b/src/java.base/share/classes/java/security/Security.java
-index b36510a376..ad5182e1e7 100644
+index 5b9552058b..b46de49211 100644
 --- a/src/java.base/share/classes/java/security/Security.java
 +++ b/src/java.base/share/classes/java/security/Security.java
 @@ -32,6 +32,7 @@ import java.net.URL;
@@ -412,16 +412,17 @@ index b36510a376..ad5182e1e7 100644
  import jdk.internal.misc.SharedSecrets;
  import jdk.internal.util.StaticProperty;
  import sun.security.util.Debug;
-@@ -47,12 +48,20 @@ import sun.security.jca.*;
+@@ -47,6 +48,9 @@ import sun.security.jca.*;
   * implementation-specific location, which is typically the properties file
   * {@code conf/security/java.security} in the Java installation directory.
   *
 + * <p>Additional default values of security properties are read from a
 + * system-specific location, if available.</p>
 + *
-  * @author Benjamin Renaud
-  * @since 1.1
-  */
+  * @implNote If the properties file fails to load, the JDK implementation will
+  * throw an unspecified error when initializing the {@code Security} class.
+  *
+@@ -56,6 +60,11 @@ import sun.security.jca.*;
  
  public final class Security {
  
@@ -433,7 +434,7 @@ index b36510a376..ad5182e1e7 100644
      /* Are we debugging? -- for developers */
      private static final Debug sdebug =
                          Debug.getInstance("properties");
-@@ -67,6 +76,19 @@ public final class Security {
+@@ -70,6 +79,19 @@ public final class Security {
      }
  
      static {
@@ -453,26 +454,19 @@ index b36510a376..ad5182e1e7 100644
          // doPrivileged here because there are multiple
          // things in initialize that might require privs.
          // (the FileInputStream call and the File.exists call,
-@@ -83,6 +105,7 @@ public final class Security {
+@@ -85,6 +107,7 @@ public final class Security {
+     private static void initialize() {
          props = new Properties();
-         boolean loadedProps = false;
          boolean overrideAll = false;
 +        boolean systemSecPropsEnabled = false;
  
          // first load the system properties file
          // to determine the value of security.overridePropertiesFile
-@@ -98,6 +121,7 @@ public final class Security {
-                 if (sdebug != null) {
-                     sdebug.println("reading security properties file: " +
-                                 propFile);
-+                    sdebug.println(props.toString());
-                 }
-             } catch (IOException e) {
-                 if (sdebug != null) {
-@@ -192,6 +216,61 @@ public final class Security {
+@@ -105,9 +128,63 @@ public final class Security {
              }
+             loadProps(null, extraPropFile, overrideAll);
          }
- 
++
 +        boolean sysUseProps = Boolean.valueOf(System.getProperty(SYS_PROP_SWITCH, "false"));
 +        boolean secUseProps = Boolean.valueOf(props.getProperty(SEC_PROP_SWITCH));
 +        if (sdebug != null) {
@@ -492,9 +486,7 @@ index b36510a376..ad5182e1e7 100644
 +            }
 +        }
 +
-+        // FIPS support depends on the contents of java.security so
-+        // ensure it has loaded first
-+        if (loadedProps && systemSecPropsEnabled) {
++        if (systemSecPropsEnabled) {
 +            boolean shouldEnable;
 +            String sysProp = System.getProperty("com.redhat.fips");
 +            if (sysProp == null) {
@@ -530,15 +522,19 @@ index b36510a376..ad5182e1e7 100644
 +        }
      }
  
-     /*
+-    private static boolean loadProps(File masterFile, String extraPropFile, boolean overrideAll) {
++    static boolean loadProps(File masterFile, String extraPropFile, boolean overrideAll) {
+         InputStream is = null;
+         try {
+             if (masterFile != null && masterFile.exists()) {
 diff --git a/src/java.base/share/classes/java/security/SystemConfigurator.java b/src/java.base/share/classes/java/security/SystemConfigurator.java
 new file mode 100644
-index 0000000000..90f6dd2ebc
+index 0000000000..49bf17ea17
 --- /dev/null
 +++ b/src/java.base/share/classes/java/security/SystemConfigurator.java
-@@ -0,0 +1,248 @@
+@@ -0,0 +1,231 @@
 +/*
-+ * Copyright (c) 2019, 2021, Red Hat, Inc.
++ * Copyright (c) 2019, 2023, Red Hat, Inc.
 + *
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 + *
@@ -616,26 +612,9 @@ index 0000000000..90f6dd2ebc
 +     * security.useSystemPropertiesFile is true.
 +     */
 +    static boolean configureSysProps(Properties props) {
-+        boolean systemSecPropsLoaded = false;
-+
-+        try (BufferedInputStream bis =
-+                new BufferedInputStream(
-+                        new FileInputStream(CRYPTO_POLICIES_JAVA_CONFIG))) {
-+            props.load(bis);
-+            systemSecPropsLoaded = true;
-+            if (sdebug != null) {
-+                sdebug.println("reading system security properties file " +
-+                        CRYPTO_POLICIES_JAVA_CONFIG);
-+                sdebug.println(props.toString());
-+            }
-+        } catch (IOException e) {
-+            if (sdebug != null) {
-+                sdebug.println("unable to load security properties from " +
-+                        CRYPTO_POLICIES_JAVA_CONFIG);
-+                e.printStackTrace();
-+            }
-+        }
-+        return systemSecPropsLoaded;
++        // now load the system file, if it exists, so its values
++        // will win if they conflict with the earlier values
++        return Security.loadProps(null, CRYPTO_POLICIES_JAVA_CONFIG, false);
 +    }
 +
 +    /*
@@ -1035,7 +1014,7 @@ index e06b2a588c..315a2ce370 100644
                          candidates = new ProtocolVersion[] {
                              ProtocolVersion.TLS13,
 diff --git a/src/java.base/share/classes/sun/security/ssl/SunJSSE.java b/src/java.base/share/classes/sun/security/ssl/SunJSSE.java
-index c50ba93ecf..de2a91a478 100644
+index 2a2b5d7568..891796f19b 100644
 --- a/src/java.base/share/classes/sun/security/ssl/SunJSSE.java
 +++ b/src/java.base/share/classes/sun/security/ssl/SunJSSE.java
 @@ -27,6 +27,8 @@ package sun.security.ssl;
@@ -1046,7 +1025,7 @@ index c50ba93ecf..de2a91a478 100644
 +import jdk.internal.misc.SharedSecrets;
  import sun.security.rsa.SunRsaSignEntries;
  import static sun.security.util.SecurityConstants.PROVIDER_VER;
- import static sun.security.provider.SunEntries.createAliases;
+ import static sun.security.util.SecurityProviderConstants.*;
 @@ -195,8 +197,13 @@ public abstract class SunJSSE extends java.security.Provider {
              "sun.security.ssl.SSLContextImpl$TLS11Context", null, null);
          ps("SSLContext", "TLSv1.2",
@@ -1062,12 +1041,12 @@ index c50ba93ecf..de2a91a478 100644
 +        }
          ps("SSLContext", "TLS",
              "sun.security.ssl.SSLContextImpl$TLSContext",
-             (isfips? null : createAliases("SSL")), null);
+             (isfips? null : List.of("SSL")), null);
 diff --git a/src/java.base/share/conf/security/java.security b/src/java.base/share/conf/security/java.security
-index 9af64321c4..957cd78a55 100644
+index c0eed3f884..b03bd9f896 100644
 --- a/src/java.base/share/conf/security/java.security
 +++ b/src/java.base/share/conf/security/java.security
-@@ -85,6 +85,14 @@ security.provider.tbd=Apple
+@@ -88,6 +88,14 @@ security.provider.tbd=Apple
  security.provider.tbd=SunPKCS11
  #endif
  
@@ -1082,7 +1061,7 @@ index 9af64321c4..957cd78a55 100644
  #
  # A list of preferred providers for specific algorithms. These providers will
  # be searched for matching algorithms before the list of registered providers.
-@@ -298,6 +306,11 @@ policy.ignoreIdentityScope=false
+@@ -301,6 +309,11 @@ policy.ignoreIdentityScope=false
  #
  keystore.type=pkcs12
  
@@ -1094,7 +1073,7 @@ index 9af64321c4..957cd78a55 100644
  #
  # Controls compatibility mode for JKS and PKCS12 keystore types.
  #
-@@ -335,6 +348,13 @@ package.definition=sun.misc.,\
+@@ -338,6 +351,13 @@ package.definition=sun.misc.,\
  #
  security.overridePropertiesFile=true
  
@@ -1405,7 +1384,7 @@ index 0000000000..b848a1fd78
 +    }
 +}
 diff --git a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
-index cf7cd19b68..69cda46f85 100644
+index ffbd671246..bdaad67e06 100644
 --- a/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
 +++ b/src/jdk.crypto.cryptoki/share/classes/sun/security/pkcs11/SunPKCS11.java
 @@ -26,6 +26,9 @@
@@ -1427,7 +1406,7 @@ index cf7cd19b68..69cda46f85 100644
  import sun.security.util.Debug;
  import sun.security.util.ResourcesMgr;
  import static sun.security.util.SecurityConstants.PROVIDER_VER;
-@@ -60,6 +65,29 @@ import static sun.security.pkcs11.wrapper.PKCS11Constants.*;
+@@ -61,6 +66,29 @@ import static sun.security.pkcs11.wrapper.PKCS11Constants.*;
   */
  public final class SunPKCS11 extends AuthProvider {
  
@@ -1457,7 +1436,7 @@ index cf7cd19b68..69cda46f85 100644
      private static final long serialVersionUID = -1354835039035306505L;
  
      static final Debug debug = Debug.getInstance("sunpkcs11");
-@@ -317,10 +345,15 @@ public final class SunPKCS11 extends AuthProvider {
+@@ -318,10 +346,15 @@ public final class SunPKCS11 extends AuthProvider {
              // request multithreaded access first
              initArgs.flags = CKF_OS_LOCKING_OK;
              PKCS11 tmpPKCS11;
@@ -1474,7 +1453,7 @@ index cf7cd19b68..69cda46f85 100644
              } catch (PKCS11Exception e) {
                  if (debug != null) {
                      debug.println("Multi-threaded initialization failed: " + e);
-@@ -336,7 +369,7 @@ public final class SunPKCS11 extends AuthProvider {
+@@ -337,7 +370,7 @@ public final class SunPKCS11 extends AuthProvider {
                      initArgs.flags = 0;
                  }
                  tmpPKCS11 = PKCS11.getInstance(library,
@@ -1483,7 +1462,7 @@ index cf7cd19b68..69cda46f85 100644
              }
              p11 = tmpPKCS11;
  
-@@ -376,6 +409,24 @@ public final class SunPKCS11 extends AuthProvider {
+@@ -377,6 +410,24 @@ public final class SunPKCS11 extends AuthProvider {
              if (nssModule != null) {
                  nssModule.setProvider(this);
              }

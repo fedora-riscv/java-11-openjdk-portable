@@ -1,0 +1,50 @@
+commit 50074a04e62f91faa080b831d9ce343396ead252
+Author: Andrew John Hughes <andrew@openjdk.org>
+Date:   Tue Sep 5 20:48:42 2023 +0000
+
+    8312489: Increase jdk.jar.maxSignatureFileSize default which is too low for JARs such as WhiteSource/Mend unified agent jar
+    
+    Backport-of: e47a84f23dd2608c6f5748093eefe301fb5bf750
+
+diff --git a/src/java.base/share/classes/java/util/jar/JarFile.java b/src/java.base/share/classes/java/util/jar/JarFile.java
+index cb7e308e0d..cce897c0d3 100644
+--- a/src/java.base/share/classes/java/util/jar/JarFile.java
++++ b/src/java.base/share/classes/java/util/jar/JarFile.java
+@@ -809,7 +809,9 @@ class JarFile extends ZipFile {
+                 throw new IOException("Unsupported size: " + uncompressedSize +
+                         " for JarEntry " + ze.getName() +
+                         ". Allowed max size: " +
+-                        SignatureFileVerifier.MAX_SIG_FILE_SIZE + " bytes");
++                        SignatureFileVerifier.MAX_SIG_FILE_SIZE + " bytes. " +
++                        "You can use the jdk.jar.maxSignatureFileSize " +
++                        "system property to increase the default value.");
+             }
+             int len = (int)uncompressedSize;
+             int bytesRead;
+diff --git a/src/java.base/share/classes/sun/security/util/SignatureFileVerifier.java b/src/java.base/share/classes/sun/security/util/SignatureFileVerifier.java
+index cb477fc134..a766b8249f 100644
+--- a/src/java.base/share/classes/sun/security/util/SignatureFileVerifier.java
++++ b/src/java.base/share/classes/sun/security/util/SignatureFileVerifier.java
+@@ -852,16 +852,16 @@ public class SignatureFileVerifier {
+          * the maximum allowed number of bytes for the signature-related files
+          * in a JAR file.
+          */
+-        Integer tmp = GetIntegerAction.privilegedGetProperty(
+-                "jdk.jar.maxSignatureFileSize", 8000000);
++        int tmp = GetIntegerAction.privilegedGetProperty(
++                "jdk.jar.maxSignatureFileSize", 16000000);
+         if (tmp < 0 || tmp > MAX_ARRAY_SIZE) {
+             if (debug != null) {
+-                debug.println("Default signature file size 8000000 bytes " +
+-                        "is used as the specified size for the " +
+-                        "jdk.jar.maxSignatureFileSize system property " +
++                debug.println("The default signature file size of 16000000 bytes " +
++                        "will be used for the jdk.jar.maxSignatureFileSize " +
++                        "system property since the specified value " +
+                         "is out of range: " + tmp);
+             }
+-            tmp = 8000000;
++            tmp = 16000000;
+         }
+         return tmp;
+     }
