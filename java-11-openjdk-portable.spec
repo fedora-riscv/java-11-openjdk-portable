@@ -469,11 +469,10 @@
 # Intentionally use jdkportablenameimpl here since we want to have static-libs files overlayed on
 # top of the JDK archive
 %define staticlibsportablename()     %{expand:%{jdkportablenameimpl -- %%{1}}}
-%define docportablename() %(echo %{uniquesuffix ""} | sed "s;el%{rhel}\\(_[0-9]\\)*;portable.docs;g")
+%define docportablename() %(echo %{uniquesuffix ""} | sed "s;%{version}-%{release};\\0.portable.docs;g" | sed "s;openjdkportable;el;g")
 %define docportablearchive()  %{docportablename}.tar.xz
-%define miscportablename() %(echo %{uniquesuffix ""} | sed "s;el%{rhel}\\(_[0-9]\\)*;portable.misc;g")
+%define miscportablename() %(echo %{uniquesuffix ""} | sed "s;%{version}-%{release};\\0.portable.misc;g" | sed "s;openjdkportable;el;g")
 %define miscportablearchive()  %{miscportablename}.tar.xz
-
 
 # RPM 4.19 no longer accept our double percentaged %%{nil} passed to %%{1}
 # so we have to pass in "" but evaluate it, otherwise files record will include it
@@ -1298,8 +1297,6 @@ function packagejdk() {
     echo "Packaging build from ${imagesdir} to ${packagesdir}..."
     mkdir -p ${packagesdir}
     pushd ${imagesdir}
-
-    echo "Packaging build from ${imagesdir} to ${packagesdir}..."
 
     if [ "x$suffix" = "x" ] ; then
         nameSuffix=""
