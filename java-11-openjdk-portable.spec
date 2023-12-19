@@ -253,6 +253,8 @@
 # Target to use to just build HotSpot
 %global hotspot_target hotspot
 
+# DTS toolset to use to provide gcc & binutils
+%global dtsversion 8
 
 # Disable LTO as this causes build failures at the moment.
 # See RHBZ#1861401
@@ -349,8 +351,9 @@
 # but in time of bootstrap of next jdk, it is featurever-1,
 # and this it is better to change it here, on single place
 %global buildjdkver %{featurever}
-# Add LTS designator for RHEL builds
-%if 0%{?rhel}
+# We don't add any LTS designator for STS packages (Fedora and EPEL).
+# We need to explicitly exclude EPEL as it would have the %%{rhel} macro defined.
+%if 0%{?rhel} && !0%{?epel}
   %global lts_designator "LTS"
   %global lts_designator_zip -%{lts_designator}
 %else
@@ -407,7 +410,7 @@
 %global top_level_dir_name   %{vcstag}
 %global top_level_dir_name_backup %{top_level_dir_name}-backup
 %global buildver        9
-%global rpmrelease      1
+%global rpmrelease      2
 #%%global tagsuffix     %%{nil}
 # Priority must be 8 digits in total; up to openjdk 1.8, we were using 18..... so when we moved to 11, we had to add another digit
 %if %is_system_jdk
@@ -429,7 +432,7 @@
 %global is_ga           1
 %if %{is_ga}
 %global ea_designator ""
-%global ea_designator_zip ""
+%global ea_designator_zip %{nil}
 %global extraver %{nil}
 %global eaprefix %{nil}
 %else
@@ -448,6 +451,7 @@
 # output dir stub
 %define buildoutputdir() %{expand:build/jdk%{featurever}.build%{?1}}
 %define installoutputdir() %{expand:install/jdk%{featurever}.install%{?1}}
+%global miscinstalloutputdir install
 %define packageoutputdir() %{expand:packages/jdk%{featurever}.packages%{?1}}
 # we can copy the javadoc to not arched dir, or make it not noarch
 %define uniquejavadocdir()    %{expand:%{fullversion}.%{_arch}%{?1}}
@@ -519,6 +523,7 @@
 %define jrebindir()     %{expand:%{_jvmdir}/%{sdkdir -- %{?1}}/bin}
 
 %global alt_java_name     alt-java
+%global generated_sources_name     generated_sources
 
 %global rpm_state_dir %{_localstatedir}/lib/rpm-state/
 
@@ -603,7 +608,7 @@ License:  ASL 1.1 and ASL 2.0 and BSD and BSD with advertising and GPL+ and GPLv
 URL:      http://openjdk.java.net/
 
 # The source tarball, generated using generate_source_tarball.sh
-Source0: openjdk-jdk%{featurever}u-%{vcstag}.tar.xz
+Source0: https://openjdk-sources.osci.io/openjdk%{featurever}/openjdk-jdk%{featurever}u-%{vcstag}.tar.xz
 
 # Use 'icedtea_sync.sh' to update the following
 # They are based on code contained in the IcedTea project (6.x).
@@ -749,8 +754,8 @@ BuildRequires: file
 BuildRequires: fontconfig-devel
 BuildRequires: freetype-devel
 %if (0%{?rhel} > 0 && 0%{?rhel} < 8)
-BuildRequires: devtoolset-8-gcc
-BuildRequires: devtoolset-8-gcc-c++
+BuildRequires: devtoolset-%{dtsversion}-gcc
+BuildRequires: devtoolset-%{dtsversion}-gcc-c++
 %else
 BuildRequires: gcc
 # gcc-c++ is already needed
@@ -782,9 +787,12 @@ BuildRequires: zip
 # to pack portable tarballs
 BuildRequires: tar
 BuildRequires: unzip
+%if (0%{?rhel} > 0 && 0%{?rhel} < 8)
 # No javapackages-filesystem on el7,nor is needed for portables
+%else
 # BuildRequires: javapackages-filesystem
 BuildRequires: java-%{buildjdkver}-openjdk-devel
+%endif
 # Zero-assembler build requirement
 %ifarch %{zero_arches}
 BuildRequires: libffi-devel
@@ -1036,7 +1044,7 @@ pushd %{top_level_dir_name}
 %patch2000 -p1
 # PKCS11 SHA3 backport
 %patch2002 -p1
-# alt-java
+# alt-java support
 %patch600 -p1
 # RSA default
 %patch1003 -p1
@@ -1055,6 +1063,7 @@ sed -e "s:@NSS_LIBDIR@:%{NSS_LIBDIR}:g" %{SOURCE11} > nss.cfg
 sed -e "s:@NSS_LIBDIR@:%{NSS_LIBDIR}:g" %{SOURCE17} > nss.fips.cfg
 
 %build
+
 # How many CPU's do we have?
 export NUM_PROC=%(/usr/bin/getconf _NPROCESSORS_ONLN 2> /dev/null || :)
 export NUM_PROC=${NUM_PROC:-1}
@@ -1124,7 +1133,7 @@ function buildjdk() {
     # are always used in a system_libs build, even
     # for the static library build
 %if (0%{?rhel} > 0 && 0%{?rhel} < 8)
-    scl enable devtoolset-8 -- bash ${top_dir_abs_src_path}/configure \
+    scl enable devtoolset-%{dtsversion} -- bash ${top_dir_abs_src_path}/configure \
 %else
     bash ${top_dir_abs_src_path}/configure \
 %endif
@@ -1165,8 +1174,11 @@ function buildjdk() {
     --disable-warnings-as-errors
 
     cat spec.gmk
-
+%if (0%{?rhel} > 0 && 0%{?rhel} < 8)
+    scl enable devtoolset-%{dtsversion}  -- make \
+%else
     make \
+%endif
       JAVAC_FLAGS=-g \
       LOG=trace \
       WARNINGS_ARE_ERRORS="-Wno-error" \
@@ -1286,6 +1298,28 @@ function packFullPatchedSources() {
   genchecksum ${srcpackagesdir}/%{jdkportablesourcesarchive -- ""}
 }
 
+function findgeneratedsources() {
+  local targetDir=${1}
+  local targetDirParent=$(dirname ${targetDir})
+  local builtJdk=${2}
+  local builtJdkName=$(basename ${builtJdk})
+  local sources=${3}
+  local sourcesName=$(basename ${sources})
+  local sourcesParent=$(dirname ${sources})
+  local target=${sourcesParent}/${targetDirParent}/%{generated_sources_name}
+  local suffixes="cpp\|hpp\|h\|hh\|rl"
+  suffixes=".*\.\($suffixes\)$"
+  mkdir -p $target
+  pushd ${builtJdk}
+    mkdir -p ${target}/${builtJdkName}
+    cp --parents $(find . | grep -e "$suffixes" -e "NONE$") ${target}/${builtJdkName}
+  popd
+  pushd ${sources}
+    mkdir -p ${target}/${sourcesName}
+    cp --parents $(find make | grep -e ".$suffixes" -e "NONE$") ${target}/${sourcesName}
+  popd
+}
+
 function packagejdk() {
     local imagesdir=$(pwd)/${1}/images
     local docdir=$(pwd)/${1}/images/docs
@@ -1293,6 +1327,7 @@ function packagejdk() {
     local packagesdir=$(pwd)/${2}
     local srcdir=$(pwd)/%{top_level_dir_name}
     local tapsetdir=$(pwd)/tapset
+    local gensources=$(pwd)/%{miscinstalloutputdir}/%{generated_sources_name}
 
     echo "Packaging build from ${imagesdir} to ${packagesdir}..."
     mkdir -p ${packagesdir}
@@ -1352,6 +1387,7 @@ function packagejdk() {
 %if %{with_systemtap}
         cp -a ${tapsetdir}* ${miscname}
 %endif
+        cp -avr ${gensources} ${miscname}
         tar -cJf ${miscarchive} ${miscname}
         genchecksum ${miscarchive}
     fi
@@ -1431,11 +1467,13 @@ for suffix in %{build_loop} ; do
       buildjdk ${bootbuilddir} ${systemjdk} "%{bootstrap_targets}" ${debugbuild} ${link_opt} ${debug_symbols}
       installjdk ${bootbuilddir} ${bootinstalldir}
       buildjdk ${builddir} $(pwd)/${bootinstalldir}/images/%{jdkimage} "${maketargets}" ${debugbuild} ${link_opt} ${debug_symbols}
+      findgeneratedsources ${installdir} ${builddir} $(pwd)/%{top_level_dir_name}
       stripjdk ${builddir}
       installjdk ${builddir} ${installdir}
       %{!?with_artifacts:rm -rf ${bootinstalldir}}
   else
       buildjdk ${builddir} ${systemjdk} "${maketargets}" ${debugbuild} ${link_opt} ${debug_symbols}
+      findgeneratedsources ${installdir} ${builddir} $(pwd)/%{top_level_dir_name}
       stripjdk ${builddir}
       installjdk ${builddir} ${installdir}
   fi
@@ -1482,7 +1520,7 @@ $JAVA_HOME/bin/java $(echo $(basename %{SOURCE14})|sed "s|\.java||")
 $JAVA_HOME/bin/javac -d . %{SOURCE15}
 export PROG=$(echo $(basename %{SOURCE15})|sed "s|\.java||")
 export SEC_DEBUG="-Djava.security.debug=properties"
-#Portable specific: set false whereas its true for upstream
+# Specific to portable:System security properties to be off by default
 $JAVA_HOME/bin/java ${SEC_DEBUG} ${PROG} false
 $JAVA_HOME/bin/java ${SEC_DEBUG} -Djava.security.disableSystemPropertiesFile=true ${PROG} false
 
@@ -1494,24 +1532,29 @@ $JAVA_HOME/bin/java $(echo $(basename %{SOURCE16})|sed "s|\.java||") "%{oj_vendo
 if ! nm $JAVA_HOME/bin/java | grep set_speculation ; then true ; else false; fi
 
 # Check alt-java launcher has SSB mitigation on supported architectures
+# set_speculation function exists in both cases, so check for prctl call
 %ifarch %{ssbd_arches}
-nm $JAVA_HOME/bin/%{alt_java_name} | grep set_speculation
+nm $JAVA_HOME/bin/%{alt_java_name} | grep prctl
 %else
-if ! nm $JAVA_HOME/bin/%{alt_java_name} | grep set_speculation ; then true ; else false; fi
+if ! nm $JAVA_HOME/bin/%{alt_java_name} | grep prctl ; then true ; else false; fi
 %endif
 
-# Check translations are available for new timezones
+%if ! 0%{?flatpak}
+# Check translations are available for new timezones (during flatpak builds, the
+# tzdb.dat used by this test is not where the test expects it, so this is
+# disabled for flatpak builds)
 $JAVA_HOME/bin/javac -d . %{SOURCE18}
 $JAVA_HOME/bin/java $(echo $(basename %{SOURCE18})|sed "s|\.java||") JRE
 $JAVA_HOME/bin/java -Djava.locale.providers=CLDR $(echo $(basename %{SOURCE18})|sed "s|\.java||") CLDR
+%endif
 
 %if %{include_staticlibs}
 # Check debug symbols in static libraries (smoke test)
 export STATIC_LIBS_HOME=${top_dir_abs_staticlibs_build_path}/images/%{static_libs_image}
 ls -l $STATIC_LIBS_HOME
 ls -l $STATIC_LIBS_HOME/lib
-readelf --debug-dump $STATIC_LIBS_HOME/lib/libfdlibm.a | grep w_remainder.c
-readelf --debug-dump $STATIC_LIBS_HOME/lib/libfdlibm.a | grep e_remainder.c
+readelf --debug-dump $STATIC_LIBS_HOME/lib/libnet.a | grep Inet4AddressImpl.c
+readelf --debug-dump $STATIC_LIBS_HOME/lib/libnet.a | grep Inet6AddressImpl.c
 %endif
 
 # Release builds strip the debug symbols into external .debuginfo files
@@ -1736,6 +1779,9 @@ done
 %endif
 
 %changelog
+* Wed Dec 13 2023 Jiri Vanek <jvanek@redhat.com> - 1:11.0.21.0.9-1
+- packing generated sources
+
 * Wed Nov 22 2023 Jiri Vanek <jvanek@redhat.com> - 1:11.0.21.0.9-1
 - Updated to OpenJDK 11.0.21+9 (GA)
 - adjsuted generate_source_tarball
